@@ -1,11 +1,12 @@
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from sqlalchemy import or_, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
+from app.core.exceptions import RegraNegocioError
 from app.models import Fornecedor
 from app.schemas.agendamento import FornecedorCreate, FornecedorOut
 
@@ -20,7 +21,8 @@ def criar(dados: FornecedorCreate, db: Session = Depends(get_db)):
         db.commit()
     except IntegrityError:
         db.rollback()
-        raise HTTPException(409, "CNPJ ou código já cadastrado")
+        raise RegraNegocioError("Já existe fornecedor com esse código",
+                                {"codigo": dados.codigo}, codigo="FORNECEDOR_DUPLICADO")
     db.refresh(f)
     return f
 

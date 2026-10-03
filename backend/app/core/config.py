@@ -39,3 +39,15 @@ CLIMA_URL = "https://api.open-meteo.com/v1/forecast"
 CLIMA_CACHE_MINUTOS = 30
 # A partir deste % a carga de adubo não pode ser agendada naquele horário
 LIMIAR_BLOQUEIO_CHUVA = int(os.getenv("LIMIAR_BLOQUEIO_CHUVA", "80"))
+
+# ---- Programação antecipada: estimativas de ordem de grandeza (dossiê, seções 7 e 9) ----
+# Não são medições. Servem para o armazém se preparar e para estimar a equipe do dia.
+JORNADA_MINUTOS = 480                 # 8 horas
+PRODUTIVIDADE_EQUIPE = 0.90           # informada pelo responsável na conversa
+CHAPAS_MINIMO_SE_HA_BATIDO = 5        # uma carga batida exige 5 chapas juntos
+MINUTOS_EQUIPE_POR_VOLUME = 5         # ciclo completo por palete/big bag (tirar, levar, guardar)
+MINUTOS_CAMINHAO_POR_VOLUME = 1.5     # só a retirada do caminhão (10 paletes = 15 min)
+MINUTOS_BATIDO_ATE_10T = 40           # 200 sacas de 50 kg
+MINUTOS_BATIDO_ACIMA_10T = 50         # 28 t a granel
+MINUTOS_MAQUINA = 20                  # adubadeira ou implemento
+VOLUMES_PADRAO = {"PALETIZADO": 10, "BIG_BAG": 20}   # quando a nota não permite estimar

@@ -12,7 +12,7 @@ from app.core.database import Base
 
 # ==========================================
 # ENUMS
-# native_enum=False -> vira VARCHAR + CHECK no banco (evita dor de cabeça em migration)
+# native_enum=False -> vira VARCHAR no banco (evita dor de cabeça em migration)
 # ==========================================
 
 class Horario(str, enum.Enum):
@@ -37,16 +37,25 @@ class LocalFisico(str, enum.Enum):
     LOJA = "LOJA"
 
 
+class Origem(str, enum.Enum):
+    """Procedência do registro (campo `origem_dado`). O painel declara de onde vêm os números.
+    Não confundir com OrigemAgendamento (NORMAL/BALCAO/CHUVA), que é como o agendamento nasceu."""
+    HISTORICO = "HISTORICO"          # carga dos dados da Cocapec
+    SISTEMA = "SISTEMA"              # uso real da plataforma
+    TESTE = "TESTE"                  # cenário de demonstração
+
+
 class StatusAgendamento(str, enum.Enum):
-    PENDENTE = "PENDENTE"            # aguardando Compras
-    APROVADO = "APROVADO"            # Compras liberou
-    REJEITADO = "REJEITADO"          # Compras recusou
-    CANCELADO = "CANCELADO"          # fornecedor cancelou (>= 24h antes)
-    NA_FILA = "NA_FILA"              # chegada registrada
-    EM_DESCARGA = "EM_DESCARGA"      # pelo menos uma descarga iniciada
-    CONCLUIDO = "CONCLUIDO"          # todas as descargas finalizadas
+    PENDENTE = "PENDENTE"                  # aguardando Compras
+    APROVADO = "APROVADO"                  # Compras liberou; falta o armazém definir destino e baia
+    DESTINO_DEFINIDO = "DESTINO_DEFINIDO"  # armazém e baia pré-programados; aguarda a chegada
+    REJEITADO = "REJEITADO"                # Compras recusou
+    CANCELADO = "CANCELADO"                # fornecedor cancelou (>= 24h antes)
+    NA_FILA = "NA_FILA"                    # chegada registrada
+    EM_DESCARGA = "EM_DESCARGA"            # pelo menos uma descarga iniciada
+    CONCLUIDO = "CONCLUIDO"                # todas as descargas finalizadas
     NAO_COMPARECEU = "NAO_COMPARECEU"
-    REAGENDADO = "REAGENDADO"        # substituído por outro agendamento (chuva etc.)
+    REAGENDADO = "REAGENDADO"              # substituído por outro agendamento (chuva etc.)
 
 
 class OrigemAgendamento(str, enum.Enum):
@@ -84,9 +93,37 @@ class Fornecedor(Base):
     id = Column(Integer, primary_key=True)
     codigo = Column(String(20), unique=True, index=True)          # Cod PN do SAP, ex. FD017530
     nome = Column(String, nullable=False)
-    cnpj = Column(String(14), unique=True, index=True, nullable=False)  # só dígitos
+    # NÃO é único: o cadastro real tem 872 linhas e 870 CNPJs (mesmo CNPJ, códigos diferentes)
+    cnpj = Column(String(14), index=True, nullable=False)          # só dígitos
+    origem_dado = Column(_enum(Origem), nullable=False, default=Origem.SISTEMA,
+                         server_default=Origem.SISTEMA.value)
 
     agendamentos = relationship("Agendamento", back_populates="fornecedor")
+
+
+class Baia(Base):
+    """Ponto físico onde o caminhão encosta dentro de um armazém.
+    O responsável pelo armazém escolhe a baia logo após a aprovação do Compras."""
+    __tablename__ = "baias"
+    __table_args__ = (UniqueConstraint("local", "codigo", name="uq_baia_local_codigo"),)
+
+    id = Column(Integer, primary_key=True)
+    local = Column(_enum(LocalFisico), nullable=False, index=True)
+    codigo = Column(String(20), nullable=False)       # ex.: ADUBO-01
+    nome = Column(String, nullable=False)             # ex.: "Adubo - Baia 1"
+    ativa = Column(Boolean, nullable=False, default=True, server_default="true")
+
+
+class Equipamento(Base):
+    """Catálogo fixo de equipamentos de descarga (dossiê, seção 6).
+    A descarga só aceita códigos daqui: o indicador de utilização fica consistente."""
+    __tablename__ = "equipamentos"
+
+    id = Column(Integer, primary_key=True)
+    codigo = Column(String(40), unique=True, nullable=False)   # ex.: EMPILHADEIRA_GAS
+    nome = Column(String, nullable=False)
+    quantidade = Column(Integer)                                # total na cooperativa
+    observacao = Column(Text)
 
 
 class NotaFiscal(Base):
@@ -121,6 +158,8 @@ class Agendamento(Base):
 
     id = Column(Integer, primary_key=True)
     fornecedor_id = Column(Integer, ForeignKey("fornecedores.id"), nullable=False, index=True)
+    origem_dado = Column(_enum(Origem), nullable=False, default=Origem.SISTEMA,
+                         server_default=Origem.SISTEMA.value)
 
     data = Column(Date, nullable=False, index=True)
     horario = Column(_enum(Horario), nullable=False)
@@ -175,6 +214,7 @@ class Descarga(Base):
     id = Column(Integer, primary_key=True)
     agendamento_id = Column(Integer, ForeignKey("agendamentos.id"), nullable=False, index=True)
     local = Column(_enum(LocalFisico), nullable=False, index=True)
+    baia_id = Column(Integer, ForeignKey("baias.id"), index=True)   # pré-programada pelo armazém
 
     # Marcos 2 e 3
     horario_entrada = Column(DateTime(timezone=True))
@@ -182,10 +222,11 @@ class Descarga(Base):
 
     # Intensidade DESTA descarga. NÃO somar no dia: o efetivo vem do boletim.
     qtd_chapas = Column(Integer)
-    # ex.: [{"tipo": "EMPILHADEIRA_GAS", "qtd": 1}, {"tipo": "PALETEIRA_MANUAL", "qtd": 1}]
+    # ex.: [{"codigo": "EMPILHADEIRA_GAS", "qtd": 1}] — códigos do catálogo de equipamentos
     equipamentos = Column(JSONB, nullable=False, server_default="[]")
 
     agendamento = relationship("Agendamento", back_populates="descargas")
+    baia = relationship("Baia")
 
 
 # ==========================================

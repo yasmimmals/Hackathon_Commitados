@@ -7,11 +7,12 @@ from app.core.config import TZ
 from app.core.database import SessionLocal
 from app.core.exceptions import RegraNegocioError
 from app.models import (
-    Acondicionamento as A, Horario as H, LocalFisico as L,
+    Acondicionamento as A, Baia, Fornecedor, Horario as H, LocalFisico as L,
     MotivoNaoRecebimento as M, OrigemAgendamento as O, StatusAgendamento as S,
 )
 from app.schemas.agendamento import (
-    AgendamentoCreate, AprovacaoIn, BalcaoCreate, Equipamento, ReagendamentoChuvaIn, SaidaIn,
+    AgendamentoCreate, AprovacaoIn, BalcaoCreate, DestinoIn, EquipamentoUsado,
+    ReagendamentoChuvaIn, SaidaIn,
 )
 from app.services import agendamento_service as svc
 
@@ -38,12 +39,26 @@ def aprovar(db, ag, agora=SEG_10H):
     return svc.aprovar(db, ag.id, AprovacaoIn(pedido_compra=123, analisado_por="compras"), agora)
 
 
+@pytest.fixture
+def destinar(db, baia):
+    """destinar(ag, L.INSUMOS, L.LOJA) -> programa os armazéns com a baia padrão de cada um."""
+    def _destinar(ag, *locais):
+        return svc.definir_destinos(db, ag.id, [DestinoIn(local=lo, baia_id=baia(lo))
+                                                for lo in locais])
+    return _destinar
+
+
+def codigo_do_erro(exc_info) -> str:
+    return exc_info.value.codigo
+
+
 # ------------------------------------------------------------ trava de vagas
 
 def test_batido_ocupa_horario_sozinho(agendar):
     agendar(A.BATIDO)
-    with pytest.raises(RegraNegocioError, match="carga batida"):
+    with pytest.raises(RegraNegocioError, match="carga batida") as e:
         agendar(A.PALETIZADO)
+    assert codigo_do_erro(e) == "VAGA_OCUPADA"
 
 
 def test_dois_unitizados_e_terceiro_recusado(agendar):
@@ -70,6 +85,14 @@ def test_cancelado_libera_vaga(db, agendar):
     ag = agendar(A.BATIDO)
     svc.cancelar(db, ag.id, agora=SEG_10H)
     assert agendar(A.BATIDO).status == S.PENDENTE
+
+
+def test_destino_definido_continua_ocupando_vaga(db, agendar, destinar):
+    ag = aprovar(db, agendar(A.BATIDO))
+    destinar(ag, L.ADUBO)
+    with pytest.raises(RegraNegocioError) as e:
+        agendar(A.PALETIZADO)
+    assert codigo_do_erro(e) == "VAGA_OCUPADA"
 
 
 def test_disponibilidade(db, agendar):
@@ -109,14 +132,15 @@ def test_corrida_pela_ultima_vaga(agendar, nova_nota):
 
 # ------------------------------------------------------------ validações
 
-@pytest.mark.parametrize("data,erro", [
-    (date(2026, 10, 10), "segunda a sexta"),    # sábado
-    (date(2026, 10, 12), "segunda a sexta"),    # feriado
-    (date(2026, 10, 5), "já passou"),           # hoje 08:00, agora são 10:00
+@pytest.mark.parametrize("data,codigo", [
+    (date(2026, 10, 10), "DIA_NAO_UTIL"),      # sábado
+    (date(2026, 10, 12), "DIA_NAO_UTIL"),      # feriado
+    (date(2026, 10, 5), "HORARIO_PASSADO"),    # hoje 08:00, agora são 10:00
 ])
-def test_datas_invalidas(agendar, data, erro):
-    with pytest.raises(RegraNegocioError, match=erro):
+def test_datas_invalidas(agendar, data, codigo):
+    with pytest.raises(RegraNegocioError) as e:
         agendar(A.PALETIZADO, data=data)
+    assert codigo_do_erro(e) == codigo
 
 
 def test_mesma_nota_nao_agenda_duas_vezes(db, nova_nota):
@@ -124,15 +148,25 @@ def test_mesma_nota_nao_agenda_duas_vezes(db, nova_nota):
     dados = AgendamentoCreate(nota_fiscal_id=nota.id, data=QUA, horario=H.H08,
                               acondicionamento=A.PALETIZADO)
     svc.criar_agendamento(db, dados, agora=SEG_10H)
-    with pytest.raises(RegraNegocioError, match="já tem o agendamento"):
+    with pytest.raises(RegraNegocioError) as e:
         svc.criar_agendamento(db, dados.model_copy(update={"horario": H.H10}), agora=SEG_10H)
+    assert codigo_do_erro(e) == "NOTA_JA_AGENDADA"
 
 
 def test_cancelamento_respeita_24h(db, agendar):
     ag = agendar(A.PALETIZADO)                          # quarta 08:00
-    with pytest.raises(RegraNegocioError, match="24h"):
+    with pytest.raises(RegraNegocioError, match="24h") as e:
         svc.cancelar(db, ag.id, agora=dt(6, 8, 1))      # terça 08:01 -> 23h59 antes
+    assert codigo_do_erro(e) == "PRAZO_CANCELAMENTO"
     assert svc.cancelar(db, ag.id, agora=dt(6, 8, 0)).status == S.CANCELADO
+
+
+def test_fornecedor_pode_repetir_cnpj(db):
+    """O cadastro real tem o mesmo CNPJ com códigos diferentes."""
+    db.add_all([Fornecedor(nome="A", cnpj="11111111111111", codigo="FD1"),
+                Fornecedor(nome="A filial", cnpj="11111111111111", codigo="FD2")])
+    db.commit()
+    assert db.query(Fornecedor).filter_by(cnpj="11111111111111").count() == 2
 
 
 # ------------------------------------------------------------ previsão de chuva
@@ -142,6 +176,7 @@ def test_adubo_bloqueado_com_80_ou_mais_e_sugere_alternativas(agendar, chuva):
     chuva[(QUA, H.H10)] = 95
     with pytest.raises(RegraNegocioError, match="80% de chuva") as e:
         agendar(A.BATIDO, adubo=True, ciente=True)
+    assert codigo_do_erro(e) == "CHUVA_BLOQUEADA"
     alternativas = e.value.extra["alternativas"]
     assert alternativas[0] == {"data": "2026-10-07", "horario": "13:00", "prob_chuva": 0}
     assert all(a["horario"] not in ("08:00", "10:00") or a["data"] != "2026-10-07"
@@ -152,6 +187,7 @@ def test_adubo_com_risco_exige_ciencia(agendar, chuva):
     chuva[(QUA, H.H08)] = 30
     with pytest.raises(RegraNegocioError, match="aceitar o aviso") as e:
         agendar(A.BATIDO, adubo=True, ciente=False)
+    assert codigo_do_erro(e) == "EXIGE_CIENCIA_CHUVA"
     assert e.value.extra == {"prob_chuva": 30, "exige_ciencia": True}
 
     ag = agendar(A.BATIDO, adubo=True, ciente=True)
@@ -186,36 +222,117 @@ def test_disponibilidade_mostra_chuva_para_nota_de_adubo(db, nova_nota, chuva):
     assert slots[H.H13]["situacao_chuva"] == "SEM_RISCO"
 
 
+# ------------------------------------------------------------ destino e baia
+
+def test_aprovacao_leva_a_aprovado_e_destino_programa_baia(db, agendar, destinar, baia):
+    ag = aprovar(db, agendar(A.PALETIZADO))
+    assert ag.status == S.APROVADO
+    ag = destinar(ag, L.INSUMOS)
+    assert ag.status == S.DESTINO_DEFINIDO
+    assert ag.descargas[0].baia_id == baia(L.INSUMOS)
+    assert ag.descargas[0].baia.codigo == "INSUMOS-01"
+
+
+def test_caixa_de_entrada_do_armazem(db, agendar, destinar):
+    pendente = agendar(A.PALETIZADO, H.H08)
+    aprovado = aprovar(db, agendar(A.PALETIZADO, H.H10))
+    ja_destinado = destinar(aprovar(db, agendar(A.PALETIZADO, H.H13)), L.LOJA)
+    ids = [a.id for a in svc.aguardando_destino(db, QUA)]
+    assert ids == [aprovado.id]
+    assert pendente.id not in ids and ja_destinado.id not in ids
+
+
+def test_chegada_sem_destino_e_recusada(db, agendar):
+    ag = aprovar(db, agendar(A.PALETIZADO))
+    with pytest.raises(RegraNegocioError) as e:
+        svc.registrar_chegada(db, ag.id)
+    assert codigo_do_erro(e) == "DESTINO_NAO_DEFINIDO"
+
+
+def test_chegada_sem_aprovacao_e_recusada(db, agendar):
+    ag = agendar(A.PALETIZADO)
+    with pytest.raises(RegraNegocioError, match="PENDENTE") as e:
+        svc.registrar_chegada(db, ag.id)
+    assert codigo_do_erro(e) == "TRANSICAO_INVALIDA"
+
+
+def test_destino_antes_do_compras_e_recusado(db, agendar, destinar):
+    ag = agendar(A.PALETIZADO)
+    with pytest.raises(RegraNegocioError) as e:
+        destinar(ag, L.INSUMOS)
+    assert codigo_do_erro(e) == "TRANSICAO_INVALIDA"
+
+
+def test_baia_de_outro_armazem_e_recusada(db, agendar, baia):
+    ag = aprovar(db, agendar(A.PALETIZADO))
+    with pytest.raises(RegraNegocioError, match="é do armazém ADUBO") as e:
+        svc.definir_destinos(db, ag.id, [DestinoIn(local=L.INSUMOS, baia_id=baia(L.ADUBO))])
+    assert codigo_do_erro(e) == "BAIA_INVALIDA"
+
+
+def test_baia_inativa_e_recusada(db, agendar, baia):
+    ag = aprovar(db, agendar(A.PALETIZADO))
+    b = db.get(Baia, baia(L.LOJA))
+    b.ativa = False
+    db.commit()
+    with pytest.raises(RegraNegocioError) as e:
+        svc.definir_destinos(db, ag.id, [DestinoIn(local=L.LOJA, baia_id=b.id)])
+    assert codigo_do_erro(e) == "BAIA_INVALIDA"
+
+
+def test_troca_de_baia_antes_de_descarregar(db, agendar, destinar):
+    ag = destinar(aprovar(db, agendar(A.PALETIZADO)), L.INSUMOS)
+    nova = Baia(local=L.INSUMOS, codigo="INSUMOS-02", nome="Insumos - Baia 2")
+    db.add(nova)
+    db.commit()
+    ag = svc.definir_destinos(db, ag.id, [DestinoIn(local=L.INSUMOS, baia_id=nova.id)])
+    assert ag.status == S.DESTINO_DEFINIDO and ag.descargas[0].baia.codigo == "INSUMOS-02"
+
+
+def test_entrada_em_armazem_nao_programado_e_recusada(db, agendar, destinar):
+    ag = destinar(aprovar(db, agendar(A.PALETIZADO)), L.INSUMOS)
+    svc.registrar_chegada(db, ag.id, agora=dt(7, 7, 50))
+    with pytest.raises(RegraNegocioError) as e:
+        svc.iniciar_descarga(db, ag.id, L.LOJA)
+    assert codigo_do_erro(e) == "LOCAL_NAO_PROGRAMADO"
+
+
 # ------------------------------------------------------------ fluxo completo
 
-def test_fluxo_completo_dois_armazens(db, agendar):
+def test_fluxo_completo_dois_armazens(db, agendar, destinar):
     ag = aprovar(db, agendar(A.PALETIZADO))
-    assert ag.status == S.APROVADO and ag.peso_kg == 12000 and ag.nf_chave
-    svc.definir_destinos(db, ag.id, [L.INSUMOS, L.LOJA])
+    assert ag.peso_kg == 12000 and ag.nf_chave
+    ag = destinar(ag, L.INSUMOS, L.LOJA)
+    assert [d.local for d in ag.descargas] == [L.INSUMOS, L.LOJA]
     assert svc.registrar_chegada(db, ag.id, agora=dt(7, 7, 50)).status == S.NA_FILA
     svc.iniciar_descarga(db, ag.id, L.INSUMOS, agora=dt(7, 8, 5))
     saida = SaidaIn(local=L.INSUMOS, qtd_chapas=2,
-                    equipamentos=[Equipamento(tipo="EMPILHADEIRA_GAS", qtd=1)])
+                    equipamentos=[EquipamentoUsado(codigo="EMPILHADEIRA_GAS", qtd=1)])
     ag = svc.finalizar_descarga(db, ag.id, saida, agora=dt(7, 8, 20))
     assert ag.status == S.EM_DESCARGA                    # ainda falta a Loja
     svc.iniciar_descarga(db, ag.id, L.LOJA, agora=dt(7, 8, 25))
     ag = svc.finalizar_descarga(db, ag.id, SaidaIn(local=L.LOJA, qtd_chapas=1), agora=dt(7, 8, 35))
     assert ag.status == S.CONCLUIDO
-    assert ag.descargas[0].equipamentos == [{"tipo": "EMPILHADEIRA_GAS", "qtd": 1}]
+    assert ag.descargas[0].equipamentos == [{"codigo": "EMPILHADEIRA_GAS", "qtd": 1}]
     assert svc.chapas_norma(ag) == 2
 
 
-def test_chegada_exige_aprovacao(db, agendar):
-    ag = agendar(A.PALETIZADO)
-    with pytest.raises(RegraNegocioError, match="PENDENTE"):
-        svc.registrar_chegada(db, ag.id)
-
-
-def test_nao_finaliza_sem_iniciar(db, agendar):
-    ag = aprovar(db, agendar(A.BATIDO))
+def test_equipamento_fora_do_catalogo_e_recusado(db, agendar, destinar):
+    ag = destinar(aprovar(db, agendar(A.PALETIZADO)), L.INSUMOS)
     svc.registrar_chegada(db, ag.id, agora=dt(7, 7, 50))
-    with pytest.raises(RegraNegocioError):
+    svc.iniciar_descarga(db, ag.id, L.INSUMOS, agora=dt(7, 8, 0))
+    with pytest.raises(RegraNegocioError) as e:
+        svc.finalizar_descarga(db, ag.id, SaidaIn(
+            local=L.INSUMOS, qtd_chapas=2, equipamentos=[EquipamentoUsado(codigo="GUINDASTE")]))
+    assert codigo_do_erro(e) == "EQUIPAMENTO_INVALIDO"
+
+
+def test_nao_finaliza_sem_iniciar(db, agendar, destinar):
+    ag = destinar(aprovar(db, agendar(A.BATIDO)), L.ADUBO)
+    svc.registrar_chegada(db, ag.id, agora=dt(7, 7, 50))
+    with pytest.raises(RegraNegocioError) as e:
         svc.finalizar_descarga(db, ag.id, SaidaIn(local=L.ADUBO, qtd_chapas=5))
+    assert codigo_do_erro(e) == "TRANSICAO_INVALIDA"
 
 
 @pytest.mark.parametrize("acond,peso,esperado", [
@@ -227,18 +344,18 @@ def test_chapas_norma(agendar, acond, peso, esperado):
 
 # ------------------------------------------------------------ chuva no dia, balcão, no-show
 
-def test_chuva_reagenda_com_prioridade_e_ignora_limite(db, agendar):
+def test_chuva_reagenda_com_prioridade_mantendo_aprovacao_e_baia(db, agendar, destinar, baia):
     sex = date(2026, 10, 9)
-    ag = aprovar(db, agendar(A.BATIDO, data=sex, adubo=True))
-    svc.definir_destinos(db, ag.id, [L.ADUBO])
+    ag = destinar(aprovar(db, agendar(A.BATIDO, data=sex, adubo=True)), L.ADUBO)
     # próximo dia útil é terça 13 (segunda 12 é feriado); lota o horário das 08h dela
-    outro = aprovar(db, agendar(A.BATIDO, data=date(2026, 10, 13)))
+    outro = destinar(aprovar(db, agendar(A.BATIDO, data=date(2026, 10, 13))), L.ADUBO)
 
     novo = svc.reagendar_por_chuva(db, ag.id, ReagendamentoChuvaIn())
     assert novo.data == date(2026, 10, 13) and novo.horario == H.H08
-    assert novo.prioritario and novo.origem == O.CHUVA and novo.status == S.APROVADO
+    assert novo.prioritario and novo.origem == O.CHUVA
+    assert novo.status == S.DESTINO_DEFINIDO and novo.pedido_compra == 123   # não volta ao Compras
     assert novo.carga_adubo and novo.nota_fiscal_id == ag.nota_fiscal_id
-    assert [d.local for d in novo.descargas] == [L.ADUBO]
+    assert [(d.local, d.baia_id) for d in novo.descargas] == [(L.ADUBO, baia(L.ADUBO))]
     antigo = svc.buscar(db, ag.id)
     assert antigo.status == S.REAGENDADO and antigo.motivo_nao_recebimento == M.CHUVA
 
@@ -246,12 +363,13 @@ def test_chuva_reagenda_com_prioridade_e_ignora_limite(db, agendar):
     assert [a.id for a in fila] == [novo.id, outro.id]   # chuva fura a fila
 
 
-def test_balcao_com_vaga_entra_na_fila_ao_aprovar(db, nova_nota):
+def test_balcao_com_vaga_entra_na_fila_quando_destino_e_definido(db, nova_nota, destinar):
     agora = dt(7, 10, 30)
     ag = svc.agendar_balcao(db, BalcaoCreate(nota_fiscal_id=nova_nota().id, horario=H.H10,
                                              acondicionamento=A.PALETIZADO), agora=agora)
     assert ag.origem == O.BALCAO and ag.horario_chegada == agora and ag.status == S.PENDENTE
-    assert aprovar(db, ag).status == S.NA_FILA
+    assert aprovar(db, ag).status == S.APROVADO
+    assert destinar(ag, L.LOJA).status == S.NA_FILA       # já está no pátio
 
 
 def test_balcao_sem_vaga_registra_nao_recebimento(db, agendar, nova_nota):
@@ -259,14 +377,15 @@ def test_balcao_sem_vaga_registra_nao_recebimento(db, agendar, nova_nota):
     with pytest.raises(RegraNegocioError, match="Não recebimento registrado") as e:
         svc.agendar_balcao(db, BalcaoCreate(nota_fiscal_id=nova_nota().id, horario=H.H10,
                                             acondicionamento=A.PALETIZADO), agora=dt(7, 10, 30))
-    assert e.value.extra["alternativas"]
+    assert codigo_do_erro(e) == "SEM_VAGA_BALCAO" and e.value.extra["alternativas"]
     recusa = svc.listar(db, status=S.REJEITADO)[0]
     assert recusa.motivo_nao_recebimento == M.SEM_VAGA
 
 
-def test_nao_compareceu_so_depois_da_janela(db, agendar):
-    ag = aprovar(db, agendar(A.PALETIZADO))   # quarta 08:00-10:00
-    with pytest.raises(RegraNegocioError, match="não terminou"):
+def test_nao_compareceu_so_depois_da_janela(db, agendar, destinar):
+    ag = destinar(aprovar(db, agendar(A.PALETIZADO)), L.INSUMOS)   # quarta 08:00-10:00
+    with pytest.raises(RegraNegocioError, match="não terminou") as e:
         svc.marcar_nao_compareceu(db, ag.id, agora=dt(7, 9, 0))
+    assert codigo_do_erro(e) == "JANELA_EM_ANDAMENTO"
     ag = svc.marcar_nao_compareceu(db, ag.id, agora=dt(7, 10, 1))
     assert ag.status == S.NAO_COMPARECEU

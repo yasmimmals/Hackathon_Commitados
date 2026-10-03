@@ -20,8 +20,9 @@ import pytest  # noqa: E402
 
 import app.models  # noqa: E402,F401
 from app.core.database import Base, SessionLocal, engine  # noqa: E402
-from app.models import Fornecedor, NotaFiscal  # noqa: E402
+from app.models import Baia, Fornecedor, LocalFisico, NotaFiscal  # noqa: E402
 from app.services import clima_service  # noqa: E402
+from scripts.seed import popular  # noqa: E402
 
 _seq = itertools.count(1)
 
@@ -40,6 +41,9 @@ def limpar(tmp_path, monkeypatch):
     with engine.begin() as c:
         nomes = ", ".join(t.name for t in Base.metadata.sorted_tables)
         c.execute(text(f"TRUNCATE {nomes} RESTART IDENTITY CASCADE"))
+    s = SessionLocal()
+    popular(s)                 # tipos de item, equipamentos e uma baia por armazém
+    s.close()
     yield
 
 
@@ -77,3 +81,11 @@ def nova_nota(db, fornecedor):
         db.commit()
         return n
     return _criar
+
+
+@pytest.fixture
+def baia(db):
+    """baia(LocalFisico.ADUBO) -> id da baia padrão daquele armazém."""
+    def _baia(local: LocalFisico) -> int:
+        return db.query(Baia).filter(Baia.local == local).order_by(Baia.id).first().id
+    return _baia
