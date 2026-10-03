@@ -10,4 +10,11 @@
   --color-marca-escuro: #0c693e;
   --color-marca-profundo: #0b5c36;
   --color-fundo: #f3f5f7;
+
+  /* Site institucional (página inicial) */
+  --color-site-azul: #0a5aa4;
+  --color-site-azul-escuro: #084a87;
+  --color-site-verde: #4ea72e;
+  --color-site-verde-escuro: #3f8f22;
+  --color-site-amarelo: #f2b705;
 }

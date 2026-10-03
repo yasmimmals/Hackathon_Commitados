@@ -1,6 +1,9 @@
 import type { Warehouse, YardEntry } from "../types";
 
-/** Disponibilidade de exemplo até a integração com o backend. */
+/**
+ * Armazéns de exemplo: a API ainda não informa vagas por armazém (o destino é
+ * definido pelo responsável do armazém depois que Compras aprova).
+ */
 export const ARMAZENS_MOCK: Warehouse[] = [
   {
     id: "adubo", name: "Adubo e Fertilizantes", detail: "Doca 03 • Paletizado / Big Bag", dock: "Doca 03",
@@ -17,9 +20,7 @@ export const ARMAZENS_MOCK: Warehouse[] = [
 ];
 
 export const ENTRADA_VAZIA: YardEntry = {
-  nfeKey: "", plate: "", driver: "", whatsapp: "",
+  notaFiscal: null, plate: "", driver: "", whatsapp: "",
   packaging: "paletizado", warehouse: "adubo", acknowledged: false,
 };
 
-/** Posição inicial na fila de encaixe (simulada). */
-export const POSICAO_INICIAL_FILA = 3;

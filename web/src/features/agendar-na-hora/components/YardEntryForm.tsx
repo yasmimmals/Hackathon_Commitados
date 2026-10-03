@@ -1,12 +1,12 @@
-import { type FormEvent, useState } from "react";
+import type { FormEvent } from "react";
 import {
-  Ban, Boxes, Car, FileText, MessageCircle, Package, ScanBarcode,
+  Ban, Boxes, Car, FileText, LoaderCircle, MessageCircle, Package,
   Upload, User, UserCheck, Warehouse as WarehouseIcon, Zap, type LucideIcon,
 } from "lucide-react";
 import Campo, { CLASSE_CAMPO, tomCampo } from "@/shared/components/ui/Campo";
 import { mascararPlaca } from "@/shared/utils/placa";
 import type { Packaging, Warehouse, WarehouseId, YardEntry, YardEntryErrors } from "../types";
-import { mascararChaveNfe, mascararTelefone } from "../utils/entradaPatio";
+import { mascararTelefone } from "../utils/entradaPatio";
 
 const PACKAGING: { key: Packaging; label: string; icon: LucideIcon }[] = [
   { key: "paletizado", label: "Paletizado", icon: Package },
@@ -14,25 +14,23 @@ const PACKAGING: { key: Packaging; label: string; icon: LucideIcon }[] = [
   { key: "batido",     label: "Batido",     icon: Ban },
 ];
 
-const NENHUM_ARQUIVO = "Nenhum arquivo selecionado";
-
 interface YardEntryFormProps {
   value: YardEntry;
   errors: YardEntryErrors;
   warehouses: Warehouse[];
+  lendoNota: boolean;
+  enviando: boolean;
+  onSelectNota: (arquivo: File | null) => void;
   onChange: (patch: Partial<YardEntry>) => void;
   onSelectWarehouse: (id: WarehouseId) => void;
   onSelectPackaging: (key: Packaging) => void;
-  onSimulateScan: () => void;
   onReceipt: () => void;
   onSubmit: () => void;
 }
 
 export default function YardEntryForm({
-  value, errors, warehouses, onChange, onSelectWarehouse, onSelectPackaging, onSimulateScan, onReceipt, onSubmit,
+  value, errors, warehouses, lendoNota, enviando, onSelectNota, onChange, onSelectWarehouse, onSelectPackaging, onReceipt, onSubmit,
 }: YardEntryFormProps) {
-  const [selectedFileName, setSelectedFileName] = useState(NENHUM_ARQUIVO);
-
   const packagingAvailable = (key: Packaging) => warehouses.some((w) => w.slots > 0 && w.accepts.includes(key));
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
@@ -51,67 +49,55 @@ export default function YardEntryForm({
       </header>
 
       <form noValidate onSubmit={handleSubmit} className="space-y-5">
-        <div className="rounded-xl border border-dashed border-gray-200 bg-gray-50 p-4">
-          <div className="mb-3 flex items-center justify-between gap-3">
-            <label htmlFor="document-upload" className="flex items-center gap-2 text-sm font-semibold text-gray-800">
-              <FileText className="h-4 w-4 text-marca" aria-hidden />
-              Anexar documento
+        <div className="rounded-xl bg-sky-50/70 p-4 ring-1 ring-sky-100">
+          <div className="mb-2 flex items-center justify-between gap-3">
+            <label htmlFor="notaFiscal" className="flex items-center gap-1.5 text-sm font-semibold text-gray-800">
+              <FileText className="h-4 w-4 text-sky-700" aria-hidden /> Nota Fiscal (XML ou PDF)
             </label>
-            <span className="text-[11px] font-medium uppercase tracking-wide text-gray-400">Opcional</span>
+            <span className="text-[11px] font-medium uppercase tracking-wide text-gray-400">Obrigatório</span>
           </div>
 
           <label
-            htmlFor="document-upload"
-            className="group flex cursor-pointer items-center justify-between gap-3 rounded-lg border border-gray-200 bg-white px-3 py-2.5 shadow-sm transition hover:border-marca hover:bg-emerald-50 focus-within:border-marca focus-within:ring-2 focus-within:ring-emerald-100"
+            className={`group flex cursor-pointer items-center justify-between gap-3 rounded-lg border bg-white px-3 py-2.5 shadow-sm transition hover:border-marca hover:bg-emerald-50 focus-within:border-marca focus-within:ring-2 focus-within:ring-emerald-100 ${
+              errors.notaFiscal ? "border-red-300" : "border-gray-200"
+            }`}
           >
             <span className="flex items-center gap-2 text-sm font-medium text-gray-700">
               <Upload className="h-4 w-4 text-marca" aria-hidden />
-              Escolher arquivo
+              {value.notaFiscal ? "Trocar arquivo" : "Escolher arquivo"}
             </span>
             <span className="rounded-lg bg-marca px-2.5 py-1.5 text-xs font-semibold text-white shadow-sm transition group-hover:bg-marca-escuro">
               Selecionar
             </span>
             <input
-              id="document-upload"
+              id="notaFiscal"
               type="file"
+              accept=".pdf,.xml,application/pdf,application/xml,text/xml"
+              aria-invalid={!!errors.notaFiscal}
+              aria-describedby={errors.notaFiscal ? "notaFiscal-erro" : "notaFiscal-situacao"}
               className="sr-only"
-              onChange={(e) => setSelectedFileName(e.target.files?.[0]?.name ?? NENHUM_ARQUIVO)}
+              onChange={(e) => {
+                onSelectNota(e.target.files?.[0] ?? null);
+                e.target.value = ""; // permite escolher o mesmo arquivo de novo
+              }}
             />
           </label>
 
-          <p className="mt-2 truncate text-xs text-gray-500">{selectedFileName}</p>
-        </div>
-
-        <div className="rounded-xl bg-sky-50/70 p-4 ring-1 ring-sky-100">
-          <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-            <label htmlFor="nfeKey" className="flex items-center gap-1.5 text-sm font-semibold text-gray-800">
-              <FileText className="h-4 w-4 text-sky-700" aria-hidden /> Chave de Acesso da NF-e (44 Dígitos)
-            </label>
-            <button
-              type="button"
-              onClick={onSimulateScan}
-              className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-semibold text-marca hover:bg-emerald-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-marca"
-            >
-              <ScanBarcode className="h-4 w-4" aria-hidden /> Simular / Ler Código
-            </button>
-          </div>
-          <div className="relative">
-            <input
-              id="nfeKey"
-              inputMode="numeric"
-              autoComplete="off"
-              value={value.nfeKey}
-              onChange={(e) => onChange({ nfeKey: mascararChaveNfe(e.target.value) })}
-              placeholder="Digite ou bipe os 44 dígitos da NF-e"
-              aria-invalid={!!errors.nfeKey}
-              aria-describedby={errors.nfeKey ? "nfeKey-erro" : "nfeKey-contador"}
-              className={`${CLASSE_CAMPO} ${tomCampo(errors.nfeKey)} bg-white py-3 pr-14 font-mono tracking-wider`}
-            />
-            <span id="nfeKey-contador" className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[11px] text-gray-400">
-              {value.nfeKey.length}/44
-            </span>
-          </div>
-          {errors.nfeKey && <p id="nfeKey-erro" className="mt-1 text-xs text-red-600">{errors.nfeKey}</p>}
+          <p id="notaFiscal-situacao" role="status" className="mt-2 flex items-center gap-1.5 truncate text-xs text-gray-600">
+            {lendoNota ? (
+              <><LoaderCircle className="h-3.5 w-3.5 animate-spin" aria-hidden /> Lendo a nota fiscal…</>
+            ) : value.notaFiscal ? (
+              <>NF-e {value.notaFiscal.numero ?? "s/ nº"} • {value.notaFiscal.fornecedor.nome}</>
+            ) : (
+              "Nenhum arquivo selecionado"
+            )}
+          </p>
+          {value.notaFiscal && (
+            <p className="mt-1 break-all font-mono text-[11px] tracking-wider text-gray-500">
+              Chave {value.notaFiscal.chave}
+            </p>
+          )}
+          {errors.notaFiscal && <p id="notaFiscal-erro" className="mt-1 text-xs text-red-600">{errors.notaFiscal}</p>}
         </div>
 
         {/* Veículo e motorista */}
@@ -238,9 +224,14 @@ export default function YardEntryForm({
           </button>
           <button
             type="submit"
-            className="inline-flex items-center justify-center gap-2 rounded-lg bg-marca px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-marca-escuro focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-marca focus-visible:ring-offset-2"
+            disabled={enviando}
+            className="inline-flex items-center justify-center gap-2 rounded-lg bg-marca px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-marca-escuro focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-marca focus-visible:ring-offset-2 disabled:cursor-wait disabled:opacity-70"
           >
-            <UserCheck className="h-4 w-4" aria-hidden /> Confirmar Entrada na Fila
+            {enviando ? (
+              <><LoaderCircle className="h-4 w-4 animate-spin" aria-hidden /> Registrando…</>
+            ) : (
+              <><UserCheck className="h-4 w-4" aria-hidden /> Confirmar Entrada na Fila</>
+            )}
           </button>
         </footer>
       </form>

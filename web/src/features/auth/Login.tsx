@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from "react";
-import { Navigate, useLocation, useNavigate } from "react-router-dom";
-import { Leaf, LogIn } from "lucide-react";
+import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
+import { ArrowLeft, Leaf, LogIn } from "lucide-react";
 import { useAuth } from "./AuthContext";
 import { GRUPOS } from "@/routes/rotas";
 import { USUARIOS_DEMO } from "./usuariosDemo";
@@ -136,6 +136,13 @@ export default function Login() {
             ))}
           </ul>
         </section>
+
+        <Link
+          to="/"
+          className="mt-4 flex items-center justify-center gap-1.5 text-xs font-semibold text-gray-600 hover:text-marca hover:underline"
+        >
+          <ArrowLeft className="h-3.5 w-3.5" aria-hidden /> Voltar para a página inicial
+        </Link>
       </div>
     </main>
   );

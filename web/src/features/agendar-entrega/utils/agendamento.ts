@@ -1,8 +1,8 @@
 import {
   ANTECEDENCIA_MAXIMA_DIAS, ANTECEDENCIA_MINIMA_DIAS, CATEGORIAS, PESO_MAXIMO_T, TAMANHO_MAXIMO_NF_MB,
 } from "../constants";
-import { vagasNoHorario } from "../data/disponibilidadeMock";
-import type { ErrosEntrega, NovaEntrega } from "../types";
+import type { SlotDisponibilidade } from "@/shared/services";
+import type { ErrosEntrega, Horario, NovaEntrega } from "../types";
 
 const EXTENSOES_NF = [".pdf", ".xml"];
 const DIAS_SEMANA_CURTOS = ["dom.", "seg.", "ter.", "qua.", "qui.", "sex.", "sáb."];
@@ -48,20 +48,44 @@ export function validarNotaFiscal(arquivo: File): string | undefined {
   return undefined;
 }
 
-export const rotuloCategoria = (key: NovaEntrega["categoria"]) => CATEGORIAS.find((c) => c.key === key)?.rotulo ?? "";
+/** Recebimento só de segunda a sexta (feriados o backend recusa ao agendar). */
+export const ehDiaUtil = (iso: string) => {
+  const diaSemana = new Date(`${iso}T12:00:00`).getDay();
+  return diaSemana !== 0 && diaSemana !== 6;
+};
 
-/** A ordem das checagens segue a ordem dos campos na tela (foco no primeiro erro). */
-export function validarEntrega(entrega: NovaEntrega): ErrosEntrega {
+/**
+ * Vagas livres de um horário para o acondicionamento escolhido. Carga batida
+ * precisa do horário vazio; com chuva bloqueando (adubo), não há vaga.
+ */
+export function vagasNoHorario(
+  slots: SlotDisponibilidade[], data: string, horario: Horario, acondicionamento: NovaEntrega["acondicionamento"],
+): number {
+  const slot = slots.find((s) => s.horario === horario);
+  if (!slot || !ehDiaUtil(data) || slot.situacao_chuva === "BLOQUEADO") return 0;
+  if (acondicionamento === "batido") return slot.aceita_batido ? 1 : 0;
+  return slot.vagas_restantes;
+}
+
+export const rotuloCategoria =(key: NovaEntrega["categoria"]) => CATEGORIAS.find((c) => c.key === key)?.rotulo ?? "";
+
+/**
+ * A ordem das checagens segue a ordem dos campos na tela (foco no primeiro erro).
+ * `vagas` vem da disponibilidade da API; sem ela (ainda carregando), quem confere é o backend.
+ */
+export function validarEntrega(entrega: NovaEntrega, vagas?: (horario: Horario) => number): ErrosEntrega {
   const erros: ErrosEntrega = {};
 
   if (!entrega.data) erros.data = "Escolha a data da entrega.";
   else if (entrega.data < dataMinima() || entrega.data > dataMaxima()) {
     erros.data = `Escolha uma data entre amanhã e os próximos ${ANTECEDENCIA_MAXIMA_DIAS} dias.`;
+  } else if (!ehDiaUtil(entrega.data)) {
+    erros.data = "O recebimento é de segunda a sexta. Escolha um dia útil.";
   }
 
   if (!erros.data) {
     if (!entrega.horario) erros.horario = "Escolha um horário.";
-    else if (vagasNoHorario(entrega.data, entrega.horario) === 0) erros.horario = "Este horário não tem mais vagas.";
+    else if (vagas && vagas(entrega.horario) === 0) erros.horario = "Este horário não tem mais vagas.";
   }
 
   if (!entrega.categoria) erros.categoria = "Escolha a categoria da carga.";
@@ -84,5 +108,6 @@ export function validarEntrega(entrega: NovaEntrega): ErrosEntrega {
   return erros;
 }
 
-/** Protocolo simulado até a integração com o backend. */
-export const gerarProtocolo = () => `#AG-${88300 + Math.floor(Math.random() * 700)}`;
+/** Peso da NF em kg ("28500.000") → como digitado no campo ("28,50"). */
+export const pesoDaNota = (pesoKg: string) =>
+  (Number(pesoKg) / 1000).toFixed(2).replace(".", ",");

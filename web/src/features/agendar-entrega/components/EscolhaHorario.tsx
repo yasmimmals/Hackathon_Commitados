@@ -1,25 +1,34 @@
-import { CalendarDays, Clock } from "lucide-react";
+import { CalendarDays, Clock, CloudRain, LoaderCircle } from "lucide-react";
 import Campo, { CLASSE_CAMPO, tomCampo } from "@/shared/components/ui/Campo";
+import type { SlotDisponibilidade } from "@/shared/services";
 import { HORARIOS } from "../constants";
-import { vagasNoHorario } from "../data/disponibilidadeMock";
 import type { ErrosEntrega, Horario, NovaEntrega } from "../types";
-import { dataMaxima, dataMinima, formatarData } from "../utils/agendamento";
+import { dataMaxima, dataMinima, formatarData, vagasNoHorario } from "../utils/agendamento";
 import Secao from "./Secao";
 
 type EscolhaHorarioProps = {
   data: string;
   horario: NovaEntrega["horario"];
+  acondicionamento: NovaEntrega["acondicionamento"];
+  disponibilidade: { slots: SlotDisponibilidade[]; carregando: boolean; erro?: string };
   erros: Pick<ErrosEntrega, "data" | "horario">;
   onData: (data: string) => void;
   onHorario: (horario: Horario) => void;
 };
 
-export default function EscolhaHorario({ data, horario, erros, onData, onHorario }: EscolhaHorarioProps) {
-  const vagas = HORARIOS.map((h) => ({ horario: h, vagas: data ? vagasNoHorario(data, h) : 0 }));
-  const semVagas = data && vagas.every((v) => v.vagas === 0);
+export default function EscolhaHorario({
+  data, horario, acondicionamento, disponibilidade, erros, onData, onHorario,
+}: EscolhaHorarioProps) {
+  const { slots, carregando, erro: erroDisponibilidade } = disponibilidade;
+  const vagas = HORARIOS.map((h) => ({
+    horario: h,
+    vagas: data ? vagasNoHorario(slots, data, h, acondicionamento) : 0,
+    chuva: slots.find((s) => s.horario === h)?.prob_chuva ?? null,
+  }));
+  const semVagas = data && !carregando && !erroDisponibilidade && vagas.every((v) => v.vagas === 0);
 
   return (
-    <Secao numero={1} titulo="Data e horário" descricao="Janelas de descarga: 08h, 10h, 13h e 15h. Domingo fechado; sábado só pela manhã.">
+    <Secao numero={1} titulo="Data e horário" descricao="Janelas de descarga: 08h, 10h, 13h e 15h, de segunda a sexta.">
       <div className="grid gap-4 md:grid-cols-[220px_minmax(0,1fr)]">
         <Campo id="data" rotulo="Data da entrega" icone={CalendarDays} erro={erros.data}>
           <input
@@ -51,9 +60,17 @@ export default function EscolhaHorario({ data, horario, erros, onData, onHorario
             <p className="rounded-lg border border-dashed border-gray-200 bg-gray-50 px-3 py-2.5 text-xs text-gray-500">
               Escolha uma data para ver os horários disponíveis.
             </p>
+          ) : carregando ? (
+            <p role="status" className="flex items-center gap-2 rounded-lg bg-gray-50 px-3 py-2.5 text-xs text-gray-500">
+              <LoaderCircle className="h-3.5 w-3.5 animate-spin" aria-hidden /> Consultando vagas…
+            </p>
+          ) : erroDisponibilidade ? (
+            <p role="alert" className="rounded-lg bg-red-50 px-3 py-2.5 text-xs text-red-700">
+              Não foi possível consultar as vagas: {erroDisponibilidade}
+            </p>
           ) : (
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-              {vagas.map(({ horario: h, vagas: livres }) => {
+              {vagas.map(({ horario: h, vagas: livres, chuva }) => {
                 const ativo = horario === h;
                 const disponivel = livres > 0;
                 return (
@@ -82,6 +99,11 @@ export default function EscolhaHorario({ data, horario, erros, onData, onHorario
                     <span className={`text-[11px] ${disponivel ? "text-emerald-700" : "text-gray-500"}`}>
                       {disponivel ? `${livres} ${livres === 1 ? "vaga" : "vagas"}` : "Esgotado"}
                     </span>
+                    {chuva !== null && (
+                      <span className="mt-0.5 flex items-center gap-1 text-[10px] text-sky-700">
+                        <CloudRain className="h-3 w-3" aria-hidden /> {chuva}% chuva
+                      </span>
+                    )}
                   </label>
                 );
               })}

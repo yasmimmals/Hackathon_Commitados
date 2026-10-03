@@ -1,4 +1,4 @@
-import { CalendarCheck, Send } from "lucide-react";
+import { CalendarCheck, LoaderCircle, Send } from "lucide-react";
 import { ACONDICIONAMENTOS } from "../constants";
 import type { NovaEntrega } from "../types";
 import { formatarData, rotuloCategoria } from "../utils/agendamento";
@@ -35,7 +35,14 @@ export function ListaResumo({ entrega }: { entrega: NovaEntrega }) {
   );
 }
 
-export default function ResumoAgendamento({ entrega }: { entrega: NovaEntrega }) {
+type ResumoAgendamentoProps = {
+  entrega: NovaEntrega;
+  enviando: boolean;
+  /** Recusa do backend que não pertence a um campo específico. */
+  erroEnvio?: string;
+};
+
+export default function ResumoAgendamento({ entrega, enviando, erroEnvio }: ResumoAgendamentoProps) {
   return (
     <aside className="space-y-4 lg:sticky lg:top-4">
       <section className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
@@ -43,11 +50,19 @@ export default function ResumoAgendamento({ entrega }: { entrega: NovaEntrega })
           <CalendarCheck className="h-4 w-4 text-marca" aria-hidden /> Resumo do agendamento
         </h2>
         <ListaResumo entrega={entrega} />
+        {erroEnvio && (
+          <p role="alert" className="mt-3 rounded-lg bg-red-50 px-3 py-2 text-xs text-red-700">{erroEnvio}</p>
+        )}
         <button
           type="submit"
-          className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-marca px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-marca-escuro focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-marca focus-visible:ring-offset-2"
+          disabled={enviando}
+          className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-marca px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-marca-escuro focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-marca focus-visible:ring-offset-2 disabled:cursor-wait disabled:opacity-70"
         >
-          <Send className="h-4 w-4" aria-hidden /> Enviar para validação
+          {enviando ? (
+            <><LoaderCircle className="h-4 w-4 animate-spin" aria-hidden /> Enviando…</>
+          ) : (
+            <><Send className="h-4 w-4" aria-hidden /> Enviar para validação</>
+          )}
         </button>
       </section>
 

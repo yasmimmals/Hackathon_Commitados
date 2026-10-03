@@ -9,7 +9,7 @@ export default function RotaProtegida({ perfil }: { perfil: Perfil }) {
   const location = useLocation();
 
   if (!usuario) {
-    return <Navigate to="/" replace state={{ de: location.pathname + location.search }} />;
+    return <Navigate to="/login" replace state={{ de: location.pathname + location.search }} />;
   }
   if (usuario.perfil !== perfil) {
     return <Navigate to={GRUPOS[usuario.perfil].base} replace />;
