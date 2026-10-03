@@ -67,40 +67,94 @@ def test_fluxo_fornecedor_pela_api(chuva):
     from main import app
     c = TestClient(app)
 
-    r = c.post("/agendamentos/nota-fiscal", files={"arquivo": ("nf.xml", nfe_xml(), "text/xml")})
+    r = c.post("/api/v1/agendamentos/nota-fiscal", files={"arquivo": ("nf.xml", nfe_xml(), "text/xml")})
     assert r.status_code == 201, r.text
     nota = r.json()
     assert nota["carga_adubo"] and nota["fornecedor"]["cnpj"] == "07467822000126"
     assert "Fornecedor cadastrado automaticamente a partir da nota" in nota["alertas"]
 
     # reenviar a mesma nota reaproveita o registro
-    r2 = c.post("/agendamentos/nota-fiscal", files={"arquivo": ("nf.xml", nfe_xml(), "text/xml")})
+    r2 = c.post("/api/v1/agendamentos/nota-fiscal", files={"arquivo": ("nf.xml", nfe_xml(), "text/xml")})
     assert r2.json()["id"] == nota["id"]
 
     chuva["padrao"] = 90
-    slots = c.get("/agendamentos/disponibilidade",
+    slots = c.get("/api/v1/agendamentos/disponibilidade",
                   params={"data": "2030-01-08", "nota_fiscal_id": nota["id"]}).json()
     assert {s["situacao_chuva"] for s in slots} == {"BLOQUEADO"}
 
     corpo = {"nota_fiscal_id": nota["id"], "data": "2030-01-08", "horario": "08:00",
              "acondicionamento": "BIG_BAG", "ciente_risco_chuva": True}
-    r = c.post("/agendamentos", json=corpo)
-    assert r.status_code == 409 and "90% de chuva" in r.json()["detail"]
-    assert "alternativas" in r.json()
+    r = c.post("/api/v1/agendamentos", json=corpo)
+    assert r.status_code == 409 and "90% de chuva" in r.json()["mensagem"]
+    assert r.json()["codigo"] == "CHUVA_BLOQUEADA" and "alternativas" in r.json()["detalhes"]
 
     chuva["padrao"] = 20
-    r = c.post("/agendamentos", json=corpo)
+    r = c.post("/api/v1/agendamentos", json=corpo)
     assert r.status_code == 201, r.text
     ag = r.json()
     assert ag["prob_chuva"] == 20 and ag["peso_kg"] == "28100.000" and ag["chapas_norma"] == 2
     assert "próximo dia útil" in ag["aviso_chuva"]
 
-    r = c.post("/agendamentos/nota-fiscal", files={"arquivo": ("nf.xml", nfe_xml(), "text/xml")})
-    assert r.status_code == 409 and r.json()["agendamento_id"] == ag["id"]
+    r = c.post("/api/v1/agendamentos/nota-fiscal", files={"arquivo": ("nf.xml", nfe_xml(), "text/xml")})
+    assert r.status_code == 409 and r.json()["codigo"] == "NOTA_JA_AGENDADA"
+    assert r.json()["detalhes"]["agendamento_id"] == ag["id"]
 
 
 def test_arquivo_invalido():
     from main import app
-    r = TestClient(app).post("/agendamentos/nota-fiscal",
+    r = TestClient(app).post("/api/v1/agendamentos/nota-fiscal",
                              files={"arquivo": ("nota.txt", b"qualquer coisa", "text/plain")})
-    assert r.status_code == 409 and "XML" in r.json()["detail"]
+    assert r.status_code == 409 and "XML" in r.json()["mensagem"]
+    assert r.json()["codigo"] == "NOTA_INVALIDA"
+
+
+def test_formato_padrao_de_erro():
+    from main import app
+    c = TestClient(app)
+    r = c.get("/api/v1/agendamentos/999999")
+    assert r.status_code == 404
+    assert r.json() == {"codigo": "NAO_ENCONTRADO",
+                        "mensagem": "Agendamento 999999 não encontrado", "detalhes": {}}
+    r = c.post("/api/v1/agendamentos", json={"data": "amanhã"})
+    assert r.status_code == 422 and r.json()["codigo"] == "VALIDACAO"
+    assert r.json()["detalhes"]["erros"]
+    assert c.get("/api/v1/health").json()["status"] == "ok"
+    assert c.get("/swagger").status_code == 200
+
+
+def test_fluxo_armazem_pela_api_com_baia(chuva):
+    """Compras aprova -> armazém escolhe baia -> motorista vê a baia -> 3 marcos."""
+    from main import app
+    c = TestClient(app)
+    nota = c.post("/api/v1/agendamentos/nota-fiscal",
+                  files={"arquivo": ("nf.xml", nfe_xml(), "text/xml")}).json()
+    ag = c.post("/api/v1/agendamentos", json={
+        "nota_fiscal_id": nota["id"], "data": "2030-01-08", "horario": "10:00",
+        "acondicionamento": "BIG_BAG", "ciente_risco_chuva": True}).json()
+
+    r = c.post(f"/api/v1/agendamentos/{ag['id']}/aprovar",
+               json={"pedido_compra": 26001, "analisado_por": "compras.ana"})
+    assert r.json()["status"] == "APROVADO"
+
+    caixa = c.get("/api/v1/armazem/aguardando-destino").json()
+    assert [a["id"] for a in caixa] == [ag["id"]]          # o "aviso" para o armazém
+
+    baias = c.get("/api/v1/cadastros/baias", params={"local": "ADUBO"}).json()
+    assert [b["codigo"] for b in baias] == ["ADUBO-01"]
+    r = c.put(f"/api/v1/armazem/agendamentos/{ag['id']}/destinos",
+              json={"destinos": [{"local": "ADUBO", "baia_id": baias[0]["id"]}]})
+    assert r.status_code == 200, r.text
+    ag = r.json()
+    assert ag["status"] == "DESTINO_DEFINIDO"
+    assert ag["descargas"][0]["baia"]["nome"] == "Adubo - Baia 1"   # o que o motorista vê
+    assert c.get("/api/v1/armazem/aguardando-destino").json() == []
+
+    equip = {e["codigo"] for e in c.get("/api/v1/cadastros/equipamentos").json()}
+    assert {"EMPILHADEIRA_GAS", "TRATOR", "PALETEIRA_MANUAL"} <= equip
+
+    nova = c.post("/api/v1/cadastros/baias",
+                  json={"local": "ADUBO", "codigo": "ADUBO-02", "nome": "Adubo - Baia 2"})
+    assert nova.status_code == 201
+    dup = c.post("/api/v1/cadastros/baias",
+                 json={"local": "ADUBO", "codigo": "ADUBO-02", "nome": "repetida"})
+    assert dup.status_code == 409 and dup.json()["codigo"] == "BAIA_DUPLICADA"

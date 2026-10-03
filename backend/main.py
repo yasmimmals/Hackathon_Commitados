@@ -1,40 +1,29 @@
-from fastapi import Depends, FastAPI, Request
+"""Ponto de entrada da API. Rotas ficam em app/routes.py.
+
+Swagger: /swagger  |  OpenAPI: /openapi.json  |  todas as rotas sob /api/v1
+"""
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
-from sqlalchemy import text
-from sqlalchemy.orm import Session
 
-from app.controllers import agendamento_controller, armazem_controller, fornecedor_controller
-from app.core.database import get_db
-from app.core.exceptions import NaoEncontradoError, RegraNegocioError
+from app.core.error_handlers import registrar_error_handlers
+from app.routes import api_router
 
-app = FastAPI(title="Cocapec - Recebimento Inteligente")
+API_PREFIX = "/api/v1"
 
-# Libera o frontend React (Vite usa 5173, CRA usa 3000)
+app = FastAPI(
+    title="Cocapec - Recebimento Inteligente",
+    version="1.0.0",
+    docs_url="/swagger",
+    redoc_url="/redoc",
+)
+
+# Hackathon: frontend em outra máquina/porta -> CORS aberto
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:3000"],
+    allow_origins=["*"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-
-@app.exception_handler(RegraNegocioError)
-def regra_negocio(_: Request, exc: RegraNegocioError):
-    return JSONResponse(status_code=409, content={"detail": str(exc), **exc.extra})
-
-
-@app.exception_handler(NaoEncontradoError)
-def nao_encontrado(_: Request, exc: NaoEncontradoError):
-    return JSONResponse(status_code=404, content={"detail": str(exc)})
-
-
-app.include_router(fornecedor_controller.router)
-app.include_router(agendamento_controller.router)
-app.include_router(armazem_controller.router)
-
-
-@app.get("/health")
-def health(db: Session = Depends(get_db)):
-    db.execute(text("SELECT 1"))
-    return {"status": "ok", "db": "ok"}
+registrar_error_handlers(app)
+app.include_router(api_router, prefix=API_PREFIX)

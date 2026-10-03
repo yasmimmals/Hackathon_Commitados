@@ -1,19 +1,41 @@
-"""Rotas do operador do pátio (PWA): fila, destino, 3 marcos, balcão, chuva, no-show."""
-from datetime import date
+"""Rotas do responsável pelo armazém / operador do pátio (PWA).
+
+Fluxo: Compras aprova -> aparece em /aguardando-destino -> define a baia (destinos)
+-> caminhão chega (chegada) -> entrada -> saída (chapas + equipamentos).
+"""
+from datetime import date, datetime
 from typing import Optional
 
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
+from app.core import config
 from app.core.database import get_db
 from app.models import LocalFisico
 from app.schemas.agendamento import (
-    AgendamentoOut, BalcaoCreate, DestinosIn, EntradaIn, ReagendamentoChuvaIn, SaidaIn,
+    AgendamentoOut, BalcaoCreate, DestinosIn, EntradaIn, Programacao, ReagendamentoChuvaIn,
+    SaidaIn,
 )
 from app.services import agendamento_service as svc
+from app.services import programacao_service
 from app.controllers.agendamento_controller import out
 
 router = APIRouter(prefix="/armazem", tags=["Armazém (operador do pátio)"])
+
+
+@router.get("/programacao", response_model=Programacao)
+def programacao(inicio: Optional[date] = None, fim: Optional[date] = None,
+                local: Optional[LocalFisico] = None, db: Session = Depends(get_db)):
+    """O que vai chegar nos próximos dias (padrão: hoje + 6), por armazém, com a equipe
+    estimada. Inclui o que o Compras ainda não aprovou (confirmado = false)."""
+    padrao_ini, padrao_fim = programacao_service.periodo_padrao(datetime.now(config.TZ).date())
+    return programacao_service.programacao(db, inicio or padrao_ini, fim or padrao_fim, local)
+
+
+@router.get("/aguardando-destino", response_model=list[AgendamentoOut])
+def aguardando_destino(data: Optional[date] = None, db: Session = Depends(get_db)):
+    """Aprovados por Compras que ainda não têm baia definida."""
+    return [out(a) for a in svc.aguardando_destino(db, data)]
 
 
 @router.get("/fila", response_model=list[AgendamentoOut])
@@ -28,7 +50,7 @@ def balcao(dados: BalcaoCreate, db: Session = Depends(get_db)):
 
 @router.put("/agendamentos/{ag_id}/destinos", response_model=AgendamentoOut)
 def destinos(ag_id: int, dados: DestinosIn, db: Session = Depends(get_db)):
-    return out(svc.definir_destinos(db, ag_id, dados.locais))
+    return out(svc.definir_destinos(db, ag_id, dados.destinos))
 
 
 @router.post("/agendamentos/{ag_id}/chegada", response_model=AgendamentoOut)

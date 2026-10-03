@@ -5,7 +5,7 @@ from typing import Optional
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from app.models import (
-    Acondicionamento, Horario, LocalFisico, MotivoNaoRecebimento,
+    Acondicionamento, Horario, LocalFisico, MotivoNaoRecebimento, Origem,
     OrigemAgendamento, StatusAgendamento,
 )
 
@@ -32,6 +32,33 @@ class FornecedorOut(BaseModel):
     nome: str
     cnpj: str
     codigo: Optional[str]
+    origem_dado: Origem
+
+
+# ---------- Cadastros: baias e equipamentos ----------
+
+class BaiaCreate(BaseModel):
+    local: LocalFisico
+    codigo: str = Field(min_length=1, max_length=20)
+    nome: str = Field(min_length=1)
+
+
+class BaiaOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    local: LocalFisico
+    codigo: str
+    nome: str
+    ativa: bool
+
+
+class EquipamentoOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    codigo: str
+    nome: str
+    quantidade: Optional[int]
+    observacao: Optional[str]
 
 
 # ---------- Nota fiscal ----------
@@ -90,23 +117,29 @@ class RejeicaoIn(BaseModel):
     observacao: Optional[str] = None
 
 
+class DestinoIn(BaseModel):
+    local: LocalFisico
+    baia_id: Optional[int] = None    # opcional: com uma única doca ativa, o sistema escolhe
+
 class DestinosIn(BaseModel):
-    locais: list[LocalFisico] = Field(min_length=1)
+    """Logo após o Compras aprovar, o armazém pré-programa onde o caminhão vai parar.
+    Pode ser mais de um armazém (uma nota com itens de grupos diferentes)."""
+    destinos: list[DestinoIn] = Field(min_length=1)
 
 
 class EntradaIn(BaseModel):
     local: LocalFisico
 
 
-class Equipamento(BaseModel):
-    tipo: str          # ex.: EMPILHADEIRA_GAS, PALETEIRA_MANUAL, TRATOR
-    qtd: int = Field(ge=1)
+class EquipamentoUsado(BaseModel):
+    codigo: str        # do catálogo GET /cadastros/equipamentos (ex.: EMPILHADEIRA_GAS)
+    qtd: int = Field(default=1, ge=1)
 
 
 class SaidaIn(BaseModel):
     local: LocalFisico
     qtd_chapas: int = Field(ge=0)
-    equipamentos: list[Equipamento] = []
+    equipamentos: list[EquipamentoUsado] = []
 
 
 class ReagendamentoChuvaIn(BaseModel):
@@ -118,6 +151,7 @@ class DescargaOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: int
     local: LocalFisico
+    baia: Optional[BaiaOut]
     horario_entrada: Optional[datetime]
     horario_saida: Optional[datetime]
     qtd_chapas: Optional[int]
@@ -129,6 +163,7 @@ class AgendamentoOut(BaseModel):
     id: int
     fornecedor_id: int
     fornecedor: FornecedorOut
+    origem_dado: Origem
     nota_fiscal_id: Optional[int]
     data: date
     horario: Horario
@@ -167,3 +202,50 @@ class SlotDisponibilidade(BaseModel):
     # Preenchidos quando a consulta é para uma nota de adubo
     prob_chuva: Optional[int] = None
     situacao_chuva: Optional[str] = None   # BLOQUEADO | RISCO | SEM_RISCO
+    
+    
+
+# ---------- Programação antecipada (visão do armazém para os próximos dias) ----------
+
+class CaminhaoPrevisto(BaseModel):
+    agendamento_id: int
+    data: date
+    horario: Horario
+    status: StatusAgendamento
+    confirmado: bool                 # False = Compras ainda não aprovou (previsão)
+    prioritario: bool
+    fornecedor: str
+    nf_numero: Optional[str]
+    acondicionamento: Acondicionamento
+    peso_kg: Optional[Decimal]
+    volumes_estimados: Optional[int]
+    locais: list[LocalFisico]
+    locais_sugeridos: bool           # True = armazém sugerido pelo sistema, ainda não definido
+    doca: Optional[str]
+    chapas_norma: Optional[int]
+    equipamento_sugerido: Optional[str]
+    minutos_caminhao: int            # até liberar o caminhão
+    minutos_equipe: int              # até a equipe ficar livre (ciclo completo)
+    carga_adubo: bool
+    prob_chuva: Optional[int]
+    situacao_chuva: Optional[str]
+
+
+class ResumoDiaLocal(BaseModel):
+    data: date
+    local: Optional[LocalFisico]     # None = armazém ainda não definido nem sugerido
+    caminhoes: int
+    confirmados: int
+    peso_total_kg: Decimal
+    chapa_minutos: int               # soma de (chapas da norma x minutos de equipe)
+    tem_batido: bool
+    chapas_recomendados: int
+    caminhoes_com_risco_chuva: int
+
+
+class Programacao(BaseModel):
+    inicio: date
+    fim: date
+    premissas: list[str]
+    resumo: list[ResumoDiaLocal]
+    caminhoes: list[CaminhaoPrevisto]
