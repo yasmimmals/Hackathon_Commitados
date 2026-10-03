@@ -1,0 +1,13 @@
+@import "tailwindcss";
+@import "../styles/header.css";
+
+/*
+ * Cores da identidade COCAPEC. Viram utilitários do Tailwind:
+ * bg-marca, text-marca, ring-marca, hover:bg-marca-escuro, bg-fundo...
+ */
+@theme {
+  --color-marca: #0d7d48;
+  --color-marca-escuro: #0c693e;
+  --color-marca-profundo: #0b5c36;
+  --color-fundo: #f3f5f7;
+}

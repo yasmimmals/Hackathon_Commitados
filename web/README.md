@@ -1,36 +1,66 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# COCAPEC • Agendamento de Cargas (front-end)
 
-## Getting Started
-
-First, run the development server:
+Portal Next.js 16 + React Router 7 + Tailwind CSS 4.
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev    # http://localhost:3000
+npm run build
+npm run lint
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Login de demonstração: use um dos e-mails listados na tela de login (qualquer senha).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Como a aplicação funciona
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+O Next.js serve uma única rota coringa (`src/app/[[...rota]]/page.tsx`) que monta
+uma SPA no navegador. Toda a navegação, autenticação e permissão por perfil
+ficam no React Router (`src/routes/AppRotas.tsx`).
 
-## Learn More
+| Perfil      | Prefixo        |
+| ----------- | -------------- |
+| Fornecedor  | `/fornecedor/*` |
+| Compras     | `/compras/*`    |
+| Armazém     | `/armazem/*`    |
 
-To learn more about Next.js, take a look at the following resources:
+## Estrutura
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```
+src/
+├── app/                    # Entrada do Next (layout raiz, CSS global, rota coringa)
+├── routes/                 # Mapa de rotas, rota protegida, telas em construção
+├── features/               # Uma pasta por funcionalidade
+│   ├── auth/               # Login, contexto de sessão, perfis e menus
+│   ├── agendamentos/       # Meus Agendamentos
+│   ├── agendar-na-hora/    # Encaixe de pátio
+│   ├── boletim/            # Boletim agrometeorológico (API Open-Meteo)
+│   └── suporte-balanca/    # FAQ e chamados para a balança
+├── shared/                 # Reutilizável entre features
+│   ├── components/layout/  # Header, Footer, LayoutPerfil
+│   ├── components/ui/      # Campo, MensagemStatus, EmConstrucao
+│   ├── hooks/              # useMensagemTemporaria
+│   └── utils/              # placa, formulário
+└── styles/                 # CSS que não é Tailwind (header)
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Cada feature segue o mesmo formato:
 
-## Deploy on Vercel
+```
+features/<nome>/
+├── <TelaPrincipal>.tsx     # Componente de página (estado e regras da tela)
+├── types.ts                # Tipos da feature
+├── components/             # Componentes visuais da tela
+├── data/                   # Dados mock / estáticos
+├── services/               # Chamadas externas (APIs)
+└── utils/                  # Funções puras (validação, filtros, formatação)
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Convenções
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **Imports** com alias `@/` (aponta para `src/`) entre pastas; relativos dentro da mesma feature.
+- **Cores da marca**: use os tokens do tema (`bg-marca`, `text-marca`, `hover:bg-marca-escuro`,
+  `bg-marca-profundo`, `bg-fundo`) definidos em `src/app/globals.css`, nunca o hex direto.
+- **Nova tela**: crie a pasta em `features/`, registre a rota em `routes/AppRotas.tsx`
+  e o item de menu em `features/auth/perfis.ts`.
+- **Tela ainda não pronta**: adicione em `routes/telasEmConstrucao.ts` e use `<EmConstrucao />`.
+- Antes de algo virar compartilhado em `shared/`, ele deve ser usado por pelo menos duas features.
