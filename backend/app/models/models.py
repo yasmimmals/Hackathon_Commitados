@@ -89,6 +89,32 @@ class Fornecedor(Base):
     agendamentos = relationship("Agendamento", back_populates="fornecedor")
 
 
+class NotaFiscal(Base):
+    """Nota enviada pelo fornecedor (XML ou PDF), lida antes de agendar.
+    O agendamento nasce dela: fornecedor, peso e tipo de carga vêm daqui."""
+    __tablename__ = "notas_fiscais"
+
+    id = Column(Integer, primary_key=True)
+    chave = Column(String(44), unique=True, index=True, nullable=False)
+    numero = Column(String(20))
+    serie = Column(String(5))
+    data_emissao = Column(Date)
+    fornecedor_id = Column(Integer, ForeignKey("fornecedores.id"), nullable=False, index=True)
+    valor_total = Column(Numeric(14, 2))
+    peso_bruto_kg = Column(Numeric(12, 3))
+    peso_liquido_kg = Column(Numeric(12, 3))
+    volumes = Column(Integer)
+    especie = Column(String)
+    carga_adubo = Column(Boolean, nullable=False, default=False, server_default="false")  # pátio aberto
+    itens = Column(JSONB, nullable=False, server_default="[]")
+    alertas = Column(JSONB, nullable=False, server_default="[]")
+    formato = Column(String(3), nullable=False)                    # xml | pdf
+    arquivo_url = Column(String, nullable=False)
+    criado_em = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+    fornecedor = relationship("Fornecedor")
+
+
 class Agendamento(Base):
     """Um caminhão. Tudo que é do caminhão como um todo fica aqui."""
     __tablename__ = "agendamentos"
@@ -101,7 +127,10 @@ class Agendamento(Base):
     acondicionamento = Column(_enum(Acondicionamento), nullable=False)
     peso_kg = Column(Numeric(12, 3))                 # < 500 kg dispensa chapa
 
-    # Nota fiscal (a IA preenche a partir do XML/PDF)
+    # Nota fiscal (lida do XML/PDF enviado pelo fornecedor)
+    nota_fiscal_id = Column(Integer, ForeignKey("notas_fiscais.id"), index=True)
+    carga_adubo = Column(Boolean, nullable=False, default=False, server_default="false")  # regra de chuva
+    prob_chuva = Column(Integer)          # % prevista para o horário, no momento do agendamento
     nf_arquivo_url = Column(String)
     nf_numero = Column(String(20))
     nf_chave = Column(String(44), index=True)
@@ -127,8 +156,9 @@ class Agendamento(Base):
     cancelado_em = Column(DateTime(timezone=True))   # para auditar a regra das 24h
 
     fornecedor = relationship("Fornecedor", back_populates="agendamentos")
+    nota_fiscal = relationship("NotaFiscal")
     descargas = relationship("Descarga", back_populates="agendamento",
-                             cascade="all, delete-orphan")
+                             cascade="all, delete-orphan", order_by="Descarga.id")
     reagendado_de = relationship("Agendamento", remote_side=[id])
 
 
