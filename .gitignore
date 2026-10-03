@@ -1,0 +1,10 @@
+.env
+__pycache__/
+*.pyc
+.venv/
+node_modules/
+# Dados da Cocapec: proibido versionar (LEIA-ME)
+dados/
+DADOS_HACKATHON_2026/
+*.xlsx
+*.csv
