@@ -14,7 +14,7 @@ export default function EmConstrucao({ titulo, acoes }: EmConstrucaoProps) {
           <Construction className="h-5 w-5" />
         </span>
         <div>
-          <h1 className="text-xl font-extrabold tracking-tight text-gray-900">{titulo}</h1>
+          <h1 className="titulo-pagina text-2xl">{titulo}</h1>
           <p className="text-sm text-gray-500">Tela em construção — rota e permissão já configuradas.</p>
         </div>
       </div>

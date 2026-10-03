@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { ChevronDown, Menu, X } from "lucide-react";
 import { MENU, SITE_COCAPEC } from "../constants";
-import Logo from "./Logo";
+import LogoCocapec from "@/shared/components/ui/LogoCocapec";
 
 const CLASSE_CONTATO =
   "inline-flex items-center justify-center rounded-full bg-site-verde px-12 py-3 text-xs font-bold text-white shadow-sm transition-colors hover:bg-site-verde-escuro focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-site-verde focus-visible:ring-offset-2";
@@ -14,7 +14,7 @@ export default function Navegacao() {
     <header className="bg-white shadow-[0_2px_6px_rgba(0,0,0,0.08)]">
       <div className="mx-auto flex max-w-[1300px] items-center justify-between gap-6 px-4 py-2.5">
         <Link to="/" aria-label="COCAPEC — página inicial" className="rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-site-azul">
-          <Logo />
+          <LogoCocapec />
         </Link>
 
         <nav aria-label="Principal" className="hidden items-center gap-7 lg:flex">

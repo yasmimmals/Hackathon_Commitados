@@ -121,14 +121,14 @@ export default function MeusAgendamentos() {
 
   return (
     <div>
-      <div className="-mx-4 -mt-6 mb-6 sm:-mx-[22px]">
+      <div className="-mx-4 -mt-6 mb-6">
         <AlertBanner />
       </div>
       <PageHeader onExport={handleExport} />
       <MensagemStatus mensagem={feedback} />
       <MensagemStatus mensagem={erroAcao} tom="erro" />
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
         <section aria-label="Lista de agendamentos" aria-busy={carga.tipo === "carregando"}>
           <StatusTabs tabs={tabs} active={tab} onChange={setTab} search={search} onSearch={setSearch} />
           <div id="agendamentos-panel" role="tabpanel" aria-labelledby={`tab-${tab}`} className="space-y-4">

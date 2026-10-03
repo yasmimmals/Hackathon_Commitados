@@ -1,20 +1,41 @@
 @import "tailwindcss";
-@import "../styles/header.css";
 
 /*
  * Cores da identidade COCAPEC. Viram utilitários do Tailwind:
  * bg-marca, text-marca, ring-marca, hover:bg-marca-escuro, bg-fundo...
  */
 @theme {
-  --color-marca: #0d7d48;
-  --color-marca-escuro: #0c693e;
-  --color-marca-profundo: #0b5c36;
-  --color-fundo: #f3f5f7;
+  /* Verde COCAPEC (ações e botões), um tom abaixo do site para manter contraste com texto branco. */
+  --color-marca: #3f8f22;
+  --color-marca-escuro: #33761b;
+  --color-marca-profundo: #285e15;
+  --color-fundo: #ececec;
 
-  /* Site institucional (página inicial) */
+  /* Cores do site institucional */
   --color-site-azul: #0a5aa4;
   --color-site-azul-escuro: #084a87;
   --color-site-verde: #4ea72e;
   --color-site-verde-escuro: #3f8f22;
   --color-site-amarelo: #f2b705;
+}
+
+/* Títulos no padrão do site: azul, itálico e sublinhado amarelo. */
+@utility titulo-pagina {
+  width: fit-content;
+  border-bottom: 3px solid var(--color-site-amarelo);
+  padding-bottom: 0.15rem;
+  font-size: 1.75rem;
+  line-height: 1.2;
+  font-weight: 900;
+  font-style: italic;
+  letter-spacing: -0.01em;
+  color: var(--color-site-azul);
+}
+
+@utility titulo-secao {
+  font-size: 1.25rem;
+  line-height: 1.3;
+  font-weight: 800;
+  font-style: italic;
+  color: var(--color-site-azul);
 }

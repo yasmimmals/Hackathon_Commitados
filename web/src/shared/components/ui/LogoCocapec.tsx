@@ -1,5 +1,5 @@
 /** Marca COCAPEC desenhada em SVG/CSS (o projeto ainda não tem os arquivos de logo). */
-export default function Logo() {
+export default function LogoCocapec() {
   return (
     <span className="flex items-center gap-2">
       <svg viewBox="0 0 40 40" className="h-10 w-10 shrink-0" aria-hidden>

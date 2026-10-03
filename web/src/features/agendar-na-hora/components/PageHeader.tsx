@@ -12,7 +12,7 @@ export default function PageHeader() {
             <MapPin className="h-3.5 w-3.5" aria-hidden /> Portaria &amp; Balança 01
           </span>
         </div>
-        <h1 className="text-2xl font-extrabold tracking-tight text-gray-900 md:text-3xl">
+        <h1 className="titulo-pagina">
           Agendamento na Hora{" "}
           <span className="text-base font-medium text-gray-500 md:text-lg">(Encaixe de Pátio)</span>
         </h1>

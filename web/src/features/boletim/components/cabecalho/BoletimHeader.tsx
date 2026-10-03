@@ -8,7 +8,7 @@ export default function BoletimHeader({ atualizadoEm }: { atualizadoEm: string }
       <div>
         <Breadcrumb />
         <div className="flex flex-wrap items-center gap-2">
-          <h1 className="text-2xl font-extrabold tracking-tight text-gray-900 md:text-3xl">
+          <h1 className="titulo-pagina">
             Boletim Agrometeorológico &amp; Impacto Operacional
           </h1>
           <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700 ring-1 ring-emerald-200">

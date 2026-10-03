@@ -39,7 +39,7 @@ export default function YardEntryForm({
   };
 
   return (
-    <section aria-labelledby="formulario-titulo" className="mx-auto max-w-4xl rounded-xl border border-gray-200 bg-white p-5 shadow-sm md:p-6">
+    <section aria-labelledby="formulario-titulo" className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm md:p-6">
       <header className="mb-5 flex items-center justify-between gap-2 border-b border-gray-100 pb-4">
         <h2 id="formulario-titulo" className="flex items-center gap-2 text-lg font-bold text-gray-900">
           <Zap className="h-5 w-5 text-marca" aria-hidden />

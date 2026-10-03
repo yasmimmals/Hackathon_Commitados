@@ -147,7 +147,7 @@ export default function AgendarEntrega() {
   return (
     <div>
       <PageHeader />
-      <form noValidate onSubmit={submit} className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start">
+      <form noValidate onSubmit={submit} className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start">
         <div className="space-y-4">
           <EscolhaHorario
             data={entrega.data}

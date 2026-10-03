@@ -3,7 +3,7 @@ import { Clock, TriangleAlert } from "lucide-react";
 export default function AlertBanner() {
   return (
     <div role="region" aria-label="Alerta meteorológico" className="w-full border-b border-amber-200 bg-amber-50">
-      <div className="mx-auto flex max-w-[1440px] items-center justify-between gap-3 px-4 py-2 text-xs text-amber-900 sm:px-[22px] md:text-sm">
+      <div className="mx-auto flex max-w-[1300px] items-center justify-between gap-3 px-4 py-2 text-xs text-amber-900 md:text-sm">
         <p className="flex items-center gap-2">
           <TriangleAlert className="h-4 w-4 shrink-0 text-amber-600" aria-hidden />
           <span>

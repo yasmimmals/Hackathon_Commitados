@@ -11,7 +11,7 @@ export default function PageHeader() {
           <span aria-hidden>›</span>
           <span>Nova Entrega</span>
         </nav>
-        <h1 className="text-2xl font-extrabold tracking-tight text-gray-900 md:text-3xl">Agendar Entrega</h1>
+        <h1 className="titulo-pagina">Agendar Entrega</h1>
         <p className="mt-1 max-w-prose text-sm text-gray-600">
           Reserve uma janela de descarga no Terminal Franca/SP. A Mesa de Compras valida a nota fiscal antes da liberação.
         </p>

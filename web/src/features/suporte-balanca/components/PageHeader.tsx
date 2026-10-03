@@ -21,7 +21,7 @@ export default function PageHeader({ busca, onBusca, onAbrirChamado }: PageHeade
           <p className="mb-1 text-[11px] font-bold uppercase tracking-wide text-marca">
             Terminal Central Franca/SP • Logística &amp; Recebimento
           </p>
-          <h1 className="flex items-center gap-2 text-2xl font-extrabold tracking-tight text-gray-900 md:text-3xl">
+          <h1 className="titulo-pagina flex items-center gap-2">
             <HelpCircle className="h-6 w-6 text-marca" aria-hidden />
             Dúvidas Frequentes &amp; Suporte Operacional da Balança
           </h1>

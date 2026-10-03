@@ -11,7 +11,7 @@ export default function PageHeader({ onExport }: { onExport?: () => void }) {
           <span aria-hidden>›</span>
           <span>Terminal Franca/SP</span>
         </nav>
-        <h1 className="text-2xl font-extrabold tracking-tight text-gray-900 md:text-3xl">Meus Agendamentos</h1>
+        <h1 className="titulo-pagina">Meus Agendamentos</h1>
         <p className="mt-1 max-w-prose text-sm text-gray-600">
           Consulte e gerencie suas janelas de descarregamento na cooperativa de forma simples e pontual.
         </p>
