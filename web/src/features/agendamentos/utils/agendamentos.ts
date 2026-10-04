@@ -1,20 +1,4 @@
-import { listarAgendamentos, listarFornecedores, type Agendamento } from "@/shared/services";
 import type { Appointment } from "../types";
-
-/** "Empresa Ltda (14.285.390/0001-44)" → "14285390000144" */
-export function cnpjDaEmpresa(empresa?: string) {
-  const encontrado = empresa?.match(/\d{2}\.?\d{3}\.?\d{3}\/?\d{4}-?\d{2}/)?.[0];
-  return encontrado?.replace(/\D/g, "");
-}
-
-/**
- * Agendamentos do fornecedor logado. O fornecedor é cadastrado pelo backend
- * ao ler a primeira nota fiscal; sem cadastro ainda, não há agendamentos.
- */
-export async function listarDoFornecedor(cnpj: string): Promise<Agendamento[]> {
-  const fornecedor = (await listarFornecedores({ q: cnpj })).find((f) => f.cnpj === cnpj);
-  return fornecedor ? listarAgendamentos({ fornecedor_id: fornecedor.id }) : [];
-}
 
 /** Texto pesquisável de um agendamento (código, produto, NF, placa, motorista...). */
 function textoPesquisavel(a: Appointment) {

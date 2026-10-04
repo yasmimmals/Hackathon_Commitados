@@ -1,10 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { LoaderCircle, ServerCrash } from "lucide-react";
-import { useAuth } from "@/features/auth/AuthContext";
 import MensagemStatus from "@/shared/components/ui/MensagemStatus";
 import { useMensagemTemporaria } from "@/shared/hooks/useMensagemTemporaria";
-import { cancelarAgendamento, mensagemDeErro } from "@/shared/services";
+import { cancelarAgendamento, listarAgendamentos, mensagemDeErro } from "@/shared/services";
 import AlertBanner from "./components/AlertBanner";
 import AppointmentCard from "./components/AppointmentCard";
 import EmptyState from "./components/EmptyState";
@@ -13,14 +12,12 @@ import SidebarWidgets from "./components/SidebarWidgets";
 import StatusTabs from "./components/StatusTabs";
 import { TAB_LABELS } from "./constants";
 import type { AppointmentAction, ListedAppointment, Tab, TabKey } from "./types";
-import { cnpjDaEmpresa, correspondeBusca, exportarCsv, listarDoFornecedor } from "./utils/agendamentos";
+import { correspondeBusca, exportarCsv } from "./utils/agendamentos";
 import { mapearAgendamento, ordenarPorData } from "./utils/mapearAgendamento";
 
 type Carga = { tipo: "carregando" } | { tipo: "erro"; mensagem: string } | { tipo: "ok" };
 
 export default function MeusAgendamentos() {
-  const { usuario } = useAuth();
-  const cnpj = cnpjDaEmpresa(usuario?.empresa);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const query = searchParams.get("q") ?? "";
@@ -40,8 +37,8 @@ export default function MeusAgendamentos() {
 
   const carregar = useCallback(() => {
     let ativo = true;
-    const pedido = cnpj ? listarDoFornecedor(cnpj) : Promise.reject(new Error("Usuário sem CNPJ cadastrado."));
-    pedido.then(
+    // O backend devolve só os agendamentos da empresa do fornecedor logado.
+    listarAgendamentos().then(
       (lista) => {
         if (!ativo) return;
         setAppointments([...lista].sort(ordenarPorData).map(mapearAgendamento));
@@ -52,7 +49,7 @@ export default function MeusAgendamentos() {
     return () => {
       ativo = false;
     };
-  }, [cnpj]);
+  }, []);
 
   useEffect(carregar, [carregar]);
 

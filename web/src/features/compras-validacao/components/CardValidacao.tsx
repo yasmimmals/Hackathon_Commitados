@@ -118,7 +118,7 @@ export default function CardValidacao({ agendamento: ag, analista, onConcluido }
 
       <div className="px-5 py-4">
         {ag.nota_fiscal_id ? (
-          <DetalhesNota notaFiscalId={ag.nota_fiscal_id} />
+          <DetalhesNota agendamentoId={ag.id} />
         ) : (
           <p className="text-sm text-gray-600">
             Agendamento sem nota vinculada{ag.nf_numero ? ` (NF-e ${ag.nf_numero})` : ""}.

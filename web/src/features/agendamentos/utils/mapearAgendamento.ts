@@ -42,6 +42,7 @@ const ROTULO_MOTIVO: Record<MotivoNaoRecebimento, string> = {
   SEM_VAGA: "Sem vaga no horário",
   CHUVA: "Chuva no dia da descarga",
   DIVERGENCIA_NF_PEDIDO: "Divergência entre a nota fiscal e o pedido de compra",
+  SEM_PEDIDO: "Sem pedido de compra para esta entrega",
   REJEITADO_COMPRAS: "Recusado pela Mesa de Compras",
   NAO_COMPARECEU: "Veículo não compareceu",
   CANCELADO_FORNECEDOR: "Cancelado pelo fornecedor",

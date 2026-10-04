@@ -1,42 +1,47 @@
-import type { LocalFisico } from "@/shared/services";
-import { LOCAIS } from "@/shared/utils/locais";
-import type { Boletim, ResumoBoletim } from "@/features/boletim-producao/types";
-import { calcularResumo } from "@/features/boletim-producao/utils/calculo";
+import type { Boletim } from "@/shared/services";
+import { ROTULO_LOCAL } from "@/shared/utils/locais";
 
 /**
- * Sobra ou falta de chapas de um boletim, em diárias e em R$.
+ * Sobra ou falta de chapas de um boletim, em diárias e em R$ (valores do backend).
  * Diárias necessárias = produção ÷ piso (a equipe "paga" pela própria produção).
  * Saldo > 0: sobra de chapas (a cooperativa paga complemento).
  * Saldo < 0: falta de chapas (produção acima do que a equipe escalada cobriria no piso).
  */
 export type IndicadorBoletim = {
+  id: number;
   data: string;
-  local: LocalFisico;
+  /** Armazém do boletim, ou GERAL no padrão da Cocapec (um boletim por dia). */
+  chave: string;
+  rotulo: string;
   fechado: boolean;
   producao: number;
   diarias: number;
   necessarias: number;
-  saldoDiarias: number;
   saldoReais: number;
 };
 
+export const rotuloDoGrupo = (b: Pick<Boletim, "local">) => (b.local ? ROTULO_LOCAL[b.local] : "Geral (Franca)");
+
 export function indicadorDoBoletim(b: Boletim): IndicadorBoletim {
-  const r: ResumoBoletim = b.status === "FECHADO" && b.resumo ? b.resumo : calcularResumo(b);
-  const necessarias = r.piso ? r.producaoTotal / r.piso : 0;
+  const producao = Number(b.calculo.producao_total);
+  const diarias = Number(b.calculo.diarias_equivalentes);
+  const piso = Number(b.calculo.piso_diaria);
   return {
+    id: b.id,
     data: b.data,
-    local: b.local,
+    chave: b.local ?? "GERAL",
+    rotulo: rotuloDoGrupo(b),
     fechado: b.status === "FECHADO",
-    producao: r.producaoTotal,
-    diarias: r.diariasEquivalentes,
-    necessarias,
-    saldoDiarias: r.diariasEquivalentes - necessarias,
-    saldoReais: r.diariasEquivalentes * r.piso - r.producaoTotal,
+    producao,
+    diarias,
+    necessarias: piso ? producao / piso : 0,
+    saldoReais: diarias * piso - producao,
   };
 }
 
-export type ResumoArmazem = {
-  local: LocalFisico;
+export type ResumoGrupo = {
+  chave: string;
+  rotulo: string;
   boletins: number;
   diarias: number;
   necessarias: number;
@@ -45,14 +50,16 @@ export type ResumoArmazem = {
   saldoReais: number;
 };
 
-/** Agrega por armazém. Sobra e falta são somadas separadamente (dias diferentes não se anulam na leitura). */
-export function resumirPorArmazem(indicadores: IndicadorBoletim[]): ResumoArmazem[] {
-  return LOCAIS.map((local) => {
-    const doLocal = indicadores.filter((i) => i.local === local);
-    const soma = (f: (i: IndicadorBoletim) => number) => doLocal.reduce((t, i) => t + f(i), 0);
+/** Agrega por armazém (ou Geral). Sobra e falta somadas à parte: dias diferentes não se anulam na leitura. */
+export function resumirPorGrupo(indicadores: IndicadorBoletim[]): ResumoGrupo[] {
+  const grupos = new Map<string, IndicadorBoletim[]>();
+  indicadores.forEach((i) => grupos.set(i.chave, [...(grupos.get(i.chave) ?? []), i]));
+  return [...grupos.entries()].map(([chave, lista]) => {
+    const soma = (f: (i: IndicadorBoletim) => number) => lista.reduce((t, i) => t + f(i), 0);
     return {
-      local,
-      boletins: doLocal.length,
+      chave,
+      rotulo: lista[0].rotulo,
+      boletins: lista.length,
       diarias: soma((i) => i.diarias),
       necessarias: soma((i) => i.necessarias),
       sobraReais: soma((i) => Math.max(0, i.saldoReais)),

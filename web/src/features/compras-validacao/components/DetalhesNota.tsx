@@ -1,9 +1,12 @@
 import { useEffect, useState } from "react";
-import { AlertTriangle, FileText, LoaderCircle } from "lucide-react";
-import { buscarNotaFiscal, mensagemDeErro, type NotaFiscal } from "@/shared/services";
+import { AlertTriangle, CheckCircle2, FileText, LoaderCircle, XCircle } from "lucide-react";
+import { buscarConferencia, mensagemDeErro, type NotaFiscal, type Verificacao } from "@/shared/services";
 import { formatarData, formatarKg, formatarMoeda } from "../utils/formatacao";
 
-type Estado = { tipo: "carregando" } | { tipo: "erro"; mensagem: string } | { tipo: "ok"; nota: NotaFiscal };
+type Estado =
+  | { tipo: "carregando" }
+  | { tipo: "erro"; mensagem: string }
+  | { tipo: "ok"; nota: NotaFiscal; verificacoes: Verificacao[] };
 
 function Dado({ rotulo, valor }: { rotulo: string; valor: string }) {
   return (
@@ -14,19 +17,20 @@ function Dado({ rotulo, valor }: { rotulo: string; valor: string }) {
   );
 }
 
-export default function DetalhesNota({ notaFiscalId }: { notaFiscalId: number }) {
+/** Conferência do Compras: checagens automáticas do backend + a NF-e completa. */
+export default function DetalhesNota({ agendamentoId }: { agendamentoId: number }) {
   const [estado, setEstado] = useState<Estado>({ tipo: "carregando" });
 
   useEffect(() => {
     let ativo = true;
-    buscarNotaFiscal(notaFiscalId).then(
-      (nota) => ativo && setEstado({ tipo: "ok", nota }),
+    buscarConferencia(agendamentoId).then(
+      (c) => ativo && setEstado({ tipo: "ok", nota: c.nota, verificacoes: c.verificacoes }),
       (erro) => ativo && setEstado({ tipo: "erro", mensagem: mensagemDeErro(erro) }),
     );
     return () => {
       ativo = false;
     };
-  }, [notaFiscalId]);
+  }, [agendamentoId]);
 
   if (estado.tipo === "carregando") {
     return (
@@ -39,9 +43,34 @@ export default function DetalhesNota({ notaFiscalId }: { notaFiscalId: number })
     return <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">Não foi possível carregar a nota: {estado.mensagem}</p>;
   }
 
-  const { nota } = estado;
+  const { nota, verificacoes } = estado;
   return (
     <div className="space-y-4">
+      {verificacoes.length > 0 && (
+        <div>
+          <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-gray-500">Conferência automática</p>
+          <ul className="grid gap-1.5 sm:grid-cols-2">
+            {verificacoes.map((v) => (
+              <li
+                key={v.item}
+                className={`flex items-start gap-2 rounded-lg px-3 py-2 text-xs ring-1 ${
+                  v.ok ? "bg-emerald-50 text-emerald-900 ring-emerald-100" : "bg-red-50 text-red-900 ring-red-100"
+                }`}
+              >
+                {v.ok ? (
+                  <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-label="Ok" />
+                ) : (
+                  <XCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-label="Divergência" />
+                )}
+                <span>
+                  <strong className="font-semibold">{v.item}</strong>
+                  <span className="block opacity-80">{v.detalhe}</span>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
       <h4 className="flex items-center gap-2 text-sm font-bold text-site-azul">
         <FileText className="h-4 w-4" aria-hidden />
         NF-e {nota.numero ?? "s/ nº"}

@@ -1,8 +1,6 @@
 import { useState } from "react";
-import type { LocalFisico } from "@/shared/services";
-import { ROTULO_LOCAL } from "@/shared/utils/locais";
-import { moeda } from "@/features/boletim-producao/utils/calculo";
-import type { ResumoArmazem } from "../utils/indicadores";
+import { moeda } from "@/shared/utils/formatacao";
+import type { ResumoGrupo } from "../utils/indicadores";
 
 /** Par divergente validado (dataviz: blue ↔ red, CVD ΔE 21.6, contraste ≥ 3:1). */
 export const COR_SOBRA = "#e34948";
@@ -12,8 +10,8 @@ const sinal = (v: number) => (v > 0 ? `+${moeda(v)}` : v < 0 ? `−${moeda(-v)}`
 const leitura = (v: number) => (v > 0 ? "sobra de chapas" : v < 0 ? "falta de chapas" : "equipe ajustada");
 
 /** Saldo em R$ por armazém, em barras divergentes a partir do zero (sobra à direita, falta à esquerda). */
-export default function GraficoSaldo({ resumo }: { resumo: ResumoArmazem[] }) {
-  const [ativo, setAtivo] = useState<LocalFisico | null>(null);
+export default function GraficoSaldo({ resumo }: { resumo: ResumoGrupo[] }) {
+  const [ativo, setAtivo] = useState<string | null>(null);
   const maximo = Math.max(1, ...resumo.map((r) => Math.abs(r.saldoReais)));
 
   return (
@@ -35,26 +33,26 @@ export default function GraficoSaldo({ resumo }: { resumo: ResumoArmazem[] }) {
         {resumo.map((r) => {
           const largura = (Math.abs(r.saldoReais) / maximo) * 50;
           const positivo = r.saldoReais >= 0;
-          const descricao = `${ROTULO_LOCAL[r.local]}: ${sinal(r.saldoReais)}, ${leitura(r.saldoReais)}. Sobra ${moeda(r.sobraReais)}, falta ${moeda(r.faltaReais)}, ${r.boletins} boletim(ns).`;
+          const descricao = `${r.rotulo}: ${sinal(r.saldoReais)}, ${leitura(r.saldoReais)}. Sobra ${moeda(r.sobraReais)}, falta ${moeda(r.faltaReais)}, ${r.boletins} boletim(ns).`;
           return (
             <li
-              key={r.local}
+              key={r.chave}
               tabIndex={0}
               aria-label={descricao}
-              onPointerEnter={() => setAtivo(r.local)}
+              onPointerEnter={() => setAtivo(r.chave)}
               onPointerLeave={() => setAtivo(null)}
-              onFocus={() => setAtivo(r.local)}
+              onFocus={() => setAtivo(r.chave)}
               onBlur={() => setAtivo(null)}
               className="grid grid-cols-[90px_minmax(0,1fr)_88px] items-center gap-2 rounded-lg px-1 py-2 hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-site-azul sm:grid-cols-[170px_minmax(0,1fr)_110px] sm:gap-3"
             >
-              <span className="truncate text-xs text-gray-700 sm:text-sm">{ROTULO_LOCAL[r.local]}</span>
+              <span className="truncate text-xs text-gray-700 sm:text-sm">{r.rotulo}</span>
               <div className="relative h-6">
                 {/* Linha do zero */}
                 <span className="absolute inset-y-0 left-1/2 w-px bg-gray-300" aria-hidden />
                 {r.saldoReais !== 0 && (
                   <span
                     aria-hidden
-                    className={`absolute top-0.5 h-5 ${positivo ? "rounded-r" : "rounded-l"} ${ativo === r.local ? "brightness-110" : ""}`}
+                    className={`absolute top-0.5 h-5 ${positivo ? "rounded-r" : "rounded-l"} ${ativo === r.chave ? "brightness-110" : ""}`}
                     style={{
                       background: positivo ? COR_SOBRA : COR_FALTA,
                       width: `${largura}%`,
@@ -62,13 +60,13 @@ export default function GraficoSaldo({ resumo }: { resumo: ResumoArmazem[] }) {
                     }}
                   />
                 )}
-                {ativo === r.local && (
+                {ativo === r.chave && (
                   <span
                     role="tooltip"
                     className="pointer-events-none absolute bottom-full left-1/2 z-10 mb-1 w-max max-w-[260px] -translate-x-1/2 rounded-lg bg-gray-900 px-3 py-2 text-xs text-white shadow-lg"
                   >
                     <strong className="block text-sm">{sinal(r.saldoReais)}</strong>
-                    <span className="block text-gray-300">{ROTULO_LOCAL[r.local]} • {leitura(r.saldoReais)}</span>
+                    <span className="block text-gray-300">{r.rotulo} • {leitura(r.saldoReais)}</span>
                     <span className="block text-gray-300">Sobra {moeda(r.sobraReais)} • Falta {moeda(r.faltaReais)}</span>
                   </span>
                 )}

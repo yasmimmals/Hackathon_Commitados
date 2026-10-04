@@ -1,48 +1,57 @@
-import { useMemo, useState } from "react";
-import { BarChart3, Info } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import type { LocalFisico } from "@/shared/services";
+import { BarChart3, Info, LoaderCircle, ServerCrash } from "lucide-react";
+import { listarBoletins, mensagemDeErro, type Boletim } from "@/shared/services";
+import { dataBr, decimal, moeda } from "@/shared/utils/formatacao";
 import { dataLocalIso } from "@/shared/utils/janelas";
-import { LOCAIS, ROTULO_LOCAL } from "@/shared/utils/locais";
-import { PISO_DIARIA } from "@/features/boletim-producao/constants";
-import { listarBoletins } from "@/features/boletim-producao/services/boletimStore";
-import { decimal, moeda } from "@/features/boletim-producao/utils/calculo";
 import GraficoSaldo from "./components/GraficoSaldo";
-import { indicadorDoBoletim, resumirPorArmazem } from "./utils/indicadores";
+import { indicadorDoBoletim, resumirPorGrupo } from "./utils/indicadores";
 
-const formatarData = (iso: string) => iso.split("-").reverse().join("/");
 const sinal = (v: number) => (v > 0 ? `+${moeda(v)}` : v < 0 ? `−${moeda(-v)}` : moeda(0));
 
-/** Sobra ou falta de chapas por armazém e período, em R$, a partir dos boletins de produção. */
+type Carga = { chave: string; boletins?: Boletim[]; erro?: string };
+
+/** Sobra ou falta de chapas por armazém e período, em R$, a partir dos boletins do backend. */
 export default function PainelGerencial() {
   const [inicio, setInicio] = useState(() => dataLocalIso(-30));
   const [fim, setFim] = useState(() => dataLocalIso(-1));
-  const [local, setLocal] = useState<LocalFisico | "">("");
+  const [grupo, setGrupo] = useState("");
   const [incluirRascunhos, setIncluirRascunhos] = useState(false);
-  // Os boletins são lidos uma vez por montagem (ficam no navegador até existir rota no backend).
-  const [boletins] = useState(listarBoletins);
+  const [carga, setCarga] = useState<Carga>({ chave: "" });
 
+  const chave = `${inicio}|${fim}`;
+  useEffect(() => {
+    let ativo = true;
+    listarBoletins({ inicio, fim }).then(
+      (boletins) => ativo && setCarga({ chave, boletins }),
+      (erro) => ativo && setCarga({ chave, erro: mensagemDeErro(erro) }),
+    );
+    return () => {
+      ativo = false;
+    };
+  }, [chave, inicio, fim]);
+
+  const atual = carga.chave === chave ? carga : undefined;
+  const boletins = useMemo(() => atual?.boletins ?? [], [atual]);
+
+  const todos = useMemo(() => boletins.map(indicadorDoBoletim), [boletins]);
+  const grupos = useMemo(() => [...new Map(todos.map((i) => [i.chave, i.rotulo])).entries()], [todos]);
   const indicadores = useMemo(
     () =>
-      boletins
-        .filter((b) => b.data >= inicio && b.data <= fim)
-        .filter((b) => incluirRascunhos || b.status === "FECHADO")
-        .filter((b) => !local || b.local === local)
-        .map(indicadorDoBoletim)
-        .sort((a, b) => b.data.localeCompare(a.data) || a.local.localeCompare(b.local)),
-    [boletins, inicio, fim, local, incluirRascunhos],
+      todos
+        .filter((i) => incluirRascunhos || i.fechado)
+        .filter((i) => !grupo || i.chave === grupo)
+        .sort((a, b) => b.data.localeCompare(a.data) || a.rotulo.localeCompare(b.rotulo)),
+    [todos, incluirRascunhos, grupo],
   );
+  const porGrupo = useMemo(() => resumirPorGrupo(indicadores), [indicadores]);
 
-  const porArmazem = useMemo(
-    () => resumirPorArmazem(indicadores).filter((r) => !local || r.local === local),
-    [indicadores, local],
-  );
-
-  const total = porArmazem.reduce(
+  const total = porGrupo.reduce(
     (t, r) => ({ sobra: t.sobra + r.sobraReais, falta: t.falta + r.faltaReais, saldo: t.saldo + r.saldoReais }),
     { sobra: 0, falta: 0, saldo: 0 },
   );
-  const rascunhosForaDoFiltro = boletins.filter((b) => b.status === "RASCUNHO" && b.data >= inicio && b.data <= fim).length;
+  const rascunhosFora = incluirRascunhos ? 0 : todos.filter((i) => !i.fechado).length;
+  const piso = boletins[0] ? Number(boletins[0].calculo.piso_diaria) : null;
 
   const kpis = [
     { rotulo: "Sobra no período", valor: moeda(total.sobra), nota: "pago em complemento" },
@@ -74,10 +83,10 @@ export default function PainelGerencial() {
           </label>
           <label className="text-xs font-semibold text-gray-700">
             Armazém
-            <select value={local} onChange={(e) => setLocal(e.target.value as LocalFisico | "")} className="mt-1 block rounded-full border border-gray-300 bg-white px-3 py-2 text-sm">
+            <select value={grupo} onChange={(e) => setGrupo(e.target.value)} className="mt-1 block rounded-full border border-gray-300 bg-white px-3 py-2 text-sm">
               <option value="">Todos</option>
-              {LOCAIS.map((l) => (
-                <option key={l} value={l}>{ROTULO_LOCAL[l]}</option>
+              {grupos.map(([c, r]) => (
+                <option key={c} value={c}>{r}</option>
               ))}
             </select>
           </label>
@@ -91,98 +100,117 @@ export default function PainelGerencial() {
       <p className="flex items-start gap-2 rounded-2xl bg-sky-50 px-4 py-3 text-xs text-sky-900 ring-1 ring-sky-100">
         <Info className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
         <span>
-          Diárias necessárias = produção ÷ piso ({moeda(PISO_DIARIA)} por diária). Diárias escaladas acima disso são{" "}
-          <strong>sobra</strong> (a cooperativa paga complemento); abaixo, <strong>falta</strong> de chapas. Valores em R$ = diferença × piso.
-          {!incluirRascunhos && rascunhosForaDoFiltro > 0 && ` ${rascunhosForaDoFiltro} boletim(ns) em rascunho no período não entram no cálculo.`}
+          Diárias necessárias = produção ÷ piso{piso != null && ` (${piso.toLocaleString("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 4 })} por diária)`}.
+          Diárias escaladas acima disso são <strong>sobra</strong> (a cooperativa paga complemento); abaixo, <strong>falta</strong> de
+          chapas. Valores em R$ = diferença × piso. A Cocapec lança um boletim geral por dia; com boletins por armazém, o painel separa cada um.
+          {rascunhosFora > 0 && ` ${rascunhosFora} boletim(ns) em rascunho no período não entram no cálculo.`}
         </span>
       </p>
 
-      <dl className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        {kpis.map((k) => (
-          <div key={k.rotulo} className="rounded-2xl bg-white px-4 py-3 shadow-sm">
-            <dt className="text-xs font-semibold text-gray-500">{k.rotulo}</dt>
-            <dd className="text-xl font-semibold text-gray-900 sm:text-2xl">{k.valor}</dd>
-            <dd className="text-[11px] text-gray-500">{k.nota}</dd>
-          </div>
-        ))}
-      </dl>
+      {!atual && (
+        <p role="status" className="flex items-center justify-center gap-2 py-10 text-sm text-gray-500">
+          <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden /> Carregando os boletins…
+        </p>
+      )}
 
-      {indicadores.length === 0 ? (
-        <div className="rounded-3xl bg-white px-4 py-12 text-center shadow-sm">
-          <p className="font-semibold text-gray-800">Nenhum boletim {incluirRascunhos ? "" : "fechado "}no período.</p>
-          <p className="mt-1 text-sm text-gray-500">
-            Feche os boletins em{" "}
-            <Link to="/armazem/boletim" className="font-semibold text-site-azul hover:underline">Boletim de Produção</Link> para ver os indicadores.
-          </p>
+      {atual?.erro && (
+        <div role="alert" className="flex flex-col items-center gap-2 rounded-3xl bg-white px-4 py-10 text-center shadow-sm">
+          <ServerCrash className="h-6 w-6 text-gray-400" aria-hidden />
+          <p className="text-sm text-gray-700">Não foi possível carregar os boletins.</p>
+          <p className="text-xs text-gray-500">{atual.erro}</p>
         </div>
-      ) : (
+      )}
+
+      {atual?.boletins && (
         <>
-          <GraficoSaldo resumo={porArmazem} />
+          <dl className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+            {kpis.map((k) => (
+              <div key={k.rotulo} className="rounded-2xl bg-white px-4 py-3 shadow-sm">
+                <dt className="text-xs font-semibold text-gray-500">{k.rotulo}</dt>
+                <dd className="text-xl font-semibold text-gray-900 sm:text-2xl">{k.valor}</dd>
+                <dd className="text-[11px] text-gray-500">{k.nota}</dd>
+              </div>
+            ))}
+          </dl>
 
-          <section aria-labelledby="tabela-armazem" className="rounded-3xl bg-white p-5 shadow-sm">
-            <h2 id="tabela-armazem" className="titulo-secao mb-3 border-b-[3px] border-site-amarelo pb-2 text-lg">Por armazém</h2>
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[640px] text-left text-sm">
-                <thead className="text-xs text-gray-600">
-                  <tr className="border-b border-gray-200">
-                    <th scope="col" className="py-2 pr-3 font-semibold">Armazém</th>
-                    <th scope="col" className="px-2 py-2 text-right font-semibold">Boletins</th>
-                    <th scope="col" className="px-2 py-2 text-right font-semibold">Diárias escaladas</th>
-                    <th scope="col" className="px-2 py-2 text-right font-semibold">Diárias necessárias</th>
-                    <th scope="col" className="px-2 py-2 text-right font-semibold">Sobra (R$)</th>
-                    <th scope="col" className="px-2 py-2 text-right font-semibold">Falta (R$)</th>
-                    <th scope="col" className="py-2 pl-2 text-right font-semibold">Saldo (R$)</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100 tabular-nums">
-                  {porArmazem.map((r) => (
-                    <tr key={r.local}>
-                      <th scope="row" className="py-2 pr-3 font-medium text-gray-900">{ROTULO_LOCAL[r.local]}</th>
-                      <td className="px-2 py-2 text-right">{r.boletins}</td>
-                      <td className="px-2 py-2 text-right">{decimal(r.diarias)}</td>
-                      <td className="px-2 py-2 text-right">{decimal(r.necessarias)}</td>
-                      <td className="px-2 py-2 text-right">{moeda(r.sobraReais)}</td>
-                      <td className="px-2 py-2 text-right">{moeda(r.faltaReais)}</td>
-                      <td className="py-2 pl-2 text-right font-semibold text-gray-900">{sinal(r.saldoReais)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+          {indicadores.length === 0 ? (
+            <div className="rounded-3xl bg-white px-4 py-12 text-center shadow-sm">
+              <p className="font-semibold text-gray-800">Nenhum boletim {incluirRascunhos ? "" : "fechado "}no período.</p>
+              <p className="mt-1 text-sm text-gray-500">
+                Feche os boletins em{" "}
+                <Link to="/armazem/boletim" className="font-semibold text-site-azul hover:underline">Boletim de Produção</Link> para ver os indicadores.
+              </p>
             </div>
-          </section>
+          ) : (
+            <>
+              <GraficoSaldo resumo={porGrupo} />
 
-          <section aria-labelledby="tabela-boletins" className="rounded-3xl bg-white p-5 shadow-sm">
-            <h2 id="tabela-boletins" className="titulo-secao mb-3 border-b-[3px] border-site-amarelo pb-2 text-lg">Por boletim</h2>
-            <div className="max-h-[420px] overflow-auto">
-              <table className="w-full min-w-[640px] text-left text-sm">
-                <thead className="sticky top-0 bg-white text-xs text-gray-600">
-                  <tr className="border-b border-gray-200">
-                    <th scope="col" className="py-2 pr-3 font-semibold">Data</th>
-                    <th scope="col" className="px-2 py-2 font-semibold">Armazém</th>
-                    <th scope="col" className="px-2 py-2 text-right font-semibold">Produção</th>
-                    <th scope="col" className="px-2 py-2 text-right font-semibold">Diárias</th>
-                    <th scope="col" className="px-2 py-2 text-right font-semibold">Necessárias</th>
-                    <th scope="col" className="py-2 pl-2 text-right font-semibold">Saldo (R$)</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100 tabular-nums">
-                  {indicadores.map((i) => (
-                    <tr key={`${i.data}-${i.local}`}>
-                      <td className="py-2 pr-3">
-                        {formatarData(i.data)}
-                        {!i.fechado && <span className="ml-1 rounded bg-amber-50 px-1 text-[10px] font-semibold text-amber-800">rascunho</span>}
-                      </td>
-                      <td className="px-2 py-2">{ROTULO_LOCAL[i.local]}</td>
-                      <td className="px-2 py-2 text-right">{moeda(i.producao)}</td>
-                      <td className="px-2 py-2 text-right">{decimal(i.diarias)}</td>
-                      <td className="px-2 py-2 text-right">{decimal(i.necessarias)}</td>
-                      <td className="py-2 pl-2 text-right font-semibold text-gray-900">{sinal(i.saldoReais)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </section>
+              <section aria-labelledby="tabela-grupo" className="rounded-3xl bg-white p-5 shadow-sm">
+                <h2 id="tabela-grupo" className="titulo-secao mb-3 border-b-[3px] border-site-amarelo pb-2 text-lg">Por armazém</h2>
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-[640px] text-left text-sm">
+                    <thead className="text-xs text-gray-600">
+                      <tr className="border-b border-gray-200">
+                        <th scope="col" className="py-2 pr-3 font-semibold">Armazém</th>
+                        <th scope="col" className="px-2 py-2 text-right font-semibold">Boletins</th>
+                        <th scope="col" className="px-2 py-2 text-right font-semibold">Diárias escaladas</th>
+                        <th scope="col" className="px-2 py-2 text-right font-semibold">Diárias necessárias</th>
+                        <th scope="col" className="px-2 py-2 text-right font-semibold">Sobra (R$)</th>
+                        <th scope="col" className="px-2 py-2 text-right font-semibold">Falta (R$)</th>
+                        <th scope="col" className="py-2 pl-2 text-right font-semibold">Saldo (R$)</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100 tabular-nums">
+                      {porGrupo.map((r) => (
+                        <tr key={r.chave}>
+                          <th scope="row" className="py-2 pr-3 font-medium text-gray-900">{r.rotulo}</th>
+                          <td className="px-2 py-2 text-right">{r.boletins}</td>
+                          <td className="px-2 py-2 text-right">{decimal(r.diarias)}</td>
+                          <td className="px-2 py-2 text-right">{decimal(r.necessarias)}</td>
+                          <td className="px-2 py-2 text-right">{moeda(r.sobraReais)}</td>
+                          <td className="px-2 py-2 text-right">{moeda(r.faltaReais)}</td>
+                          <td className="py-2 pl-2 text-right font-semibold text-gray-900">{sinal(r.saldoReais)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+
+              <section aria-labelledby="tabela-boletins" className="rounded-3xl bg-white p-5 shadow-sm">
+                <h2 id="tabela-boletins" className="titulo-secao mb-3 border-b-[3px] border-site-amarelo pb-2 text-lg">Por boletim</h2>
+                <div className="max-h-[420px] overflow-auto">
+                  <table className="w-full min-w-[640px] text-left text-sm">
+                    <thead className="sticky top-0 bg-white text-xs text-gray-600">
+                      <tr className="border-b border-gray-200">
+                        <th scope="col" className="py-2 pr-3 font-semibold">Data</th>
+                        <th scope="col" className="px-2 py-2 font-semibold">Armazém</th>
+                        <th scope="col" className="px-2 py-2 text-right font-semibold">Produção</th>
+                        <th scope="col" className="px-2 py-2 text-right font-semibold">Diárias</th>
+                        <th scope="col" className="px-2 py-2 text-right font-semibold">Necessárias</th>
+                        <th scope="col" className="py-2 pl-2 text-right font-semibold">Saldo (R$)</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100 tabular-nums">
+                      {indicadores.map((i) => (
+                        <tr key={i.id}>
+                          <td className="py-2 pr-3">
+                            {dataBr(i.data)}
+                            {!i.fechado && <span className="ml-1 rounded bg-amber-50 px-1 text-[10px] font-semibold text-amber-800">rascunho</span>}
+                          </td>
+                          <td className="px-2 py-2">{i.rotulo}</td>
+                          <td className="px-2 py-2 text-right">{moeda(i.producao)}</td>
+                          <td className="px-2 py-2 text-right">{decimal(i.diarias)}</td>
+                          <td className="px-2 py-2 text-right">{decimal(i.necessarias)}</td>
+                          <td className="py-2 pl-2 text-right font-semibold text-gray-900">{sinal(i.saldoReais)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+            </>
+          )}
         </>
       )}
     </div>
