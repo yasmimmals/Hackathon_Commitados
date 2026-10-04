@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
 
-/** Textos estruturados do portal (o sistema é só em português). */
 export const TEXTOS = {
   pt: {
     lang: "pt-BR",
@@ -105,7 +104,6 @@ export const TEXTOS = {
 
 export type Textos = (typeof TEXTOS)["pt"];
 
-/** Mantido para não mexer no layout: não há mais troca de idioma. */
 export function IdiomaProvider({ children }: { children: ReactNode }) {
   return children;
 }

@@ -102,7 +102,6 @@ export default function VisualizadorImagem({
 
   return (
     <figure className="my-6">
-      {/* Container de Prévia no Documento */}
       <div
         onClick={() => {
           resetarZoom();
@@ -129,14 +128,12 @@ export default function VisualizadorImagem({
         </figcaption>
       )}
 
-      {/* Modal em Tela Cheia com Zoom e Navegação Fluida */}
       {aberto && (
         <div
           role="dialog"
           aria-modal="true"
           className="fixed inset-0 z-50 flex flex-col bg-slate-950/90 backdrop-blur-sm select-none"
         >
-          {/* Header da Barra de Ferramentas */}
           <header className="flex items-center justify-between border-b border-gray-800 bg-gray-900/90 px-4 py-3 text-white">
             <div className="flex items-center gap-3">
               <h2 className="max-w-md truncate text-sm font-semibold">{legenda || alt}</h2>
@@ -208,7 +205,6 @@ export default function VisualizadorImagem({
             </div>
           </header>
 
-          {/* Área de Visualização e Panning com fundo branco contrastante */}
           <div
             ref={containerRef}
             onWheel={handleWheel}
@@ -237,7 +233,6 @@ export default function VisualizadorImagem({
             </div>
           </div>
 
-          {/* Rodapé com Dicas */}
           <footer className="border-t border-gray-800 bg-gray-900/90 px-4 py-2 text-center text-xs text-gray-400">
             Dica: use a <strong>roda do mouse</strong> ou os botões de <strong>+ e -</strong> para ampliar. Clique e arraste para explorar o diagrama em detalhes.
           </footer>

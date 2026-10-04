@@ -7,7 +7,6 @@ import PrevisaoSemanal from "./PrevisaoSemanal";
 
 type Estado = { tipo: "carregando" } | { tipo: "erro" } | { tipo: "ok"; dias: DiaPrevisao[] };
 
-/** Previsão do tempo compacta (mesmo modelo do Boletim) que busca os próprios dados. */
 export default function PrevisaoTempoResumo({ hrefBoletim }: { hrefBoletim?: string }) {
   const [estado, setEstado] = useState<Estado>({ tipo: "carregando" });
 

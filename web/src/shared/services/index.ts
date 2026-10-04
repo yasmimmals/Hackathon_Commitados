@@ -10,3 +10,4 @@ export * from "./compras";
 export * from "./armazem";
 export * from "./boletins";
 export * from "./painel";
+export * from "./painel/tempos";

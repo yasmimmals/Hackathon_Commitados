@@ -1,6 +1,5 @@
 import type { Perfil } from "./types";
 
-/** Acessos de demonstração criados pelo seed do backend (scripts/seed.py). */
 export const SENHA_DEMO = "Cocapec@2026";
 
 export const USUARIOS_DEMO: { email: string; perfil: Perfil; rotulo: string }[] = [

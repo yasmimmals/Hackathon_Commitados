@@ -9,9 +9,7 @@ type EquipeTemporariaProps = {
   chapas: Chapa[];
   bloqueado: boolean;
   salvando: boolean;
-  /** Envia a equipe inteira ao backend (PUT /boletins/{id}/equipe). */
   onSalvar: (equipe: ChapaNoBoletimIn[]) => Promise<boolean>;
-  /** Cadastra um chapa temporário novo (POST /cadastros/chapas). */
   onCadastrarChapa: (matricula: string, nome: string) => Promise<boolean>;
 };
 

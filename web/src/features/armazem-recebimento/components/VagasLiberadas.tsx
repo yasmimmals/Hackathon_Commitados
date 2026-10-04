@@ -12,7 +12,6 @@ type VagasLiberadasProps = {
   data: string;
   vagas: VagaLiberada[];
   candidatos: Agendamento[];
-  /** Encaixe só vale para hoje (o backend agenda o balcão na data atual). */
   ehHoje: boolean;
   onConcluido: (mensagem: string) => void;
 };
@@ -151,7 +150,6 @@ function Vaga({ vaga, candidatos, onConcluido }: { vaga: VagaLiberada; candidato
   );
 }
 
-/** Define quem ocupa as vagas liberadas por não comparecimento ou cancelamento. */
 export default function VagasLiberadas({ data, vagas, candidatos, ehHoje, onConcluido }: VagasLiberadasProps) {
   const abertas = vagas.filter((v) => !janelaTerminou(data, v.horario));
 

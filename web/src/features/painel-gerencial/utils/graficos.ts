@@ -1,6 +1,5 @@
 import type { CoresGrafico } from "@/shared/components/graficos";
 
-/** Acabamento comum dos gráficos: eixos discretos, grade horizontal leve, números em pt-BR. */
 export const eixoX = (c: CoresGrafico) => ({
   tick: { fill: c.eixo, fontSize: 11 },
   axisLine: { stroke: c.grade },

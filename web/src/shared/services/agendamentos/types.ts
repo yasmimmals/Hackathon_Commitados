@@ -14,7 +14,6 @@ export type StatusAgendamento =
   | "NAO_COMPARECEU"
   | "REAGENDADO";
 
-/** Como o agendamento nasceu. */
 export type OrigemAgendamento = "NORMAL" | "BALCAO" | "CHUVA";
 
 export type MotivoNaoRecebimento =
@@ -34,9 +33,7 @@ export type AgendamentoCreate = {
   data: DataISO;
   horario: Horario;
   acondicionamento: Acondicionamento;
-  /** Obrigatório para adubo com risco de chuva. */
   ciente_risco_chuva?: boolean;
-  /** Para onde vão os avisos (aprovação, reprovação, doca definida). */
   email_contato?: string | null;
 };
 
@@ -47,7 +44,6 @@ export type FiltrosAgendamento = {
 };
 
 export type EquipamentoUsado = {
-  /** Código do catálogo GET /cadastros/equipamentos (ex.: EMPILHADEIRA_GAS). */
   codigo: string;
   qtd?: number;
 };
@@ -90,7 +86,6 @@ export type Agendamento = {
   criado_em: DataHoraISO;
   cancelado_em: DataHoraISO | null;
   descargas: Descarga[];
-  /** Quantos chapas a norma exige. */
   chapas_norma: number | null;
   aviso_chuva: string | null;
 };
@@ -103,12 +98,9 @@ export type SlotDisponibilidade = {
   aceita_unitizado: boolean;
   vagas_restantes: number;
   encaixes_chuva: number;
-  /** Preenchidos quando a consulta é para uma nota de adubo. */
   prob_chuva: number | null;
   situacao_chuva: SituacaoChuva | null;
 };
-
-// ---------- Notificações ao fornecedor ----------
 
 export type TipoNotificacao = "APROVADO" | "REPROVADO" | "DESTINO_DEFINIDO" | "REAGENDADO_CHUVA";
 

@@ -77,12 +77,10 @@ export default function MenuLateralDocumentacao({
 
   return (
     <>
-      {/* Menu Desktop */}
       <aside className="hidden lg:block w-72 shrink-0 border-r border-gray-200 bg-white p-4">
         <div className="sticky top-6">{conteudoMenu}</div>
       </aside>
 
-      {/* Gaveta Mobile */}
       {abertoMobile && (
         <div className="fixed inset-0 z-50 flex lg:hidden">
           <div

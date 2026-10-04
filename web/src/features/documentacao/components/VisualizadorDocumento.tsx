@@ -32,7 +32,6 @@ function extrairFrontmatter(conteudo: string): {
 }
 
 export default function VisualizadorDocumento({ documento }: Props) {
-  // Guarda o slug junto do resultado: enquanto não bate com o documento atual, está carregando.
   const [resultado, setResultado] = useState<{ slug: string; conteudo: string | null } | null>(null);
 
   useEffect(() => {
@@ -86,7 +85,6 @@ export default function VisualizadorDocumento({ documento }: Props) {
 
   return (
     <article className="max-w-none space-y-6">
-      {/* Cabeçalho do Documento */}
       <header className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-200 pb-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-site-azul">
@@ -102,7 +100,6 @@ export default function VisualizadorDocumento({ documento }: Props) {
         )}
       </header>
 
-      {/* Conteúdo Renderizado do Markdown */}
       <div className="prose prose-slate max-w-none text-gray-800 leading-relaxed">
         <ReactMarkdown
           remarkPlugins={[remarkGfm]}
@@ -174,7 +171,6 @@ export default function VisualizadorDocumento({ documento }: Props) {
         </ReactMarkdown>
       </div>
 
-      {/* Componentes Especiais Integrados */}
       {documento.especial === "bpmn" && (
         <section className="mt-8 pt-6 border-t border-gray-200">
           <h3 className="text-xl font-bold text-site-azul mb-2">Diagrama de Processos (BPMN)</h3>

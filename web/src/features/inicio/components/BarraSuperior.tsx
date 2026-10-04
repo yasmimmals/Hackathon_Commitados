@@ -11,7 +11,6 @@ export default function BarraSuperior() {
   const { textos } = useIdioma();
   const [busca, setBusca] = useState("");
 
-  // O portal não tem busca própria: pesquisa no site institucional.
   const pesquisar = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const termo = busca.trim();

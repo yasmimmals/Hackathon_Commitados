@@ -7,7 +7,6 @@ import { ROTULO_SITUACAO, rotuloMes, useCarga } from "../utils/carga";
 import { eixoX, eixoY, grade, margem, moedaCurta, num } from "../utils/graficos";
 import { Carregando, Erro, LegendaSituacao, Premissas } from "./Estados";
 
-/** Espera o usuário parar de arrastar o controle antes de recalcular no backend. */
 function useAtrasado<T>(valor: T, ms = 350) {
   const [v, setV] = useState(valor);
   useEffect(() => {

@@ -130,7 +130,6 @@ export default function ReferenciaApi() {
 
   return (
     <div className="space-y-6">
-      {/* Busca Rápida */}
       <div className="relative">
         <input
           type="text"
@@ -198,7 +197,6 @@ export default function ReferenciaApi() {
                           <p className="text-gray-700 whitespace-pre-line">{op.description}</p>
                         )}
 
-                        {/* Parâmetros */}
                         {op.parameters && op.parameters.length > 0 && (
                           <div>
                             <h5 className="font-bold text-gray-800">Parâmetros:</h5>
@@ -235,7 +233,6 @@ export default function ReferenciaApi() {
                           </div>
                         )}
 
-                        {/* Corpo da Requisição */}
                         {op.requestBody && (
                           <div>
                             <h5 className="font-bold text-gray-800">Corpo da Requisição (Request Body):</h5>
@@ -248,7 +245,6 @@ export default function ReferenciaApi() {
                           </div>
                         )}
 
-                        {/* Respostas */}
                         {op.responses && (
                           <div>
                             <h5 className="font-bold text-gray-800">Respostas:</h5>

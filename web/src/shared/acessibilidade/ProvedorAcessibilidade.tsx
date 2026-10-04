@@ -10,7 +10,6 @@ type Contexto = {
   prefs: Preferencias;
   atualizar: (mudanca: Partial<Preferencias>) => void;
   restaurar: () => void;
-  /** Mensagem lida por leitores de tela sem mudar o foco (região aria-live). */
   anunciar: (mensagem: string) => void;
   falar: (texto: string) => void;
   pararFala: () => void;
@@ -45,7 +44,7 @@ export default function ProvedorAcessibilidade({ children }: { children: ReactNo
 
   const anunciar = useCallback((m: string) => {
     setAviso("");
-    window.setTimeout(() => setAviso(m), 30);   // limpar antes garante a releitura de mensagens iguais
+    window.setTimeout(() => setAviso(m), 30);
   }, []);
 
   const atualizar = useCallback((m: Partial<Preferencias>) => setPrefs((p) => ({ ...p, ...m })), []);
@@ -54,7 +53,6 @@ export default function ProvedorAcessibilidade({ children }: { children: ReactNo
     anunciar("Preferências de acessibilidade restauradas para o padrão.");
   }, [anunciar]);
 
-  // Alt + A abre a central de qualquer tela
   useEffect(() => {
     const tecla = (e: KeyboardEvent) => {
       if (e.altKey && (e.key === "a" || e.key === "A")) {
@@ -66,7 +64,6 @@ export default function ProvedorAcessibilidade({ children }: { children: ReactNo
     return () => window.removeEventListener("keydown", tecla);
   }, []);
 
-  // Ler ao selecionar: selecionou um trecho com o mouse ou teclado, ouve na hora
   useEffect(() => {
     if (!prefs.lerAoSelecionar) return;
     const aoSoltar = () => {
@@ -124,10 +121,6 @@ export default function ProvedorAcessibilidade({ children }: { children: ReactNo
   );
 }
 
-/**
- * Matrizes de simulação de daltonismo (aproximação de Machado et al., severidade total),
- * usadas pelo "Simular visão" da Central via `html[data-simular] { filter: url(#...) }`.
- */
 const MATRIZES_SIMULACAO = {
   protanopia: "0.567 0.433 0 0 0  0.558 0.442 0 0 0  0 0.242 0.758 0 0  0 0 0 1 0",
   deuteranopia: "0.625 0.375 0 0 0  0.7 0.3 0 0 0  0 0.3 0.7 0 0  0 0 0 1 0",
@@ -146,7 +139,6 @@ function FiltrosDaltonismo() {
   );
 }
 
-/** Símbolo internacional de acessibilidade (figura de braços abertos). */
 function IconeAcessibilidade() {
   return (
     <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth={2}

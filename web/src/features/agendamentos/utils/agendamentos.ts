@@ -1,6 +1,5 @@
 import type { Appointment } from "../types";
 
-/** Texto pesquisável de um agendamento (código, produto, NF, placa, motorista...). */
 function textoPesquisavel(a: Appointment) {
   return [
     a.code, a.product, a.subtitle, a.meta, a.notice?.reference,
@@ -13,7 +12,6 @@ export function correspondeBusca(a: Appointment, busca: string) {
   return !termo || textoPesquisavel(a).includes(termo);
 }
 
-/** Gera e baixa um CSV (separador ";" e BOM para abrir corretamente no Excel). */
 export function exportarCsv(agendamentos: Appointment[]) {
   const cabecalho = ["Código", "Data", "Status", "Produto", "Detalhes", "Motorista", "Placa", "Destino"];
   const linhas = agendamentos.map((a) => [

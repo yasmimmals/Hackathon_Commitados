@@ -1,7 +1,5 @@
 import { api } from "@/shared/services/api";
 
-/* Painel gerencial (Tarefa 3). Todos os números vêm calculados do backend (/api/v1/painel). */
-
 export type Situacao = "SOBRA" | "ADEQUADO" | "EQUILIBRIO" | "RISCO_DE_FALTA" | "FALTA";
 
 export type Precisao = {

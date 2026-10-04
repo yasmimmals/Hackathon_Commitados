@@ -5,7 +5,6 @@ type EmConstrucaoProps = {
   acoes: string[];
 };
 
-/** Placeholder de telas cuja rota e permissão já existem, mas a interface não. */
 export default function EmConstrucao({ titulo, acoes }: EmConstrucaoProps) {
   return (
     <section className="rounded-xl border border-dashed border-gray-300 bg-white p-6 shadow-sm">

@@ -2,7 +2,6 @@ import { Area, AreaChart, ResponsiveContainer } from "recharts";
 import { TrendingDown, TrendingUp } from "lucide-react";
 import { useCores } from "./cores";
 
-/** Número principal + variação + mini-gráfico de tendência (sparkline). */
 export default function CartaoKpi({ rotulo, valor, nota, tendencia, variacao, destaque, corTendencia }: {
   rotulo: string;
   valor: string;

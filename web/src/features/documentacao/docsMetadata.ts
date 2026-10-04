@@ -66,7 +66,7 @@ export const GRUPOS_DOCUMENTACAO: GrupoDocumentacao[] = [
   {
     titulo: "9. Relatório Gerencial",
     itens: [
-      { slug: "08-relatorio-gerencial", titulo: "Relatório Gerencial (Tarefa 3)", status: "completo" },
+      { slug: "08-relatorio-gerencial", titulo: "Relatório Gerencial", status: "completo" },
     ],
   },
   {

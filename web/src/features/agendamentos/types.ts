@@ -4,19 +4,19 @@ export interface AppointmentAction {
   label: string;
   variant?: "ghost" | "outline" | "danger" | "primary";
   icon?: "alert" | "x" | "edit" | "calendar" | "eye" | "ticket" | "receipt";
-  kind?: "delay" | "cancel" | "reschedule";  // ações tratadas pela lista (MeusAgendamentos)
+  kind?: "delay" | "cancel" | "reschedule";
   onClick?: () => void;
 }
 
 export interface Appointment {
   id: string;
-  code: string;               // ex.: #AG-88190
-  dateLabel: string;          // ex.: "Hoje às 13:00h" ou "15/10/2026 • 10:00h"
+  code: string;
+  dateLabel: string;
   status: AppointmentStatus;
-  statusText: string;         // ex.: "Janela Ativa"
-  subtitle?: string;          // ex.: "Tolerância até 13:30h • Doca Coberta Setor 2"
-  product: string;            // ex.: "Fertilizante Foliar Especial Quelatado (28,00 t)"
-  meta?: string;              // ex.: "Big Bag 1.000kg • Pedido PC-2026-750"
+  statusText: string;
+  subtitle?: string;
+  product: string;
+  meta?: string;
   transport?: {
     driver: string;
     plate: string;
@@ -25,7 +25,7 @@ export interface Appointment {
   };
   notice?: {
     author: string;
-    reference?: string;       // ex.: "NF-e 004.891"
+    reference?: string;
     message: string;
   };
   footerInfo?: string;
@@ -35,7 +35,6 @@ export interface Appointment {
 
 export type TabKey = "todos" | "validacao" | "autorizados" | "recusados" | "historico";
 
-/** Agendamento já classificado na aba em que aparece. */
 export type ListedAppointment = Appointment & { tab: Exclude<TabKey, "todos"> };
 
 export interface Tab {

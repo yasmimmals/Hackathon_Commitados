@@ -7,21 +7,18 @@ export type UsuarioApi = {
   email: string;
   nome: string;
   perfil: PerfilUsuario;
-  /** Só para FORNECEDOR: a empresa cujos agendamentos ele enxerga. */
   fornecedor: EmpresaUsuario | null;
 };
 
 export type SessaoApi = {
   token: string;
   tipo: "Bearer";
-  /** Segundos Unix. */
   expira_em: number;
   usuario: UsuarioApi;
 };
 
 export type LoginIn = { email: string; senha: string };
 
-/** Fornecedor informa empresa e CNPJ; Compras e Armazém, o código interno. */
 export type CadastroIn = {
   perfil: Exclude<PerfilUsuario, "ADMIN">;
   nome: string;

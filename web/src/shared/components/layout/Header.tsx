@@ -81,7 +81,6 @@ export default function Header() {
 
   return (
     <header className="print:hidden">
-      {/* Barra superior azul */}
       <div className="border-t-2 border-gray-700 bg-site-azul text-white">
         <div className="mx-auto flex max-w-[1300px] flex-wrap items-center justify-between gap-3 px-4 py-2.5">
           <p className="flex min-w-0 items-center gap-2 text-[13px]">
@@ -96,7 +95,6 @@ export default function Header() {
             </span>
           </p>
 
-          {/* Campo de pesquisa apenas para o Fornecedor real */}
           {fornecedor && (
             <form role="search" onSubmit={handleSearch} className="relative order-3 w-full md:order-none md:w-[380px]">
               <input
@@ -132,7 +130,6 @@ export default function Header() {
         </div>
       </div>
 
-      {/* Barra de Logo e Navegação Principal */}
       <div className="bg-white shadow-[0_2px_6px_rgba(0,0,0,0.08)]">
         <div className="mx-auto flex max-w-[1300px] items-center justify-between gap-6 px-4 py-2.5">
           <div className="flex items-center gap-3">
@@ -150,7 +147,6 @@ export default function Header() {
             )}
           </div>
 
-          {/* Navegação normal (para perfis individuais: fornecedor, compras, armazém) */}
           {!isAdministrador && (
             <nav aria-label="Navegação principal" className="hidden items-center gap-3 lg:flex max-w-[850px] xl:max-w-none overflow-x-auto py-1">
               <ul className="flex flex-wrap items-center gap-x-1 gap-y-0.5">
@@ -179,7 +175,6 @@ export default function Header() {
             </nav>
           )}
 
-          {/* Botão Hamburger Mobile */}
           <button
             type="button"
             onClick={() => setMenuAberto((a) => !a)}
@@ -192,7 +187,6 @@ export default function Header() {
           </button>
         </div>
 
-        {/* Sub-barra de navegação padronizada exclusiva para o ADMINISTRADOR / GERENTE */}
         {isAdministrador && (
           <div className="hidden lg:block border-t border-gray-100 bg-slate-50/90 shadow-inner">
             <div className="mx-auto max-w-[1300px] px-4 py-2">
@@ -231,7 +225,6 @@ export default function Header() {
           </div>
         )}
 
-        {/* Menu Mobile */}
         {menuAberto && (
           <nav id="menu-sistema" aria-label="Navegação principal" className="border-t border-gray-100 px-4 pb-4 lg:hidden">
             {isAdministrador ? (

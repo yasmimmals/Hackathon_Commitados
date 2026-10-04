@@ -70,9 +70,7 @@ export const GRUPOS: Record<Perfil, GrupoRotas> = {
   },
 };
 
-/** Itens do menu do perfil, com o caminho completo (base + rota). */
 export function menuDoPerfil(perfil: Perfil): ItemMenu[] {
-  // Controle só do front (demonstração). O Administrador vê todos os menus mais Documentação.
   if (perfil === "administrador") {
     const todosItens: ItemMenu[] = [
       ...menuDoPerfil("fornecedor"),
@@ -89,7 +87,6 @@ export function menuDoPerfil(perfil: Perfil): ItemMenu[] {
     .map((r) => ({ href: r.path ? `${base}/${r.path}` : base, rotulo: r.menu! }));
 }
 
-/** Item do menu correspondente à URL atual (o mais específico vence). */
 export function itemMenuAtivo(perfil: Perfil, pathname: string): ItemMenu | undefined {
   return menuDoPerfil(perfil)
     .filter((i) => pathname === i.href || pathname.startsWith(i.href + "/"))

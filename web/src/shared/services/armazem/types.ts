@@ -10,7 +10,6 @@ export type BalcaoCreate = {
 
 export type DestinoIn = {
   local: LocalFisico;
-  /** Opcional: com uma única doca ativa, o sistema escolhe. */
   baia_id?: number | null;
 };
 
@@ -29,18 +28,12 @@ export type SaidaIn = {
 };
 
 export type ReagendamentoChuvaIn = {
-  /** Padrão: próximo dia útil. */
   nova_data?: DataISO | null;
-  /** Padrão: 08:00. */
   novo_horario?: Horario;
 };
 
-// ---------- Programação antecipada ----------
-
 export type FiltrosProgramacao = {
-  /** Padrão no backend: hoje. */
   inicio?: DataISO;
-  /** Padrão no backend: hoje + 6. */
   fim?: DataISO;
   local?: LocalFisico;
 };
@@ -50,7 +43,6 @@ export type CaminhaoPrevisto = {
   data: DataISO;
   horario: Horario;
   status: StatusAgendamento;
-  /** false = Compras ainda não aprovou (previsão). */
   confirmado: boolean;
   prioritario: boolean;
   fornecedor: string;
@@ -59,14 +51,11 @@ export type CaminhaoPrevisto = {
   peso_kg: Decimal | null;
   volumes_estimados: number | null;
   locais: LocalFisico[];
-  /** true = armazém sugerido pelo sistema, ainda não definido. */
   locais_sugeridos: boolean;
   doca: string | null;
   chapas_norma: number | null;
   equipamento_sugerido: string | null;
-  /** Até liberar o caminhão. */
   minutos_caminhao: number;
-  /** Até a equipe ficar livre (ciclo completo). */
   minutos_equipe: number;
   carga_adubo: boolean;
   prob_chuva: number | null;
@@ -75,7 +64,6 @@ export type CaminhaoPrevisto = {
 
 export type ResumoDiaLocal = {
   data: DataISO;
-  /** null = armazém ainda não definido nem sugerido. */
   local: LocalFisico | null;
   caminhoes: number;
   confirmados: number;

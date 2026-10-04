@@ -37,7 +37,6 @@ export default function MeusAgendamentos() {
 
   const carregar = useCallback(() => {
     let ativo = true;
-    // O backend devolve só os agendamentos da empresa do fornecedor logado.
     listarAgendamentos().then(
       (lista) => {
         if (!ativo) return;

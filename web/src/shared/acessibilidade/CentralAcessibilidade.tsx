@@ -11,16 +11,11 @@ import { vozDisponivel } from "./voz";
 
 const ICONES = { Glasses, Palette, Type, Focus, Hand, Ear };
 
-/**
- * Central de Acessibilidade (Alt + A). Painel lateral no computador, tela cheia no celular.
- * Toda mudança vale na hora, em todas as telas, e fica salva neste navegador.
- */
 export default function CentralAcessibilidade({ aoFechar }: { aoFechar: () => void }) {
   const { prefs, atualizar, restaurar, anunciar, falar, pararFala } = useAcessibilidade();
   const painel = useRef<HTMLDivElement>(null);
   const tituloId = useId();
 
-  // foco entra no painel, Esc fecha, Tab não escapa (diálogo modal)
   useEffect(() => {
     const el = painel.current;
     el?.querySelector<HTMLElement>("button, input")?.focus();
@@ -225,7 +220,6 @@ function Opcoes<T extends string>({ rotulo, valor, opcoes, aoMudar, colunas = 1 
             <button key={v} type="button" role="radio" aria-checked={ativo} onClick={() => aoMudar(v)}
               className={`flex min-h-[44px] items-start gap-2 rounded-xl border-2 px-3 py-2 text-left text-xs ${
                 ativo ? "border-site-azul bg-site-azul/10" : "border-gray-200 hover:border-gray-400"}`}>
-              {/* o marcador redondo indica a seleção sem depender só da cor da borda */}
               <span aria-hidden className={`mt-0.5 h-3.5 w-3.5 shrink-0 rounded-full border-2 border-site-azul ${ativo ? "bg-site-azul" : ""}`} />
               <span>
                 <span className="block font-semibold">{nome}</span>

@@ -1,12 +1,6 @@
 import type { Boletim } from "@/shared/services";
 import { ROTULO_LOCAL } from "@/shared/utils/locais";
 
-/**
- * Sobra ou falta de chapas de um boletim, em diárias e em R$ (valores do backend).
- * Diárias necessárias = produção ÷ piso (a equipe "paga" pela própria produção).
- * Saldo > 0: sobra de chapas (a cooperativa paga complemento).
- * Saldo < 0: falta de chapas (produção acima do que a equipe escalada cobriria no piso).
- */
 export type IndicadorBoletim = {
   id: number;
   data: string;

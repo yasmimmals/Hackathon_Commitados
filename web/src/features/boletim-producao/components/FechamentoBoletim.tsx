@@ -6,7 +6,6 @@ import { pagamentoChapa, type Verificacao } from "../utils/boletim";
 type FechamentoBoletimProps = {
   boletim: Boletim;
   verificacoes: Verificacao[];
-  /** Produção editada e ainda não salva: fechar agora usaria os números antigos. */
   producaoPendente: boolean;
   enviando: boolean;
   onFechar: () => void;

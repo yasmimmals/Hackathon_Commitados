@@ -1,19 +1,11 @@
-/**
- * Preferências de acessibilidade: o que cada pessoa precisa para usar o sistema.
- * Salvas no navegador e aplicadas no <html> como atributos data-*; o CSS (globals.css)
- * reage a eles. Por isso funcionam em TODAS as telas, sem mexer em cada componente.
- */
-
 export type Tema = "padrao" | "escuro" | "alto-contraste";
 export type Paleta = "padrao" | "daltonismo";
-/** Qual par de cores se confunde: define quais cores do site são trocadas (ver globals.css). */
 export type TipoDaltonismo = "vermelho-verde" | "azul-amarelo";
-/** Filtro que mostra a tela como uma pessoa daltônica a vê. Serve para a equipe testar. */
 export type SimulacaoVisao = "nenhuma" | "protanopia" | "deuteranopia" | "tritanopia";
 
 export type Preferencias = {
   tema: Tema;
-  escalaTexto: number;        // 100 a 160 (%)
+  escalaTexto: number;
   paleta: Paleta;
   tipoDaltonismo: TipoDaltonismo;
   simularVisao: SimulacaoVisao;
@@ -26,7 +18,7 @@ export type Preferencias = {
   cursorGrande: boolean;
   reduzirMovimento: boolean;
   lerAoSelecionar: boolean;
-  velocidadeVoz: number;      // 0.7 a 1.5
+  velocidadeVoz: number;
 };
 
 export const PADRAO: Preferencias = {
@@ -57,7 +49,6 @@ export type Perfil = {
   ajustes: Partial<Preferencias>;
 };
 
-/** Um clique configura tudo o que aquele perfil costuma precisar. */
 export const PERFIS: Perfil[] = [
   { id: "baixa-visao", nome: "Baixa visão", icone: "Glasses",
     descricao: "Texto maior, contraste forte, foco e cursor bem visíveis.",
@@ -89,9 +80,7 @@ export function carregar(): Preferencias {
     const salvo = window.localStorage.getItem(CHAVE_STORAGE);
     if (salvo) return { ...PADRAO, ...JSON.parse(salvo) };
   } catch {
-    /* storage bloqueado: segue com o padrão */
   }
-  // Primeira visita: respeita o que a pessoa já configurou no sistema operacional
   const mq = (q: string) => window.matchMedia?.(q).matches ?? false;
   return {
     ...PADRAO,
@@ -104,7 +93,6 @@ export function salvar(p: Preferencias) {
   try {
     window.localStorage.setItem(CHAVE_STORAGE, JSON.stringify(p));
   } catch {
-    /* sem storage: vale só nesta sessão */
   }
 }
 
@@ -127,10 +115,6 @@ export function aplicarNoDocumento(p: Preferencias) {
   h.style.colorScheme = p.tema === "padrao" ? "light" : "dark";
 }
 
-/**
- * Mesmo efeito de aplicarNoDocumento, em JS puro, para rodar no <head> ANTES da página
- * aparecer: quem usa alto contraste não vê um "flash" branco ao abrir o sistema.
- */
 export const SCRIPT_ANTES_DE_PINTAR = `(function(){try{
 var s=localStorage.getItem(${JSON.stringify(CHAVE_STORAGE)});var p=s?JSON.parse(s):{};
 var m=function(q){return window.matchMedia&&window.matchMedia(q).matches};

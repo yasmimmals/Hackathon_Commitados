@@ -1,9 +1,5 @@
 import type { Warehouse, YardEntry } from "../types";
 
-/**
- * Armazéns de exemplo: a API ainda não informa vagas por armazém (o destino é
- * definido pelo responsável do armazém depois que Compras aprova).
- */
 export const ARMAZENS_MOCK: Warehouse[] = [
   {
     id: "adubo", name: "Adubo e Fertilizantes", detail: "Doca 03 • Paletizado / Big Bag", dock: "Doca 03",

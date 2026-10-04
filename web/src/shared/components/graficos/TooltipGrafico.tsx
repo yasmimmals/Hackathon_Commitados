@@ -3,7 +3,6 @@ import { useCores } from "./cores";
 
 type Item = { name?: string | number; value?: unknown; color?: string; dataKey?: unknown; payload?: Record<string, unknown> };
 
-/** Balão do gráfico no estilo Looker/shadcn: título + linhas com cor, nome e valor formatado. */
 export function TooltipGrafico({ active, payload, label, formatarValor, formatarRotulo, rodape }: {
   active?: boolean;
   payload?: readonly Item[];

@@ -4,7 +4,6 @@ export type StatusBoletim = "RASCUNHO" | "FECHADO";
 
 export type BoletimCreate = {
   data: DataISO;
-  /** Só no modo por armazém do backend; por padrão o boletim é geral do dia. */
   local?: LocalFisico | null;
   observacao?: string | null;
 };
@@ -27,7 +26,6 @@ export type LinhaProducao = LinhaProducaoIn & {
 
 export type ChapaNoBoletim = ChapaNoBoletimIn & { nome: string };
 
-/** Valores calculados pelo backend (arredondados só na saída). */
 export type CalculoBoletim = {
   producao_total: Decimal;
   chapas: number;
@@ -44,7 +42,6 @@ export type CalculoBoletim = {
 export type Boletim = {
   id: number;
   data: DataISO;
-  /** null = boletim geral do dia. */
   local: LocalFisico | null;
   status: StatusBoletim;
   origem_dado: Origem;
@@ -52,7 +49,6 @@ export type Boletim = {
   linhas: LinhaProducao[];
   equipe: ChapaNoBoletim[];
   calculo: CalculoBoletim;
-  /** Alertas que não bloqueiam (chapa em outro boletim, produção abaixo do piso...). */
   avisos: string[];
   criado_em: DataHoraISO;
   fechado_em: DataHoraISO | null;

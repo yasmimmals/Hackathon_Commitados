@@ -5,7 +5,6 @@ import Navegacao from "./components/Navegacao";
 import Noticias from "./components/Noticias";
 import { useIdioma } from "./i18n";
 
-/** Página pública, no padrão do site institucional, com acesso ao Espaço Fornecedor (PT/EN). */
 export default function PaginaInicial() {
   const { textos } = useIdioma();
   return (

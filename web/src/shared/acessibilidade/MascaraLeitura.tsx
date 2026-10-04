@@ -2,10 +2,6 @@
 
 import { useEffect, useState } from "react";
 
-/**
- * Máscara de leitura: escurece a tela e deixa visível só uma faixa que segue o mouse
- * (ou o dedo). Ajuda quem perde a linha ao ler (dislexia, TDAH, baixa visão).
- */
 export default function MascaraLeitura() {
   const [y, setY] = useState<number | null>(null);
   useEffect(() => {
