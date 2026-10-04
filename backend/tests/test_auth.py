@@ -127,8 +127,29 @@ def test_fornecedor_ve_so_a_propria_empresa(cliente, usuario, db, fornecedor, no
     assert [a["fornecedor_id"] for a in lista] == [fornecedor.id]
     r = cliente.get(f"{API}/agendamentos/{alheio.id}", headers=h)
     assert r.status_code == 403 and r.json()["codigo"] == "AGENDAMENTO_DE_OUTRO_FORNECEDOR"
-    r = cliente.get(f"{API}/agendamentos/nota-fiscal/{nota_outra.id}", headers=h)
-    assert r.status_code == 403 and r.json()["codigo"] == "NOTA_DE_OUTRO_FORNECEDOR"
+    # A nota em si pode ser de outra empresa: consultar é permitido.
+    assert cliente.get(f"{API}/agendamentos/nota-fiscal/{nota_outra.id}", headers=h).status_code == 200
+
+
+def test_fornecedor_agenda_com_nota_de_outra_empresa_e_enxerga(cliente, usuario, db, fornecedor):
+    outra = Fornecedor(nome="Transportadora X", cnpj="55666777000188")
+    db.add(outra)
+    db.commit()
+    nota = NotaFiscal(chave="8" * 44, numero="77", fornecedor_id=outra.id, peso_bruto_kg=1000,
+                      formato="xml", arquivo_url="x")
+    db.add(nota)
+    db.commit()
+    eu = usuario("forn@x.com", PerfilUsuario.FORNECEDOR, fornecedor)
+    h = entrar(cliente, "forn@x.com")
+
+    r = cliente.post(f"{API}/agendamentos", headers=h, json={
+        "nota_fiscal_id": nota.id, "data": "2030-01-07", "horario": "08:00", "acondicionamento": "PALETIZADO"})
+    assert r.status_code == 201, r.text
+    ag = r.json()
+    assert ag["fornecedor_id"] == outra.id                     # fica no nome do emitente da NF
+    assert [a["id"] for a in cliente.get(f"{API}/agendamentos", headers=h).json()] == [ag["id"]]
+    assert cliente.get(f"{API}/agendamentos/{ag['id']}", headers=h).status_code == 200
+    assert db.get(Agendamento, ag["id"]).criado_por_id == eu.id
 
 
 # ---------- cadastro ----------
