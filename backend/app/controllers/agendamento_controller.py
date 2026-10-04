@@ -95,11 +95,11 @@ def notificacoes(ag_id: int, db: Session = Depends(get_db),
 
 # ---- Compras ----
 
-@router.get("/{ag_id}/conferencia", response_model=ConferenciaOut,
-            dependencies=[Depends(exigir_perfil(PerfilUsuario.COMPRAS))])
-def conferencia(ag_id: int, db: Session = Depends(get_db)):
-    """Tela do Compras: nota lida + checagens automáticas, para aprovar ou reprovar."""
-    c = svc.conferencia(db, ag_id)
+@router.get("/{ag_id}/conferencia", response_model=ConferenciaOut)
+def conferencia(ag_id: int, pedido: Optional[int] = None, db: Session = Depends(get_db)):
+    """Tela do Compras: nota lida, pedido de compra e checagens automáticas.
+    `pedido` (opcional): número a conferir antes de aprovar."""
+    c = svc.conferencia(db, ag_id, pedido)
     return {**c, "agendamento": out(c["agendamento"])}
 
 

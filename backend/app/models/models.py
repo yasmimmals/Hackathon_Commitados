@@ -396,3 +396,80 @@ class Usuario(Base):
         CheckConstraint("perfil <> 'FORNECEDOR' OR fornecedor_id IS NOT NULL",
                         name="ck_usuario_fornecedor_tem_empresa"),
     )
+
+
+
+# ==========================================
+# 3. DADOS HISTÓRICOS DA COCAPEC (carregados por scripts/carregar_historico.py)
+# Somente leitura para o sistema: servem ao painel e à conferência do Compras.
+# ==========================================
+
+class Produto(Base):
+    """Cadastro de produtos (02_cadastros/produtos.xlsx), um registro por código.
+    O mesmo código aparece em vários depósitos no arquivo: fica o depósito que recebe."""
+    __tablename__ = "produtos"
+
+    codigo = Column(String(20), primary_key=True)          # código Cocapec: FER000003
+    descricao = Column(String, nullable=False)
+    unidade = Column(String(10))
+    peso_unitario_kg = Column(Numeric(14, 4))
+    grupo = Column(String(3), index=True)                  # FER, PEC, AGR...
+    deposito = Column(String(20))
+    local = Column(_enum(LocalFisico))
+
+
+class PedidoItem(Base):
+    """Item de pedido de compra (03_movimentacao). Alimenta a conferência do Compras.
+    Atenção: Qtd e Peso são do ITEM DO PEDIDO, não do que chegou em cada caminhão."""
+    __tablename__ = "pedido_itens"
+    __table_args__ = (UniqueConstraint("pedido", "codigo_item", name="uq_pedido_item"),)
+
+    id = Column(Integer, primary_key=True)
+    pedido = Column(Integer, nullable=False, index=True)
+    fornecedor_codigo = Column(String(20), index=True)
+    codigo_item = Column(String(20), nullable=False)
+    descricao = Column(String)
+    quantidade = Column(Numeric(16, 4))
+    peso_kg = Column(Numeric(16, 3))
+    deposito = Column(String(20))
+    local = Column(_enum(LocalFisico))
+    data_documento = Column(Date)
+
+
+class RecebimentoHistorico(Base):
+    """Uma entrega histórica = uma nota fiscal recebida (agregação das linhas da movimentação).
+    É a melhor aproximação de 'um caminhão' que os dados permitem."""
+    __tablename__ = "recebimentos_historicos"
+
+    id = Column(Integer, primary_key=True)
+    data = Column(Date, nullable=False, index=True)
+    fornecedor_id = Column(Integer, ForeignKey("fornecedores.id"), index=True)
+    fornecedor_codigo = Column(String(20))
+    nf_numero = Column(String(20))
+    chave = Column(String(60), index=True)
+    chave_valida = Column(Boolean, nullable=False, default=False)
+    itens = Column(Integer, nullable=False)
+    pedidos = Column(Integer, nullable=False)
+    local_principal = Column(_enum(LocalFisico), index=True)   # armazém com mais peso na nota
+    locais = Column(String)                                    # todos os armazéns da nota
+    grupos = Column(String)
+    peso_planilha_kg = Column(Numeric(16, 3))   # soma bruta da planilha (inflada: peso do pedido)
+    peso_estimado_kg = Column(Numeric(16, 3))   # rateado por recebimento e limitado a 1 caminhão
+    exige_chapa = Column(Boolean, nullable=False, default=False)   # peso estimado >= 500 kg
+    alertas = Column(JSONB, nullable=False, server_default="[]")
+    origem_dado = Column(_enum(Origem), nullable=False, default=Origem.HISTORICO,
+                         server_default=Origem.HISTORICO.value)
+
+
+class FolhaDiaria(Base):
+    """Folha diária dos ensacadores (04_mao_de_obra/chapas_por_dia.csv): quem trabalhou
+    e quanto foi pago no dia. É o registro real de efetivo para o 'sobra ou falta chapa'."""
+    __tablename__ = "folha_diaria"
+
+    data = Column(Date, primary_key=True)
+    dia_semana = Column(String(10))
+    chapas_presentes = Column(Integer, nullable=False)
+    chapas_operacao_cafe = Column(Integer, nullable=False, default=0)
+    valor_pago = Column(Numeric(12, 2), nullable=False)
+    suspeito = Column(Boolean, nullable=False, default=False)   # dia fora do padrão
+    motivo_suspeita = Column(String)

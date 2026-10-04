@@ -1,23 +1,28 @@
-"""Boletim Diário de Serviços dos Ensacadores (Tarefa 2).
+"""Boletim Diário de Serviços dos Ensacadores (Tarefa 2). Só o perfil ARMAZEM acessa.
 
 Ordem de uso: POST /boletins (abre o rascunho do dia; boletim geral, sem armazém)
   -> PUT /boletins/{id}/producao  e  PUT /boletins/{id}/equipe  (quantas vezes quiser)
   -> POST /boletins/{id}/fechar   (congela o custo do dia)
+  -> GET  /boletins/{id}/excel    (baixa o boletim formatado em .xlsx)
 """
 from datetime import date
 from typing import Optional
 
-from fastapi import APIRouter, Depends
-from fastapi.responses import Response
+from fastapi import APIRouter, Depends, Response
 from sqlalchemy.orm import Session
 
+from app.core.auth import exigir_perfil
 from app.core.database import get_db
-from app.models import LocalFisico, StatusBoletim
+from app.models import LocalFisico, PerfilUsuario, StatusBoletim
 from app.schemas.boletim import BoletimCreate, BoletimOut, EquipeIn, FecharIn, ProducaoIn
 from app.services import boletim_service as svc
 from app.services.boletim_excel import gerar_xlsx
 
-router = APIRouter(prefix="/boletins", tags=["Boletim diário (chapas)"])
+XLSX = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+
+# Quem preenche o boletim é o responsável do armazém (Compras e fornecedor não acessam)
+router = APIRouter(prefix="/boletins", tags=["Boletim diário (chapas)"],
+                   dependencies=[Depends(exigir_perfil(PerfilUsuario.ARMAZEM))])
 
 
 @router.post("", response_model=BoletimOut, status_code=201)
@@ -58,13 +63,13 @@ def reabrir(boletim_id: int, db: Session = Depends(get_db)):
 
 
 @router.get("/{boletim_id}/excel", response_class=Response,
-            responses={200: {"content": {"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {}}}})
+            responses={200: {"content": {XLSX: {}}}})
 def excel(boletim_id: int, db: Session = Depends(get_db)):
     """Boletim formatado em .xlsx (cabeçalho, seções, moeda e totais), igual à tela."""
     b = svc.para_saida(db, svc.buscar(db, boletim_id))
     nome = f"boletim-producao-{b['data'].isoformat()}.xlsx"
     return Response(
         content=gerar_xlsx(b),
-        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        media_type=XLSX,
         headers={"Content-Disposition": f'attachment; filename="{nome}"'},
     )

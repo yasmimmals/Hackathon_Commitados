@@ -288,7 +288,8 @@ class ConferenciaOut(BaseModel):
     agendamento: AgendamentoOut
     nota: NotaFiscalOut
     verificacoes: list[Verificacao]
-    pedido_compra: Optional[dict] = None   # entra com a carga dos pedidos (Parte 4)
+    pedido_compra: Optional[dict] = None   # itens do pedido (base histórica da Cocapec)
+    pedidos_recentes_do_fornecedor: list[int] = []   # ajuda o Compras a achar o pedido
 
 
 class NotificacaoOut(BaseModel):

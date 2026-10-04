@@ -20,7 +20,7 @@ from app.core.exceptions import NaoEncontradoError, RegraNegocioError
 from app.models import (
     Acondicionamento, Agendamento, Baia, Descarga, Equipamento, Fornecedor, Horario,
     LocalFisico, MotivoNaoRecebimento as Motivo, NotaFiscal, OrigemAgendamento as Origem,
-    StatusAgendamento as St, TipoNotificacao,
+    PedidoItem, StatusAgendamento as St, TipoNotificacao,
 )
 from app.services import clima_service, notificacao_service
 from app.services.nfe_parser import chave_valida, ler_nota
@@ -562,9 +562,36 @@ def reagendar_por_chuva(db: Session, ag_id: int, dados) -> Agendamento:
 
 # ------------------------------------------------------------------ compras: conferência (NOVO)
 
-def conferencia(db: Session, ag_id: int) -> dict:
-    """Tudo que o Compras precisa para decidir: a nota lida e checagens automáticas.
-    A decisão é humana: o sistema só aponta o que conferiu."""
+def _pedido(db: Session, numero: int) -> Optional[dict]:
+    itens = list(db.scalars(select(PedidoItem).where(PedidoItem.pedido == numero)
+                            .order_by(PedidoItem.codigo_item)))
+    if not itens:
+        return None
+    return {"numero": numero, "fornecedor_codigo": itens[0].fornecedor_codigo,
+            "data_documento": itens[0].data_documento.isoformat() if itens[0].data_documento else None,
+            "locais": sorted({i.local.value for i in itens if i.local}),
+            "itens": [{"codigo": i.codigo_item, "descricao": i.descricao,
+                       "quantidade": str(i.quantidade), "deposito": i.deposito,
+                       "local": i.local.value if i.local else None} for i in itens]}
+
+
+def _pedidos_recentes_do_fornecedor(db: Session, cnpj: str, limite: int = 5) -> list[int]:
+    codigos = list(db.scalars(select(Fornecedor.codigo).where(
+        Fornecedor.cnpj == cnpj, Fornecedor.codigo.is_not(None))))
+    if not codigos:
+        return []
+    linhas = db.execute(select(PedidoItem.pedido, func.max(PedidoItem.data_documento))
+                        .where(PedidoItem.fornecedor_codigo.in_(codigos))
+                        .group_by(PedidoItem.pedido)
+                        .order_by(func.max(PedidoItem.data_documento).desc()).limit(limite)).all()
+    return [p for p, _ in linhas]
+
+
+def conferencia(db: Session, ag_id: int, pedido: Optional[int] = None) -> dict:
+    """Tudo que o Compras precisa para decidir: a nota lida, o pedido de compra (se
+    informado ou já vinculado) e checagens automáticas. A decisão é humana: o sistema
+    só aponta o que conferiu. O código de item da nota é do fornecedor e não casa com
+    o da Cocapec, então a comparação item a item é visual."""
     ag = buscar(db, ag_id)
     if not ag.nota_fiscal_id:
         raise RegraNegocioError("Agendamento sem nota fiscal vinculada", codigo="SEM_NOTA")
@@ -585,7 +612,23 @@ def conferencia(db: Session, ag_id: int) -> dict:
               "detalhe": "; ".join(nota.alertas) or "nenhum"})
     v.append({"item": "Fornecedor com e-mail para aviso", "ok": bool(ag.fornecedor.email),
               "detalhe": ag.fornecedor.email or "sem e-mail: o aviso só ficará registrado"})
-    return {"agendamento": ag, "nota": nota, "verificacoes": v, "pedido_compra": None}
+
+    numero = pedido or ag.pedido_compra
+    dados_pedido = _pedido(db, numero) if numero else None
+    if numero:
+        v.append({"item": "Pedido de compra encontrado", "ok": dados_pedido is not None,
+                  "detalhe": (f"pedido {numero}: {len(dados_pedido['itens'])} item(ns), "
+                              f"armazém {', '.join(dados_pedido['locais']) or '-'}")
+                  if dados_pedido else f"pedido {numero} não está na base (pode ser recente)"})
+        if dados_pedido:
+            do_fornecedor = set(db.scalars(select(Fornecedor.cnpj).where(
+                Fornecedor.codigo == dados_pedido["fornecedor_codigo"])))
+            v.append({"item": "Pedido é do mesmo fornecedor da nota",
+                      "ok": nota.fornecedor.cnpj in do_fornecedor,
+                      "detalhe": f"pedido do fornecedor {dados_pedido['fornecedor_codigo']}"})
+    return {"agendamento": ag, "nota": nota, "verificacoes": v, "pedido_compra": dados_pedido,
+            "pedidos_recentes_do_fornecedor":
+                _pedidos_recentes_do_fornecedor(db, nota.fornecedor.cnpj)}
 
 
 # ------------------------------------------------------------------ consultas
