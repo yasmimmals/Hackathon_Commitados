@@ -1,6 +1,7 @@
 """Parâmetros de negócio num lugar só. Mudou a regra? Muda aqui."""
 import os
 from datetime import date, time
+from decimal import Decimal
 from zoneinfo import ZoneInfo
 
 TZ = ZoneInfo("America/Sao_Paulo")
@@ -51,3 +52,20 @@ MINUTOS_BATIDO_ATE_10T = 40           # 200 sacas de 50 kg
 MINUTOS_BATIDO_ACIMA_10T = 50         # 28 t a granel
 MINUTOS_MAQUINA = 20                  # adubadeira ou implemento
 VOLUMES_PADRAO = {"PALETIZADO": 10, "BIG_BAG": 20}   # quando a nota não permite estimar
+
+# ---- Boletim diário (dossiê, seção 8) ----
+PISO_DIARIA = Decimal("90.1731")       # diária completa: é o piso que forma o custo
+# A Cocapec preenche UM boletim geral por dia (informado pelo responsável; a folha dos
+# chapas também não separa armazém: LOCAL = FRANCA). O dossiê fala em um por armazém:
+# para esse modo, troque para True. Nunca há os dois no mesmo dia.
+BOLETIM_POR_ARMAZEM = False
+LIMITE_CHAPAS_POR_BOLETIM = 20         # o formulário de papel tem 20 linhas
+# Atenção: a planilha mostra "Meia diária R$ 45,0786", mas a fórmula dela (J65) nunca usa
+# esse valor: meia diária conta como 0,5 diária equivalente x piso (= 45,08655).
+
+# ---- E-mail para o fornecedor ----
+# Sem SMTP_HOST, os avisos ficam só registrados (status SIMULADA). No docker-compose,
+# o Mailpit recebe tudo e mostra em http://localhost:8025 (caixa de teste, não envia de verdade).
+SMTP_HOST = os.getenv("SMTP_HOST") or None
+SMTP_PORT = int(os.getenv("SMTP_PORT", "1025"))
+SMTP_REMETENTE = os.getenv("SMTP_REMETENTE", "recebimento@cocapec.com.br")

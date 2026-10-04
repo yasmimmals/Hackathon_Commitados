@@ -1,4 +1,4 @@
-"""Cadastros de apoio: baias (onde o caminhão encosta) e catálogo de equipamentos."""
+"""Cadastros de apoio: baias (docas), equipamentos, chapas e tipos de item do boletim."""
 from typing import Optional
 
 from fastapi import APIRouter, Depends
@@ -8,8 +8,9 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.core.exceptions import NaoEncontradoError, RegraNegocioError
-from app.models import Baia, Equipamento, LocalFisico
+from app.models import Baia, Chapa, Equipamento, LocalFisico, TipoItem
 from app.schemas.agendamento import BaiaCreate, BaiaOut, EquipamentoOut
+from app.schemas.boletim import ChapaCreate, ChapaOut, TipoItemOut
 
 router = APIRouter(prefix="/cadastros", tags=["Cadastros"])
 
@@ -53,3 +54,31 @@ def ativar_desativar_baia(baia_id: int, ativa: bool, db: Session = Depends(get_d
 @router.get("/equipamentos", response_model=list[EquipamentoOut])
 def listar_equipamentos(db: Session = Depends(get_db)):
     return db.scalars(select(Equipamento).order_by(Equipamento.nome)).all()
+
+
+@router.get("/chapas", response_model=list[ChapaOut])
+def listar_chapas(incluir_inativos: bool = False, db: Session = Depends(get_db)):
+    stmt = select(Chapa)
+    if not incluir_inativos:
+        stmt = stmt.where(Chapa.ativo.is_(True))
+    return db.scalars(stmt.order_by(Chapa.nome)).all()
+
+
+@router.post("/chapas", response_model=ChapaOut, status_code=201)
+def criar_chapa(dados: ChapaCreate, db: Session = Depends(get_db)):
+    chapa = Chapa(matricula=dados.matricula.strip(), nome=dados.nome)
+    db.add(chapa)
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise RegraNegocioError(f"Matrícula {dados.matricula} já cadastrada",
+                                codigo="CHAPA_DUPLICADO")
+    db.refresh(chapa)
+    return chapa
+
+
+@router.get("/tipos-item", response_model=list[TipoItemOut])
+def listar_tipos_item(db: Session = Depends(get_db)):
+    """As 14 linhas do boletim com o preço unitário."""
+    return db.scalars(select(TipoItem).where(TipoItem.ativo.is_(True)).order_by(TipoItem.id)).all()

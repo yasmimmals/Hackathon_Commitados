@@ -1,5 +1,5 @@
 """Rotas do fornecedor (enviar nota, consultar vagas, agendar, cancelar)
-e de Compras (aprovar/rejeitar).
+e de Compras (conferir, aprovar, reprovar).
 
 Fluxo do fornecedor:
   1. POST /agendamentos/nota-fiscal        -> envia XML ou PDF; o sistema lê tudo
@@ -15,10 +15,11 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.models import StatusAgendamento
 from app.schemas.agendamento import (
-    AgendamentoCreate, AgendamentoOut, AprovacaoIn, NotaFiscalOut, RejeicaoIn,
-    SlotDisponibilidade,
+    AgendamentoCreate, AgendamentoOut, AprovacaoIn, ConferenciaOut, NotaFiscalOut,
+    NotificacaoOut, RejeicaoIn, SlotDisponibilidade,
 )
 from app.services import agendamento_service as svc
+from app.services import notificacao_service
 
 router = APIRouter(prefix="/agendamentos", tags=["Agendamento (fornecedor e Compras)"])
 
@@ -67,7 +68,21 @@ def cancelar(ag_id: int, db: Session = Depends(get_db)):
     return out(svc.cancelar(db, ag_id))
 
 
+@router.get("/{ag_id}/notificacoes", response_model=list[NotificacaoOut])
+def notificacoes(ag_id: int, db: Session = Depends(get_db)):
+    """Avisos enviados ao fornecedor sobre este agendamento."""
+    svc.buscar(db, ag_id)
+    return notificacao_service.listar(db, ag_id)
+
+
 # ---- Compras ----
+
+@router.get("/{ag_id}/conferencia", response_model=ConferenciaOut)
+def conferencia(ag_id: int, db: Session = Depends(get_db)):
+    """Tela do Compras: nota lida + checagens automáticas, para aprovar ou reprovar."""
+    c = svc.conferencia(db, ag_id)
+    return {**c, "agendamento": out(c["agendamento"])}
+
 
 @router.post("/{ag_id}/aprovar", response_model=AgendamentoOut)
 def aprovar(ag_id: int, dados: AprovacaoIn, db: Session = Depends(get_db)):
@@ -76,4 +91,5 @@ def aprovar(ag_id: int, dados: AprovacaoIn, db: Session = Depends(get_db)):
 
 @router.post("/{ag_id}/rejeitar", response_model=AgendamentoOut)
 def rejeitar(ag_id: int, dados: RejeicaoIn, db: Session = Depends(get_db)):
+    """Reprovar exige motivo e observação; o fornecedor recebe o aviso por e-mail."""
     return out(svc.rejeitar(db, ag_id, dados))
