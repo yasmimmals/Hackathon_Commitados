@@ -1,7 +1,7 @@
 import type { EmpresaUsuario } from "@/shared/services";
 
-/** Área do sistema (grupo de rotas). O ADMIN entra pela área do armazém e acessa todas. */
-export type Perfil = "fornecedor" | "compras" | "armazem";
+/** Área do sistema (grupo de rotas). O administrador acessa todas as áreas e a documentação. */
+export type Perfil = "fornecedor" | "compras" | "armazem" | "administrador";
 
 export type Usuario = {
   id: number;

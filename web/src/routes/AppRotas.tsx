@@ -27,10 +27,16 @@ export default function AppRotas() {
             return (
               <Route key={perfil} path={base} element={<RotaProtegida perfil={perfil} />}>
                 <Route element={<LayoutPerfil />}>
-                  <Route index element={<Navigate to={rotas[0].path} replace />} />
-                  {rotas.map((r) => (
-                    <Route key={r.path} path={r.path} element={r.element} />
-                  ))}
+                  {rotas[0].path ? (
+                    <Route index element={<Navigate to={rotas[0].path} replace />} />
+                  ) : (
+                    <Route index element={rotas[0].element} />
+                  )}
+                  {rotas
+                    .filter((r) => r.path !== "")
+                    .map((r) => (
+                      <Route key={r.path} path={r.path} element={r.element} />
+                    ))}
                 </Route>
               </Route>
             );

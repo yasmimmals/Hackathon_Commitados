@@ -9,6 +9,7 @@ import BoletimProducao from "@/features/boletim-producao/BoletimProducao";
 import FilaValidacao from "@/features/compras-validacao/FilaValidacao";
 import HistoricoValidacoes from "@/features/compras-validacao/HistoricoValidacoes";
 import PainelGerencial from "@/features/painel-gerencial/PainelGerencial";
+import PaginaDocumentacao from "@/features/documentacao/PaginaDocumentacao";
 import EmConstrucao from "@/shared/components/ui/EmConstrucao";
 import { TELAS_EM_CONSTRUCAO as TELAS } from "./telasEmConstrucao";
 
@@ -59,14 +60,33 @@ export const GRUPOS: Record<Perfil, GrupoRotas> = {
       { path: "painel", element: <PainelGerencial />, menu: "Painel Gerencial" },
     ],
   },
+  administrador: {
+    rotulo: "Administrador",
+    base: "/documentacao",
+    rotas: [
+      { path: "", element: <PaginaDocumentacao />, menu: "Documentação" },
+      { path: ":slug", element: <PaginaDocumentacao /> },
+    ],
+  },
 };
 
 /** Itens do menu do perfil, com o caminho completo (base + rota). */
 export function menuDoPerfil(perfil: Perfil): ItemMenu[] {
+  // Controle só do front (demonstração). O Administrador vê todos os menus mais Documentação.
+  if (perfil === "administrador") {
+    const todosItens: ItemMenu[] = [
+      ...menuDoPerfil("fornecedor"),
+      ...menuDoPerfil("compras"),
+      ...menuDoPerfil("armazem"),
+      { href: "/documentacao", rotulo: "Documentação" },
+    ];
+    return todosItens;
+  }
+
   const { base, rotas } = GRUPOS[perfil];
   return rotas
     .filter((r) => r.menu)
-    .map((r) => ({ href: `${base}/${r.path}`, rotulo: r.menu! }));
+    .map((r) => ({ href: r.path ? `${base}/${r.path}` : base, rotulo: r.menu! }));
 }
 
 /** Item do menu correspondente à URL atual (o mais específico vence). */
