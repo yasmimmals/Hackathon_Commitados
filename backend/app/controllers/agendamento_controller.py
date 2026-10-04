@@ -19,7 +19,7 @@ from app.core.auth import (
 from app.core.database import get_db
 from app.models import Fornecedor, PerfilUsuario, StatusAgendamento, Usuario
 from app.schemas.agendamento import (
-    AgendamentoCreate, AgendamentoOut, AprovacaoIn, ConferenciaOut, NotaFiscalOut,
+    AgendamentoCreate, AgendamentoOut, AprovacaoIn, AtrasoIn, ConferenciaOut, NotaFiscalOut,
     NotificacaoOut, RejeicaoIn, SlotDisponibilidade,
 )
 from app.services import agendamento_service as svc
@@ -83,6 +83,14 @@ def cancelar(ag_id: int, db: Session = Depends(get_db),
              usuario: Usuario = Depends(exigir_perfil(PerfilUsuario.FORNECEDOR))):
     garantir_agendamento_do_fornecedor(usuario, svc.buscar(db, ag_id))
     return out(svc.cancelar(db, ag_id))
+
+
+@router.post("/{ag_id}/atraso", response_model=AgendamentoOut)
+def avisar_atraso(ag_id: int, dados: AtrasoIn, db: Session = Depends(get_db),
+                  usuario: Usuario = Depends(exigir_perfil(PerfilUsuario.FORNECEDOR))):
+    """Fornecedor avisa atraso; a equipe do armazém vê o aviso na agenda do dia."""
+    garantir_agendamento_do_fornecedor(usuario, svc.buscar(db, ag_id))
+    return out(svc.informar_atraso(db, ag_id, dados))
 
 
 @router.get("/{ag_id}/notificacoes", response_model=list[NotificacaoOut])
