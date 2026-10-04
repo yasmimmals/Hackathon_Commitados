@@ -11,7 +11,6 @@ const sinal = (v: number) => (v > 0 ? `+${moeda(v)}` : v < 0 ? `−${moeda(-v)}`
 
 type Carga = { chave: string; boletins?: Boletim[]; erro?: string };
 
-/** Sobra ou falta de chapas por armazém e período, em R$, a partir dos boletins do backend. */
 export default function PainelGerencial() {
   const [inicio, setInicio] = useState(() => dataLocalIso(-30));
   const [fim, setFim] = useState(() => dataLocalIso(-1));

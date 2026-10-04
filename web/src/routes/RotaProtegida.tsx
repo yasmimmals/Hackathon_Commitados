@@ -3,7 +3,6 @@ import { useAuth } from "@/features/auth/AuthContext";
 import { GRUPOS } from "./rotas";
 import type { Perfil } from "@/features/auth/types";
 
-/** Libera as rotas filhas apenas para o perfil informado (o ADMIN acessa todas as áreas). */
 export default function RotaProtegida({ perfil }: { perfil: Perfil }) {
   const { usuario } = useAuth();
   const location = useLocation();

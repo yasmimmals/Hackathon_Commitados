@@ -1,5 +1,6 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/features/auth/AuthContext";
+import Cadastro from "@/features/auth/Cadastro";
 import Login from "@/features/auth/Login";
 import PaginaInicial from "@/features/inicio/PaginaInicial";
 import type { Perfil } from "@/features/auth/types";
@@ -12,10 +13,6 @@ function RedirecionarInicio() {
   return <Navigate to={usuario ? GRUPOS[usuario.perfil].base : "/"} replace />;
 }
 
-/**
- * Monta o React Router a partir de GRUPOS (ver ./rotas.tsx): cada grupo
- * fica protegido pelo perfil dono e a primeira rota é a página inicial.
- */
 export default function AppRotas() {
   return (
     <BrowserRouter>
@@ -23,6 +20,7 @@ export default function AppRotas() {
         <Routes>
           <Route path="/" element={<PaginaInicial />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/cadastro" element={<Cadastro />} />
 
           {(Object.keys(GRUPOS) as Perfil[]).map((perfil) => {
             const { base, rotas } = GRUPOS[perfil];

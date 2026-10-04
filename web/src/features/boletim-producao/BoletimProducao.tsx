@@ -4,7 +4,7 @@ import { useAuth } from "@/features/auth/AuthContext";
 import MensagemStatus from "@/shared/components/ui/MensagemStatus";
 import { useMensagemTemporaria } from "@/shared/hooks/useMensagemTemporaria";
 import {
-  abrirBoletim, buscarBoletim, criarChapa, definirEquipe, ErroApi, fecharBoletim, lancarProducao,
+  abrirBoletim, baixarBoletimExcel, buscarBoletim, criarChapa, definirEquipe, ErroApi, fecharBoletim, lancarProducao,
   listarAgendamentos, listarBoletins, listarChapas, listarTiposItem, mensagemDeErro, reabrirBoletim,
   type Agendamento, type Boletim, type Chapa, type ChapaNoBoletimIn, type TipoItem,
 } from "@/shared/services";
@@ -16,7 +16,6 @@ import EquipeTemporaria from "./components/EquipeTemporaria";
 import FechamentoBoletim from "./components/FechamentoBoletim";
 import TabelaProducao, { type Rascunho } from "./components/TabelaProducao";
 import { verificarBoletim } from "./utils/boletim";
-import { exportarBoletimExcel } from "./utils/exportar";
 
 type Dados = { boletim: Boletim | null; tipos: TipoItem[]; chapas: Chapa[] };
 type Carga = { tipo: "carregando" } | { tipo: "erro"; mensagem: string } | { tipo: "ok"; dados: Dados };
@@ -29,7 +28,6 @@ const rascunhoDe = (b: Boletim | null): Rascunho =>
     ]),
   );
 
-/** Descargas concluídas no dia (todos os armazéns), para conferir a produção lançada. */
 function DescargasDoDia({ data }: { data: string }) {
   const [estado, setEstado] = useState<{ data: string; lista?: Agendamento[]; erro?: boolean }>({ data: "" });
 
@@ -77,12 +75,11 @@ function DescargasDoDia({ data }: { data: string }) {
 
 export default function BoletimProducao() {
   const { usuario } = useAuth();
-  // O boletim é fechado no dia seguinte: abre por padrão o de ontem.
   const [data, setData] = useState(() => dataLocalIso(-1));
   const [carga, setCarga] = useState<Carga>({ tipo: "carregando" });
   const [rascunho, setRascunho] = useState<Rascunho>({});
   const [alterado, setAlterado] = useState(false);
-  const [ocupado, setOcupado] = useState<"" | "abrir" | "producao" | "equipe" | "fechamento">("");
+  const [ocupado, setOcupado] = useState<"" | "abrir" | "producao" | "equipe" | "fechamento" | "excel">("");
   const [feedback, setFeedback] = useMensagemTemporaria(6000);
   const [erro, setErro] = useMensagemTemporaria(10000);
 
@@ -91,7 +88,6 @@ export default function BoletimProducao() {
     Promise.all([listarBoletins({ inicio: data, fim: data }), listarTiposItem(), listarChapas()]).then(
       ([boletins, tipos, chapas]) => {
         if (!ativo) return;
-        // Padrão da Cocapec: um boletim geral por dia (sem armazém).
         const boletim = boletins.find((b) => b.local === null) ?? boletins[0] ?? null;
         setCarga({ tipo: "ok", dados: { boletim, tipos: tipos.filter((t) => t.ativo), chapas } });
         setRascunho(rascunhoDe(boletim));
@@ -109,7 +105,6 @@ export default function BoletimProducao() {
   const dados = carga.tipo === "ok" ? carga.dados : undefined;
   const boletim = dados?.boletim ?? null;
 
-  /** Atualiza o boletim vindo da API; a produção em edição só é trocada quando pedido. */
   const aplicar = (b: Boletim, { reiniciarRascunho }: { reiniciarRascunho: boolean }) => {
     setCarga((c) => (c.tipo === "ok" ? { tipo: "ok", dados: { ...c.dados, boletim: b } } : c));
     if (reiniciarRascunho) {
@@ -136,7 +131,6 @@ export default function BoletimProducao() {
       try {
         aplicar(await abrirBoletim({ data }), { reiniciarRascunho: true });
       } catch (falha) {
-        // Outra pessoa abriu o boletim do dia: carrega o existente.
         if (falha instanceof ErroApi && falha.codigo === "BOLETIM_JA_EXISTE") {
           aplicar(await buscarBoletim(Number(falha.detalhes.boletim_id)), { reiniciarRascunho: true });
         } else throw falha;
@@ -185,6 +179,18 @@ export default function BoletimProducao() {
     });
   };
 
+  const exportarExcel = () =>
+    boletim &&
+    executar("excel", async () => {
+      const { arquivo, nome } = await baixarBoletimExcel(boletim.id);
+      const url = URL.createObjectURL(arquivo);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = nome;
+      link.click();
+      URL.revokeObjectURL(url);
+    });
+
   const verificacoes = useMemo(() => (boletim && dados ? verificarBoletim(boletim, dados.chapas) : []), [boletim, dados]);
   const bloqueado = boletim?.status === "FECHADO";
 
@@ -220,10 +226,13 @@ export default function BoletimProducao() {
           {boletim && (
             <button
               type="button"
-              onClick={() => exportarBoletimExcel(boletim)}
-              className="inline-flex items-center gap-2 rounded-full border border-site-verde bg-white px-4 py-2 text-sm font-semibold text-marca hover:bg-emerald-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-site-verde"
+              onClick={exportarExcel}
+              disabled={ocupado === "excel" || alterado}
+              title={alterado ? "Salve a produção antes de exportar" : undefined}
+              className="inline-flex items-center gap-2 rounded-full border border-site-verde bg-white px-4 py-2 text-sm font-semibold text-marca hover:bg-emerald-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-site-verde disabled:cursor-not-allowed disabled:opacity-50"
             >
-              <FileSpreadsheet className="h-4 w-4" aria-hidden /> Exportar para Excel
+              {ocupado === "excel" ? <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden /> : <FileSpreadsheet className="h-4 w-4" aria-hidden />}
+              Exportar para Excel
             </button>
           )}
         </div>

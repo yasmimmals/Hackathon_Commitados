@@ -22,10 +22,6 @@ export const TELAS_EM_CONSTRUCAO = {
       "Recusar agendamento (motivo obrigatório)",
     ],
   },
-  historicoValidacoes: {
-    titulo: "Histórico de Validações",
-    acoes: ["Consultar validações aprovadas e recusadas"],
-  },
   recebimentoCaminhao: {
     titulo: "Recebimento do Caminhão",
     acoes: [

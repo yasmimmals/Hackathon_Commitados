@@ -17,7 +17,6 @@ function Dado({ rotulo, valor }: { rotulo: string; valor: string }) {
   );
 }
 
-/** Conferência do Compras: checagens automáticas do backend + a NF-e completa. */
 export default function DetalhesNota({ agendamentoId }: { agendamentoId: number }) {
   const [estado, setEstado] = useState<Estado>({ tipo: "carregando" });
 

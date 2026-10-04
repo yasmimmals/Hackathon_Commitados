@@ -7,6 +7,7 @@ import Boletim from "@/features/boletim/Boletim";
 import AgendaDoDia from "@/features/armazem-recebimento/AgendaDoDia";
 import BoletimProducao from "@/features/boletim-producao/BoletimProducao";
 import FilaValidacao from "@/features/compras-validacao/FilaValidacao";
+import HistoricoValidacoes from "@/features/compras-validacao/HistoricoValidacoes";
 import PainelGerencial from "@/features/painel-gerencial/PainelGerencial";
 import SuporteBalanca from "@/features/suporte-balanca/SuporteBalanca";
 import EmConstrucao from "@/shared/components/ui/EmConstrucao";
@@ -55,7 +56,7 @@ export const GRUPOS: Record<Perfil, GrupoRotas> = {
     rotas: [
       { path: "validacoes", element: <FilaValidacao />, menu: "Fila de Validação" },
       { path: "validacoes/:id", element: <EmConstrucao {...TELAS.validarAgendamento} /> },
-      { path: "historico", element: <EmConstrucao {...TELAS.historicoValidacoes} />, menu: "Histórico de Validações" },
+      { path: "historico", element: <HistoricoValidacoes />, menu: "Histórico de Validações" },
     ],
   },
   armazem: {

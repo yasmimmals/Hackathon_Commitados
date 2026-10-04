@@ -1,13 +1,17 @@
 import type { Clima, DiaPrevisao, IconeClima, SeloJanela, StatusJanela } from "../types";
 
-/** Complexo Logístico Franca/SP (Alta Mogiana). */
-const LATITUDE = -20.5386;
-const LONGITUDE = -47.4008;
+export const UNIDADES = {
+  matriz: { nome: "Complexo Logístico Franca - Matriz", cidade: "Franca/SP", latitude: -20.5386, longitude: -47.4008 },
+  pedregulho: { nome: "Unidade Pedregulho", cidade: "Pedregulho/SP", latitude: -20.2569, longitude: -47.4767 },
+  patrocinio: { nome: "Unidade Patrocínio Paulista", cidade: "Patrocínio Paulista/SP", latitude: -20.6394, longitude: -47.2817 },
+} as const;
+
+export type Unidade = keyof typeof UNIDADES;
+
 const TIMEZONE = "America/Sao_Paulo";
-/** Dados reais são reconsultados a cada 10 min (cache em memória no navegador). */
 const VALIDADE_CACHE_MS = 10 * 60 * 1000;
 
-let cache: { em: number; clima: Promise<Clima> } | null = null;
+const cache = new Map<Unidade, { em: number; clima: Promise<Clima> }>();
 
 type RespostaOpenMeteo = {
   current: {
@@ -38,7 +42,7 @@ const DIAS_SEMANA = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta"
 const MESES = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
 const PONTOS_CARDEAIS = ["N", "NE", "L", "SE", "S", "SO", "O", "NO"];
 
-/** Códigos WMO → descrição em português. */
+
 function descreverCodigo(codigo: number): string {
   if (codigo === 0) return "Céu limpo";
   if (codigo === 1) return "Predomínio de sol";
@@ -108,23 +112,24 @@ function classificarDia(
   return { janela: "Dia todo liberado (todas moegas)", status: "aberta", selo: "aberta" };
 }
 
-/** Condições atuais e previsão de 7 dias para Franca/SP, via Open-Meteo (com cache). */
-export function buscarClima(): Promise<Clima> {
-  if (!cache || Date.now() - cache.em > VALIDADE_CACHE_MS) {
-    const clima = consultarOpenMeteo();
-    cache = { em: Date.now(), clima };
-    // Falha não fica em cache: a próxima chamada tenta de novo.
-    clima.catch(() => {
-      if (cache?.clima === clima) cache = null;
-    });
-  }
-  return cache.clima;
+/** Condições atuais e previsão de 7 dias da unidade, via Open-Meteo (com cache por unidade). */
+export function buscarClima(unidade: Unidade = "matriz"): Promise<Clima> {
+  const atual = cache.get(unidade);
+  if (atual && Date.now() - atual.em <= VALIDADE_CACHE_MS) return atual.clima;
+  const clima = consultarOpenMeteo(unidade);
+  cache.set(unidade, { em: Date.now(), clima });
+  // Falha não fica em cache: a próxima chamada tenta de novo.
+  clima.catch(() => {
+    if (cache.get(unidade)?.clima === clima) cache.delete(unidade);
+  });
+  return clima;
 }
 
-async function consultarOpenMeteo(): Promise<Clima> {
+async function consultarOpenMeteo(unidade: Unidade): Promise<Clima> {
+  const { latitude, longitude } = UNIDADES[unidade];
   const params = new URLSearchParams({
-    latitude: String(LATITUDE),
-    longitude: String(LONGITUDE),
+    latitude: String(latitude),
+    longitude: String(longitude),
     timezone: TIMEZONE,
     current: "temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,wind_direction_10m",
     hourly: "precipitation_probability,precipitation",

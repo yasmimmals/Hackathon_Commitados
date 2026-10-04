@@ -6,7 +6,6 @@ export type IconeClima = "sol" | "nublado" | "chuva" | "tempestade" | "garoa";
 
 export type DiaPrevisao = {
   dia: string;
-  /** Data no formato AAAA-MM-DD. */
   iso: string;
   data: string;
   icone: IconeClima;
@@ -32,9 +31,7 @@ export type CondicaoAtual = {
 export type ChuvaHoje = {
   mm: number;
   probabilidade: number;
-  /** Primeira hora (a partir de agora) com probabilidade ≥ 50%, ex.: "14h". */
   inicioEstimado: string | null;
-  /** Maior intensidade horária prevista para o resto do dia (mm/h). */
   picoMmH: number;
 };
 

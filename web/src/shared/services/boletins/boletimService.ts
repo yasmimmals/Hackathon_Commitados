@@ -48,3 +48,11 @@ export async function reabrirBoletim(id: number): Promise<Boletim> {
   const { data } = await api.post<Boletim>(`${BASE}/${id}/reabrir`);
   return data;
 }
+
+/** GET /boletins/{id}/excel — boletim formatado (.xlsx) para baixar. */
+export async function baixarBoletimExcel(id: number): Promise<{ arquivo: Blob; nome: string }> {
+  const resposta = await api.get<Blob>(`${BASE}/${id}/excel`, { responseType: "blob" });
+  const disposicao = String(resposta.headers["content-disposition"] ?? "");
+  const nome = /filename="?([^"]+)"?/.exec(disposicao)?.[1] ?? `boletim-${id}.xlsx`;
+  return { arquivo: resposta.data, nome };
+}

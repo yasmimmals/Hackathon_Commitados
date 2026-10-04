@@ -2,14 +2,12 @@ import { useState } from "react";
 import { moeda } from "@/shared/utils/formatacao";
 import type { ResumoGrupo } from "../utils/indicadores";
 
-/** Par divergente validado (dataviz: blue ↔ red, CVD ΔE 21.6, contraste ≥ 3:1). */
 export const COR_SOBRA = "#e34948";
 export const COR_FALTA = "#2a78d6";
 
 const sinal = (v: number) => (v > 0 ? `+${moeda(v)}` : v < 0 ? `−${moeda(-v)}` : moeda(0));
 const leitura = (v: number) => (v > 0 ? "sobra de chapas" : v < 0 ? "falta de chapas" : "equipe ajustada");
 
-/** Saldo em R$ por armazém, em barras divergentes a partir do zero (sobra à direita, falta à esquerda). */
 export default function GraficoSaldo({ resumo }: { resumo: ResumoGrupo[] }) {
   const [ativo, setAtivo] = useState<string | null>(null);
   const maximo = Math.max(1, ...resumo.map((r) => Math.abs(r.saldoReais)));
@@ -47,7 +45,7 @@ export default function GraficoSaldo({ resumo }: { resumo: ResumoGrupo[] }) {
             >
               <span className="truncate text-xs text-gray-700 sm:text-sm">{r.rotulo}</span>
               <div className="relative h-6">
-                {/* Linha do zero */}
+                
                 <span className="absolute inset-y-0 left-1/2 w-px bg-gray-300" aria-hidden />
                 {r.saldoReais !== 0 && (
                   <span

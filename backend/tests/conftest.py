@@ -104,7 +104,7 @@ def usuario_admin():
     from main import app
 
     app.dependency_overrides[usuario_atual] = lambda: Usuario(
-        id=0, email="admin@teste", nome="Admin de teste", perfil=PerfilUsuario.ADMIN,
+        id=None, email="admin@teste", nome="Admin de teste", perfil=PerfilUsuario.ADMIN,
         senha_hash="-", ativo=True)
     yield
     app.dependency_overrides.pop(usuario_atual, None)

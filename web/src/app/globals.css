@@ -41,3 +41,24 @@
   font-style: italic;
   color: var(--color-site-azul);
 }
+
+/* Impressão / "Salvar como PDF": página A4, fundo branco, cores preservadas e cards inteiros. */
+@media print {
+  @page {
+    size: A4;
+    margin: 12mm;
+  }
+
+  body {
+    background: #fff;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  section,
+  figure,
+  li,
+  dl > div {
+    break-inside: avoid;
+  }
+}

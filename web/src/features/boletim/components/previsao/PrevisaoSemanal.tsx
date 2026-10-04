@@ -66,7 +66,7 @@ export default function PrevisaoSemanal({
         >
           Previsão do tempo
         </h2>
-        <div className="flex gap-2">
+        <div className="flex gap-2 print:hidden">
           <button
             type="button"
             onClick={() => rolar(-1)}
@@ -107,7 +107,7 @@ export default function PrevisaoSemanal({
         ref={trilho}
         onScroll={atualizarLimites}
         aria-label="Previsão diária"
-        className={`flex snap-x snap-mandatory overflow-x-auto p-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${compacto ? "gap-2" : "gap-3 pb-2"}`}
+        className={`flex snap-x snap-mandatory overflow-x-auto p-1 [scrollbar-width:none] print:flex-wrap print:overflow-visible [&::-webkit-scrollbar]:hidden ${compacto ? "gap-2" : "gap-3 pb-2"}`}
       >
         {previsao.map((d) => {
           const ativo = d.iso === dia?.iso;
