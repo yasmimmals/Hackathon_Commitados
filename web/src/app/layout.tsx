@@ -1,8 +1,9 @@
 import type { ReactNode } from "react";
 import type { Metadata, Viewport } from "next";
-import { Ubuntu } from "next/font/google";
+import { Atkinson_Hyperlegible, Ubuntu } from "next/font/google";
 import AvisoConexao from "@/shared/components/pwa/AvisoConexao";
 import RegistroPwa from "@/shared/components/pwa/RegistroPwa";
+import { ProvedorAcessibilidade, SCRIPT_ANTES_DE_PINTAR } from "@/shared/acessibilidade";
 import "./globals.css";
 
 
@@ -11,6 +12,14 @@ const ubuntu = Ubuntu({
   weight: ["400", "500", "700"],
   style: ["normal", "italic"],
   variable: "--font-ubuntu",
+  display: "swap",
+});
+
+// Fonte de alta legibilidade (Braille Institute), ativada pela opção "Fonte para dislexia"
+const atkinson = Atkinson_Hyperlegible({
+  subsets: ["latin"],
+  weight: ["400", "700"],
+  variable: "--font-atkinson",
   display: "swap",
 });
 
@@ -32,11 +41,17 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
   return (
-    <html lang="pt-BR" className={`${ubuntu.variable} h-full antialiased`}>
+    <html lang="pt-BR" className={`${ubuntu.variable} ${atkinson.variable} h-full antialiased`} suppressHydrationWarning>
+      <head>
+        {/* aplica tema e tamanho de texto salvos ANTES de pintar: sem "flash" para quem usa alto contraste */}
+        <script dangerouslySetInnerHTML={{ __html: SCRIPT_ANTES_DE_PINTAR }} />
+      </head>
       <body className="flex min-h-full flex-col bg-fundo font-sans text-gray-900">
-        {children}
-        <AvisoConexao />
-        <RegistroPwa />
+        <ProvedorAcessibilidade>
+          {children}
+          <AvisoConexao />
+          <RegistroPwa />
+        </ProvedorAcessibilidade>
       </body>
     </html>
   );

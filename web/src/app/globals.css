@@ -63,19 +63,270 @@
   }
 }
 
-html.alto-contraste {
-  filter: contrast(135%);
+/* =====================================================================
+ * ACESSIBILIDADE (Central de Acessibilidade, Alt + A)
+ * As preferências viram atributos no <html> (data-tema, data-dislexia...).
+ * Os temas trocam as VARIÁVEIS de cor do Tailwind: todas as telas mudam
+ * juntas, sem editar componente por componente.
+ * ===================================================================== */
+
+/* Tamanho do texto: tudo no Tailwind é em rem, então escala a interface inteira */
+html {
+  font-size: calc(100% * var(--escala-texto, 1));
 }
 
-html.alto-contraste body {
-  background-color: #f8fafc;
+/* Foco visível para todos (WCAG 2.4.7); componentes com anel próprio continuam com o deles */
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 3px solid var(--color-site-azul);
+  outline-offset: 2px;
 }
 
-html.fonte-grande {
-  font-size: 110%;
+/* ---------- Tema escuro ---------- */
+html[data-tema="escuro"] {
+  --color-white: #121c2e;
+  --color-fundo: #0a1220;
+  --color-marca: #5cbf3a;
+  --color-marca-escuro: #4aa82c;
+  --color-marca-profundo: #3c8f22;
+  --color-site-azul: #6cb0ff;
+  --color-site-azul-escuro: #4c97ef;
+  --color-site-verde: #6fd04c;
+  --color-site-verde-escuro: #5cbf3a;
+  --color-site-amarelo: #f6c945;
+  --color-emerald-50: #0e2a22;
+  --color-emerald-100: #1c362f;
+  --color-emerald-200: #2a433c;
+  --color-emerald-300: #395049;
+  --color-emerald-400: #7ee2b8;
+  --color-emerald-500: #7ee2b8;
+  --color-emerald-600: #7ee2b8;
+  --color-emerald-700: #7ee2b8;
+  --color-emerald-800: #7ee2b8;
+  --color-emerald-900: #7ee2b8;
+  --color-emerald-950: #7ee2b8;
+  --color-sky-50: #0d2a45;
+  --color-sky-100: #1b3650;
+  --color-sky-200: #2a435b;
+  --color-sky-300: #385066;
+  --color-sky-400: #9fd3ff;
+  --color-sky-500: #9fd3ff;
+  --color-sky-600: #9fd3ff;
+  --color-sky-700: #9fd3ff;
+  --color-sky-800: #9fd3ff;
+  --color-sky-900: #9fd3ff;
+  --color-sky-950: #9fd3ff;
+  --color-red-50: #3a1517;
+  --color-red-100: #452324;
+  --color-red-200: #513132;
+  --color-red-300: #5d3f40;
+  --color-red-400: #ff9b9b;
+  --color-red-500: #ff9b9b;
+  --color-red-600: #ff9b9b;
+  --color-red-700: #ff9b9b;
+  --color-red-800: #ff9b9b;
+  --color-red-900: #ff9b9b;
+  --color-red-950: #ff9b9b;
+  --color-amber-50: #3a2a08;
+  --color-amber-100: #453616;
+  --color-amber-200: #514325;
+  --color-amber-300: #5d5034;
+  --color-amber-400: #ffd98a;
+  --color-amber-500: #ffd98a;
+  --color-amber-600: #ffd98a;
+  --color-amber-700: #ffd98a;
+  --color-amber-800: #ffd98a;
+  --color-amber-900: #ffd98a;
+  --color-amber-950: #ffd98a;
+  --color-blue-50: #0f2347;
+  --color-blue-100: #1d3052;
+  --color-blue-200: #2b3d5d;
+  --color-blue-300: #3a4a68;
+  --color-blue-400: #a9c7ff;
+  --color-blue-500: #a9c7ff;
+  --color-blue-600: #a9c7ff;
+  --color-blue-700: #a9c7ff;
+  --color-blue-800: #a9c7ff;
+  --color-blue-900: #a9c7ff;
+  --color-blue-950: #a9c7ff;
+  --color-slate-50: #1d2a40;
+  --color-slate-100: #2a364b;
+  --color-slate-200: #384356;
+  --color-slate-300: #455062;
+  --color-slate-400: #e2e8f0;
+  --color-slate-500: #e2e8f0;
+  --color-slate-600: #e2e8f0;
+  --color-slate-700: #e2e8f0;
+  --color-slate-800: #e2e8f0;
+  --color-slate-900: #e2e8f0;
+  --color-slate-950: #e2e8f0;
+  --color-gray-50: #172235;
+  --color-gray-100: #1d2a40;
+  --color-gray-200: #2a3a55;
+  --color-gray-300: #3b4d6b;
+  --color-gray-400: #8a97ad;
+  --color-gray-500: #a9b4c6;
+  --color-gray-600: #c4ccd9;
+  --color-gray-700: #d7dde7;
+  --color-gray-800: #e7ebf1;
+  --color-gray-900: #f3f5f8;
+  --color-gray-950: #ffffff;
 }
 
-html.fonte-extragrande {
-  font-size: 120%;
+/* ---------- Alto contraste (WCAG AAA): preto, branco e amarelo ---------- */
+html[data-tema="alto-contraste"] {
+  --color-white: #000000;
+  --color-fundo: #000000;
+  --color-marca: #ffe600;
+  --color-marca-escuro: #fff27a;
+  --color-marca-profundo: #fff27a;
+  --color-site-azul: #ffe600;
+  --color-site-azul-escuro: #fff27a;
+  --color-site-verde: #7cff6b;
+  --color-site-verde-escuro: #7cff6b;
+  --color-site-amarelo: #00e5ff;
+  --color-emerald-50: #000000;
+  --color-emerald-100: #000000;
+  --color-emerald-200: #000000;
+  --color-emerald-300: #000000;
+  --color-emerald-400: #7cff6b;
+  --color-emerald-500: #7cff6b;
+  --color-emerald-600: #7cff6b;
+  --color-emerald-700: #7cff6b;
+  --color-emerald-800: #7cff6b;
+  --color-emerald-900: #7cff6b;
+  --color-emerald-950: #7cff6b;
+  --color-sky-50: #000000;
+  --color-sky-100: #000000;
+  --color-sky-200: #000000;
+  --color-sky-300: #000000;
+  --color-sky-400: #00e5ff;
+  --color-sky-500: #00e5ff;
+  --color-sky-600: #00e5ff;
+  --color-sky-700: #00e5ff;
+  --color-sky-800: #00e5ff;
+  --color-sky-900: #00e5ff;
+  --color-sky-950: #00e5ff;
+  --color-red-50: #000000;
+  --color-red-100: #000000;
+  --color-red-200: #000000;
+  --color-red-300: #000000;
+  --color-red-400: #ff6b6b;
+  --color-red-500: #ff6b6b;
+  --color-red-600: #ff6b6b;
+  --color-red-700: #ff6b6b;
+  --color-red-800: #ff6b6b;
+  --color-red-900: #ff6b6b;
+  --color-red-950: #ff6b6b;
+  --color-amber-50: #000000;
+  --color-amber-100: #000000;
+  --color-amber-200: #000000;
+  --color-amber-300: #000000;
+  --color-amber-400: #ffe600;
+  --color-amber-500: #ffe600;
+  --color-amber-600: #ffe600;
+  --color-amber-700: #ffe600;
+  --color-amber-800: #ffe600;
+  --color-amber-900: #ffe600;
+  --color-amber-950: #ffe600;
+  --color-blue-50: #000000;
+  --color-blue-100: #000000;
+  --color-blue-200: #000000;
+  --color-blue-300: #000000;
+  --color-blue-400: #00e5ff;
+  --color-blue-500: #00e5ff;
+  --color-blue-600: #00e5ff;
+  --color-blue-700: #00e5ff;
+  --color-blue-800: #00e5ff;
+  --color-blue-900: #00e5ff;
+  --color-blue-950: #00e5ff;
+  --color-slate-50: #000000;
+  --color-slate-100: #000000;
+  --color-slate-200: #000000;
+  --color-slate-300: #000000;
+  --color-slate-400: #ffffff;
+  --color-slate-500: #ffffff;
+  --color-slate-600: #ffffff;
+  --color-slate-700: #ffffff;
+  --color-slate-800: #ffffff;
+  --color-slate-900: #ffffff;
+  --color-slate-950: #ffffff;
+  --color-gray-50: #000000;
+  --color-gray-100: #0a0a0a;
+  --color-gray-200: #1a1a1a;
+  --color-gray-300: #ffffff;
+  --color-gray-400: #ffffff;
+  --color-gray-500: #ffffff;
+  --color-gray-600: #ffffff;
+  --color-gray-700: #ffffff;
+  --color-gray-800: #ffffff;
+  --color-gray-900: #ffffff;
+  --color-gray-950: #ffffff;
+}
+/* sem sombras para separar, os cartões ganham contorno */
+html[data-tema="alto-contraste"] :where(.shadow-sm, .shadow, .shadow-md, .shadow-lg, .shadow-xl) {
+  outline: 1px solid #ffffff;
+}
+html[data-tema="alto-contraste"] img:not([src$=".svg"]) {
+  filter: grayscale(1) contrast(1.2);
 }
 
+/* ---------- Fonte para dislexia (Atkinson Hyperlegible) ---------- */
+html[data-dislexia] {
+  --font-sans: var(--font-atkinson), ui-sans-serif, system-ui, sans-serif;
+}
+html[data-dislexia] :where(.titulo-pagina, .titulo-secao, i, em) {
+  font-style: normal;
+}
+
+/* ---------- Espaçamento de leitura (WCAG 1.4.12) ---------- */
+html[data-espacamento] body {
+  line-height: 1.7;
+}
+html[data-espacamento] :where(p, li, td, th, dd, dt, label, span, a, button, h1, h2, h3) {
+  letter-spacing: 0.05em;
+  word-spacing: 0.14em;
+}
+
+/* ---------- Links destacados (não dependem só de cor) ---------- */
+html[data-links] :where(a, [role="link"]) {
+  text-decoration: underline !important;
+  text-decoration-thickness: 2px !important;
+  text-underline-offset: 3px;
+  background-color: color-mix(in srgb, var(--color-site-amarelo) 30%, transparent);
+}
+
+/* ---------- Foco reforçado ---------- */
+html[data-foco] :focus-visible {
+  outline: 4px solid var(--color-site-amarelo) !important;
+  outline-offset: 3px !important;
+  box-shadow: 0 0 0 8px var(--color-site-azul) !important;
+}
+
+/* ---------- Alvos de toque grandes (WCAG 2.5.5) ---------- */
+html[data-alvos] :where(button, [role="button"], [role="tab"], [role="switch"], select, a,
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"])) {
+  min-height: 44px;
+}
+html[data-alvos] :where(button, [role="button"]) {
+  min-width: 44px;
+}
+html[data-alvos] :where(input[type="checkbox"], input[type="radio"]) {
+  width: 1.4rem;
+  height: 1.4rem;
+}
+
+/* ---------- Cursor grande ---------- */
+html[data-cursor],
+html[data-cursor] * {
+  cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 24 24'><path d='M4 2l14 9-6.5 1.5L15 20l-3 1.5-3.5-7.5L4 18z' fill='black' stroke='white' stroke-width='1.5'/></svg>") 4 2, auto !important;
+}
+
+/* ---------- Reduzir movimento ---------- */
+html[data-sem-movimento] *,
+html[data-sem-movimento] *::before,
+html[data-sem-movimento] *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+  scroll-behavior: auto !important;
+}

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Info, LoaderCircle, ServerCrash } from "lucide-react";
-import { COR, ROTULO_SITUACAO } from "../utils/carga";
+import { useCores } from "@/shared/components/graficos";
+import { ROTULO_SITUACAO } from "../utils/carga";
 
 export function Carregando({ texto = "Calculando…" }: { texto?: string }) {
   return (
@@ -50,6 +51,7 @@ export function Premissas({ itens, titulo = "Como este número é calculado" }: 
 }
 
 export function LegendaSituacao({ situacoes }: { situacoes: string[] }) {
+  const { situacao: COR } = useCores();
   return (
     <span className="flex flex-wrap gap-3 text-xs text-gray-700">
       {situacoes.map((s) => (
@@ -63,6 +65,7 @@ export function LegendaSituacao({ situacoes }: { situacoes: string[] }) {
 }
 
 export function SeloSituacao({ situacao }: { situacao?: string | null }) {
+  const { situacao: COR } = useCores();
   if (!situacao) return <span className="text-gray-400">—</span>;
   return (
     <span className="inline-block rounded-full px-2 py-0.5 text-[11px] font-semibold text-white"

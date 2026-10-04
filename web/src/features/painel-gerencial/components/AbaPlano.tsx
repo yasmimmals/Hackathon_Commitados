@@ -1,154 +1,225 @@
-import { useState } from "react";
-import { obterPlanoEscala, type MesPlano } from "@/shared/services";
+import { useEffect, useState } from "react";
+import { Area, AreaChart, Bar, CartesianGrid, Cell, ComposedChart, Line, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { obterPlanoEscala } from "@/shared/services";
+import { CartaoGrafico, CartaoKpi, Legenda, TooltipGrafico, useCores } from "@/shared/components/graficos";
 import { decimal, moeda } from "@/shared/utils/formatacao";
-import { COR, corDaSituacao, rotuloMes, useCarga } from "../utils/carga";
-import { Carregando, Erro, Kpi, LegendaSituacao, Premissas, SeloSituacao } from "./Estados";
+import { ROTULO_SITUACAO, rotuloMes, useCarga } from "../utils/carga";
+import { eixoX, eixoY, grade, margem, moedaCurta, num } from "../utils/graficos";
+import { Carregando, Erro, LegendaSituacao, Premissas } from "./Estados";
+
+/** Espera o usuário parar de arrastar o controle antes de recalcular no backend. */
+function useAtrasado<T>(valor: T, ms = 350) {
+  const [v, setV] = useState(valor);
+  useEffect(() => {
+    const t = window.setTimeout(() => setV(valor), ms);
+    return () => window.clearTimeout(t);
+  }, [valor, ms]);
+  return v;
+}
 
 export default function AbaPlano() {
+  const c = useCores();
   const [reserva, setReserva] = useState(2);
-  const [simular, setSimular] = useState("");
-  const equipeFixa = simular === "" ? undefined : Number(simular);
+  const [simular, setSimular] = useState(false);
+  const [equipe, setEquipe] = useState(8);
+  const r = useAtrasado(reserva);
+  const e = useAtrasado(equipe);
   const { dados, erro, carregando } = useCarga(
-    () => obterPlanoEscala({ meses: 12, reserva, equipe_fixa: equipeFixa }),
-    `${reserva}|${simular}`,
+    () => obterPlanoEscala({ meses: 12, reserva: r, equipe_fixa: simular ? e : undefined }),
+    `${r}|${simular ? e : "-"}`,
   );
 
   const controles = (
-    <div className="flex flex-wrap items-end gap-3 rounded-2xl bg-white px-4 py-3 shadow-sm">
-      <label className="text-xs font-semibold text-gray-700">
-        Reserva p/ carregamento e organização
-        <input type="number" min={0} max={8} value={reserva}
-          onChange={(e) => setReserva(Math.max(0, Math.min(8, Number(e.target.value) || 0)))}
-          className="mt-1 block w-28 rounded-full border border-gray-300 bg-white px-3 py-1.5 text-sm" />
+    <section aria-label="Ajustes do plano" className="grid gap-4 rounded-3xl bg-white p-4 shadow-sm sm:grid-cols-2 sm:p-5">
+      <label className="block">
+        <span className="flex justify-between text-sm font-semibold text-gray-800">
+          Reserva para carregamento e organização <span className="tabular-nums text-site-azul">{reserva} chapas</span>
+        </span>
+        <input type="range" min={0} max={6} value={reserva} onChange={(ev) => setReserva(Number(ev.target.value))}
+          aria-valuetext={`${reserva} chapas`} className="mt-2 h-10 w-full accent-site-azul" />
+        <span className="text-[11px] text-gray-500">Atividades que não estão nos dados, como carregar cooperados.</span>
       </label>
-      <label className="text-xs font-semibold text-gray-700">
-        Simular equipe fixa de
-        <input type="number" min={1} max={30} placeholder="ex.: 8" value={simular}
-          onChange={(e) => setSimular(e.target.value)}
-          className="mt-1 block w-28 rounded-full border border-gray-300 bg-white px-3 py-1.5 text-sm" />
-      </label>
-      {simular !== "" && (
-        <button type="button" onClick={() => setSimular("")} className="pb-1.5 text-xs font-semibold text-site-azul hover:underline">
-          limpar simulação
+      <div>
+        <button type="button" role="switch" aria-checked={simular} onClick={() => setSimular(!simular)}
+          className="flex w-full items-center justify-between text-sm font-semibold text-gray-800">
+          Simular equipe fixa
+          <span aria-hidden className={`relative h-7 w-12 rounded-full transition ${simular ? "bg-site-azul" : "bg-gray-300"}`}>
+            <span className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow transition-all ${simular ? "left-6" : "left-1"}`} />
+          </span>
         </button>
-      )}
-      <p className="basis-full text-[11px] text-gray-500 sm:basis-auto sm:pb-1.5">
-        Mude os valores e o plano é recalculado na hora pelo sistema.
-      </p>
-    </div>
+        <label className={`mt-2 block ${simular ? "" : "opacity-40"}`}>
+          <span className="flex justify-between text-xs font-semibold text-gray-700">
+            Chapas o ano todo <span className="tabular-nums text-site-azul">{equipe}</span>
+          </span>
+          <input type="range" min={4} max={20} value={equipe} disabled={!simular} onChange={(ev) => setEquipe(Number(ev.target.value))}
+            aria-valuetext={`${equipe} chapas`} className="mt-1 h-10 w-full accent-site-azul" />
+        </label>
+      </div>
+    </section>
   );
 
-  if (carregando) return <div className="space-y-4">{controles}<Carregando texto="Montando o plano de escala…" /></div>;
-  if (erro || !dados) return <div className="space-y-4">{controles}<Erro mensagem={erro ?? "sem dados"} /></div>;
+  if (carregando && !dados) return <div className="space-y-5">{controles}<Carregando texto="Montando o plano de escala…" /></div>;
+  if (erro || !dados) return <div className="space-y-5">{controles}<Erro mensagem={erro ?? "sem dados"} /></div>;
 
-  const r = dados.resumo;
-  const maximo = Math.max(1, ...dados.meses.map((m) => Math.max(m.equipe_recomendada, m.equipe_pratica_atual ?? 0, m.equipe_simulada ?? 0)));
-  const economia = r.diferenca;
+  const res = dados.resumo;
+  const linhas = dados.meses.map((m) => ({
+    rotulo: m.rotulo, caminhoes: m.caminhoes_dia_previsto, atual: m.equipe_pratica_atual ?? 0,
+    recomendada: m.equipe_recomendada, simulada: m.equipe_simulada, situacao: m.situacao_pratica_atual ?? "NEUTRO",
+    situacaoSim: m.situacao_simulada, custoAtual: m.custo_pratica_atual, custoRec: m.custo_recomendado, custoSim: m.custo_simulado,
+  }));
+  let a = 0, p = 0, s = 0;
+  const acumulado = linhas.map((l) => ({ rotulo: l.rotulo, atual: (a += l.custoAtual), plano: (p += l.custoRec),
+    ...(l.custoSim != null ? { simulado: (s += l.custoSim) } : {}) }));
+  const precisao = dados.precisao.detalhe.map((d) => ({ rotulo: rotuloMes(d.mes), real: d.real, previsto: d.previsto, erro: d.erro_percentual }));
+  const corSit = (x: string) => c.situacao[(x in c.situacao ? x : "NEUTRO") as keyof typeof c.situacao];
+  const foco = (dadosX: { rotulo: string }[]) => (f: number | null) =>
+    f != null ? <ReferenceLine x={dadosX[f]?.rotulo} stroke={c.destaque} strokeWidth={2} /> : null;
+  const economia = res.diferenca;
 
   return (
     <div className="space-y-5">
       {controles}
 
-      <p className="rounded-3xl bg-site-azul px-5 py-4 text-sm font-semibold text-white shadow-sm sm:text-base">{r.frase}</p>
+      <p className={`rounded-3xl bg-site-azul px-5 py-4 text-sm font-semibold text-white shadow-sm transition-opacity sm:text-base ${carregando ? "opacity-70" : ""}`}
+        aria-live="polite" aria-busy={carregando}>
+        {res.frase}{carregando && <span className="ml-2 text-xs font-normal">recalculando…</span>}
+      </p>
 
       <dl className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <Kpi rotulo="Prática atual (12 meses)" valor={moeda(r.custo_pratica_atual)} nota="mesma equipe do ano passado" />
-        <Kpi rotulo="Plano recomendado" valor={moeda(r.custo_plano_recomendado)} nota="escala acompanhando a demanda" />
-        <Kpi rotulo={economia >= 0 ? "Economia" : "Investimento a mais"} valor={moeda(Math.abs(economia))}
+        <CartaoKpi rotulo="Prática atual (12 meses)" valor={moeda(res.custo_pratica_atual)} nota="mesma escala do ano passado"
+          tendencia={acumulado.map((x) => x.atual)} corTendencia={c.series[3]} />
+        <CartaoKpi rotulo="Plano recomendado" valor={moeda(res.custo_plano_recomendado)} nota="escala acompanha a demanda"
+          tendencia={acumulado.map((x) => x.plano)} corTendencia={c.series[1]} />
+        <CartaoKpi destaque rotulo={economia >= 0 ? "Economia" : "Investimento a mais"} valor={moeda(Math.abs(economia))}
           nota={economia >= 0 ? "com o mesmo serviço" : "para cobrir o pico"} />
-        {r.custo_simulado != null ? (
-          <Kpi rotulo={`Simulação: ${equipeFixa} chapas fixos`} valor={moeda(r.custo_simulado)}
-            nota={r.meses_com_falta_simulada?.length ? `falta em ${r.meses_com_falta_simulada.join(", ")}` : "sem falta prevista"} />
+        {res.custo_simulado != null ? (
+          <CartaoKpi rotulo={`Simulação: ${e} chapas fixos`} valor={moeda(res.custo_simulado)}
+            nota={res.meses_com_falta_simulada?.length ? `falta em ${res.meses_com_falta_simulada.join(", ")}` : "sem falta prevista"} />
         ) : (
-          <Kpi rotulo="Meses com risco hoje" valor={String(r.meses_com_risco_na_pratica_atual.length)}
-            nota={r.meses_com_risco_na_pratica_atual.join(", ") || "nenhum"} />
+          <CartaoKpi rotulo="Meses com risco hoje" valor={String(res.meses_com_risco_na_pratica_atual.length)}
+            nota={res.meses_com_risco_na_pratica_atual.join(", ") || "nenhum"} />
         )}
       </dl>
 
-      <figure className="rounded-3xl bg-white p-5 shadow-sm">
-        <figcaption className="mb-3 flex flex-wrap items-end justify-between gap-2 border-b-[3px] border-site-amarelo pb-2">
-          <span className="titulo-secao text-lg">Escala mês a mês: prática atual x recomendada</span>
-          <LegendaSituacao situacoes={["SOBRA", "ADEQUADO", "RISCO_DE_FALTA", "FALTA"]} />
-        </figcaption>
-        <p className="mb-4 text-xs text-gray-500">
-          Barra colorida = equipe de hoje (cor = situação) • barra cinza = recomendada
-          {equipeFixa != null && " • barra tracejada = simulação"}.
-        </p>
-        <div className="overflow-x-auto">
-          <div className="flex min-w-[640px] items-end gap-2" style={{ height: 220 }}>
-            {dados.meses.map((m) => <ColunaMes key={m.mes} m={m} maximo={maximo} />)}
-          </div>
-        </div>
-      </figure>
+      <CartaoGrafico
+        titulo="Escala mês a mês: hoje x recomendada"
+        subtitulo="Barras = equipe de hoje (cor = situação) • degraus = equipe recomendada"
+        resumo={`${res.frase} ${res.meses_com_risco_na_pratica_atual.length ? `Meses com risco de falta mantendo a escala de hoje: ${res.meses_com_risco_na_pratica_atual.join(", ")}.` : ""}`}
+        serieSonora={linhas.map((l) => l.recomendada)}
+        pontos={linhas.map((l) => `${l.rotulo}: hoje ${decimal(l.atual)} chapas, recomendado ${l.recomendada}, ${ROTULO_SITUACAO[l.situacao] ?? "sem dados"}${l.simulada != null ? `, simulação ${l.simulada}` : ""}`)}
+        tabela={{ linhas, colunas: [
+          { rotulo: "Mês", valor: (l) => l.rotulo },
+          { rotulo: "Caminhões/dia", valor: (l) => num(l.caminhoes), alinhar: "direita" },
+          { rotulo: "Hoje", valor: (l) => decimal(l.atual), alinhar: "direita" },
+          { rotulo: "Recomendado", valor: (l) => l.recomendada, alinhar: "direita" },
+          { rotulo: "Situação hoje", valor: (l) => ROTULO_SITUACAO[l.situacao] ?? "—" },
+          { rotulo: "Custo hoje", valor: (l) => moeda(l.custoAtual), alinhar: "direita" },
+          { rotulo: "Custo recomendado", valor: (l) => moeda(l.custoRec), alinhar: "direita" },
+        ] }}
+        arquivo="plano-de-escala"
+        legenda={<div className="flex flex-wrap gap-4"><LegendaSituacao situacoes={["SOBRA", "ADEQUADO", "RISCO_DE_FALTA", "FALTA"]} />
+          <Legenda itens={[{ cor: c.texto, rotulo: "Recomendado" }, ...(simular ? [{ cor: c.series[4], rotulo: "Simulação", tracejado: true }] : [])]} /></div>}
+      >
+        {(f) => (
+          <ResponsiveContainer width="100%" height="100%">
+            <ComposedChart data={linhas} margin={margem}>
+              <CartesianGrid {...grade(c)} />
+              <XAxis dataKey="rotulo" {...eixoX(c)} />
+              <YAxis {...eixoY(c, (v) => num(v, 0))} allowDecimals={false} />
+              <Tooltip cursor={{ fill: c.grade, opacity: 0.35 }}
+                content={(pp) => <TooltipGrafico active={pp.active} payload={pp.payload} label={pp.label}
+                  formatarValor={(v) => `${num(Number(v))} chapas`}
+                  rodape={(l) => <>{num(Number(l.caminhoes))} caminhões/dia • hoje: <strong>{ROTULO_SITUACAO[String(l.situacao)] ?? "—"}</strong></>} />} />
+              <Bar dataKey="atual" name="Hoje" radius={[6, 6, 0, 0]} maxBarSize={34} isAnimationActive={c.animar}>
+                {linhas.map((l, i) => <Cell key={l.rotulo} fill={corSit(l.situacao)} fillOpacity={f == null || f === i ? 1 : 0.45} />)}
+              </Bar>
+              <Line dataKey="recomendada" name="Recomendado" type="step" stroke={c.texto} strokeWidth={2.5} dot={false} isAnimationActive={c.animar} />
+              {simular && <Line dataKey="simulada" name="Simulação" type="step" stroke={c.series[4]} strokeWidth={2.5}
+                strokeDasharray="6 4" dot={false} isAnimationActive={c.animar} />}
+              {foco(linhas)(f)}
+            </ComposedChart>
+          </ResponsiveContainer>
+        )}
+      </CartaoGrafico>
 
-      <section className="rounded-3xl bg-white p-5 shadow-sm">
-        <h2 className="titulo-secao mb-3 border-b-[3px] border-site-amarelo pb-2 text-lg">Detalhe do plano</h2>
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[720px] text-left text-sm">
-            <thead className="text-xs text-gray-600">
-              <tr className="border-b border-gray-200">
-                <th className="py-2 pr-3 font-semibold">Mês</th>
-                <th className="px-2 py-2 text-right font-semibold">Caminhões/dia</th>
-                <th className="px-2 py-2 text-right font-semibold">Hoje</th>
-                <th className="px-2 py-2 text-right font-semibold">Recomendado</th>
-                <th className="px-2 py-2 font-semibold">Situação hoje</th>
-                <th className="px-2 py-2 text-right font-semibold">Custo hoje</th>
-                <th className="py-2 pl-2 text-right font-semibold">Custo recomendado</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100 tabular-nums">
-              {dados.meses.map((m) => (
-                <tr key={m.mes}>
-                  <th scope="row" className="py-2 pr-3 font-medium text-gray-900">{m.rotulo}</th>
-                  <td className="px-2 py-2 text-right">{decimal(m.caminhoes_dia_previsto)}</td>
-                  <td className="px-2 py-2 text-right">{m.equipe_pratica_atual != null ? decimal(m.equipe_pratica_atual) : "—"}</td>
-                  <td className="px-2 py-2 text-right font-semibold">{m.equipe_recomendada}</td>
-                  <td className="px-2 py-2"><SeloSituacao situacao={m.situacao_pratica_atual} /></td>
-                  <td className="px-2 py-2 text-right">{moeda(m.custo_pratica_atual)}</td>
-                  <td className="py-2 pl-2 text-right">{moeda(m.custo_recomendado)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
+      <div className="grid gap-5 xl:grid-cols-2">
+        <CartaoGrafico
+          titulo="Custo acumulado em 12 meses"
+          subtitulo="A distância entre as curvas é a economia (ou o investimento) do plano"
+          resumo={`Em 12 meses, mantendo a escala de hoje, o custo acumulado chega a ${moeda(res.custo_pratica_atual)}. Com o plano, ${moeda(res.custo_plano_recomendado)}.${res.custo_simulado != null ? ` Com ${e} chapas fixos, ${moeda(res.custo_simulado)}.` : ""}`}
+          serieSonora={acumulado.map((x) => x.atual - x.plano)}
+          pontos={acumulado.map((x) => `Até ${x.rotulo}: hoje ${moeda(x.atual)}, plano ${moeda(x.plano)}, diferença ${moeda(x.atual - x.plano)}`)}
+          tabela={{ linhas: acumulado, colunas: [
+            { rotulo: "Até", valor: (x) => x.rotulo },
+            { rotulo: "Escala de hoje", valor: (x) => moeda(x.atual), alinhar: "direita" },
+            { rotulo: "Plano", valor: (x) => moeda(x.plano), alinhar: "direita" },
+            { rotulo: "Diferença", valor: (x) => moeda(x.atual - x.plano), alinhar: "direita" },
+          ] }}
+          arquivo="custo-acumulado"
+          legenda={<Legenda itens={[{ cor: c.series[3], rotulo: "Escala de hoje" }, { cor: c.series[1], rotulo: "Plano" },
+            ...(simular ? [{ cor: c.series[4], rotulo: "Simulação", tracejado: true }] : [])]} />}
+        >
+          {(f) => (
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={acumulado} margin={margem}>
+                <defs>
+                  <linearGradient id="grad-acum-atual" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor={c.series[3]} stopOpacity={0.35} /><stop offset="100%" stopColor={c.series[3]} stopOpacity={0} />
+                  </linearGradient>
+                  <linearGradient id="grad-acum-plano" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor={c.series[1]} stopOpacity={0.45} /><stop offset="100%" stopColor={c.series[1]} stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid {...grade(c)} />
+                <XAxis dataKey="rotulo" {...eixoX(c)} />
+                <YAxis {...eixoY(c, moedaCurta, 68)} />
+                <Tooltip content={(pp) => <TooltipGrafico active={pp.active} payload={pp.payload} label={pp.label}
+                  formatarRotulo={(r) => `Acumulado até ${r}`} formatarValor={(v) => moeda(Number(v))}
+                  rodape={(l) => <>Diferença: <strong>{moeda(Number(l.atual) - Number(l.plano))}</strong></>} />} />
+                <Area dataKey="atual" name="Escala de hoje" type="monotone" stroke={c.series[3]} strokeWidth={2.5} fill="url(#grad-acum-atual)" isAnimationActive={c.animar} />
+                <Area dataKey="plano" name="Plano" type="monotone" stroke={c.series[1]} strokeWidth={2.5} fill="url(#grad-acum-plano)" isAnimationActive={c.animar} />
+                {simular && <Area dataKey="simulado" name="Simulação" type="monotone" stroke={c.series[4]} strokeWidth={2}
+                  strokeDasharray="6 4" fill="none" isAnimationActive={c.animar} />}
+                {foco(acumulado)(f)}
+              </AreaChart>
+            </ResponsiveContainer>
+          )}
+        </CartaoGrafico>
 
-      <section className="rounded-3xl bg-white p-5 shadow-sm">
-        <h2 className="titulo-secao mb-1 border-b-[3px] border-site-amarelo pb-2 text-lg">A previsão funciona?</h2>
-        <p className="mb-3 text-xs text-gray-500">{dados.precisao.como_ler} Erro médio: <strong>±{decimal(dados.precisao.erro_medio_percentual ?? 0)}%</strong>.</p>
-        <ul className="grid grid-cols-2 gap-x-6 gap-y-1 text-xs sm:grid-cols-3">
-          {dados.precisao.detalhe.map((d) => (
-            <li key={d.mes} className="flex justify-between gap-2 tabular-nums">
-              <span className="text-gray-600">{rotuloMes(d.mes)}</span>
-              <span>prev. {decimal(d.previsto)} • real {decimal(d.real)}</span>
-              <span className="font-semibold" style={{ color: d.erro_percentual > 25 ? COR.SOBRA : COR.ADEQUADO }}>{decimal(d.erro_percentual)}%</span>
-            </li>
-          ))}
-        </ul>
-      </section>
+        <CartaoGrafico
+          titulo="A previsão funciona?"
+          subtitulo="Cada mês foi previsto só com os dados anteriores a ele e comparado com o real"
+          resumo={`Testado em ${precisao.length} meses reais, o modelo errou em média ${decimal(dados.precisao.erro_medio_percentual ?? 0)} por cento. ${dados.precisao.como_ler}`}
+          serieSonora={precisao.map((x) => x.real)}
+          pontos={precisao.map((x) => `${x.rotulo}: previsto ${num(x.previsto)}, real ${num(x.real)}, erro ${num(x.erro)} por cento`)}
+          tabela={{ linhas: precisao, colunas: [
+            { rotulo: "Mês", valor: (x) => x.rotulo },
+            { rotulo: "Previsto", valor: (x) => num(x.previsto), alinhar: "direita" },
+            { rotulo: "Real", valor: (x) => num(x.real), alinhar: "direita" },
+            { rotulo: "Erro", valor: (x) => `${num(x.erro)}%`, alinhar: "direita" },
+          ] }}
+          arquivo="precisao-do-modelo"
+          legenda={<Legenda itens={[{ cor: c.series[0], rotulo: "Real" }, { cor: c.series[2], rotulo: "Previsto", tracejado: true }]} />}
+        >
+          {(f) => (
+            <ResponsiveContainer width="100%" height="100%">
+              <ComposedChart data={precisao} margin={margem}>
+                <CartesianGrid {...grade(c)} />
+                <XAxis dataKey="rotulo" {...eixoX(c)} />
+                <YAxis {...eixoY(c, (v) => num(v, 0))} />
+                <Tooltip content={(pp) => <TooltipGrafico active={pp.active} payload={pp.payload} label={pp.label}
+                  formatarValor={(v) => `${num(Number(v))} cam/dia`} rodape={(l) => <>Erro: <strong>{num(Number(l.erro))}%</strong></>} />} />
+                <Line dataKey="real" name="Real" type="monotone" stroke={c.series[0]} strokeWidth={3} dot={{ r: 3 }} isAnimationActive={c.animar} />
+                <Line dataKey="previsto" name="Previsto" type="monotone" stroke={c.series[2]} strokeWidth={2.5} strokeDasharray="6 4"
+                  dot={{ r: 3 }} isAnimationActive={c.animar} />
+                {foco(precisao)(f)}
+              </ComposedChart>
+            </ResponsiveContainer>
+          )}
+        </CartaoGrafico>
+      </div>
 
       <Premissas itens={dados.premissas} />
-    </div>
-  );
-}
-
-function ColunaMes({ m, maximo }: { m: MesPlano; maximo: number }) {
-  const h = (v: number) => `${(v / maximo) * 170}px`;
-  const atual = m.equipe_pratica_atual ?? 0;
-  return (
-    <div className="flex flex-1 flex-col items-center gap-1"
-      aria-label={`${m.rotulo}: hoje ${decimal(atual)}, recomendado ${m.equipe_recomendada}`}>
-      <div className="flex items-end gap-0.5" aria-hidden>
-        <span className="w-3 rounded-t sm:w-4" title={`Hoje: ${decimal(atual)}`}
-          style={{ height: h(atual), background: corDaSituacao(m.situacao_pratica_atual) }} />
-        <span className="w-3 rounded-t bg-gray-400 sm:w-4" title={`Recomendado: ${m.equipe_recomendada}`}
-          style={{ height: h(m.equipe_recomendada) }} />
-        {m.equipe_simulada != null && (
-          <span className="w-3 rounded-t border-2 border-dashed sm:w-4" title={`Simulação: ${m.equipe_simulada}`}
-            style={{ height: h(m.equipe_simulada), borderColor: corDaSituacao(m.situacao_simulada) }} />
-        )}
-      </div>
-      <span className="text-[11px] text-gray-600">{m.rotulo}</span>
     </div>
   );
 }
