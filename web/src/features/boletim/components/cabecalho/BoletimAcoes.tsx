@@ -21,13 +21,6 @@ export default function BoletimAcoes({ unidade, onUnidade, onExportarPdf }: Bole
           <option key={u} value={u}>{UNIDADES[u].nome}</option>
         ))}
       </select>
-      <button
-        type="button"
-        onClick={onExportarPdf}
-        className="inline-flex items-center gap-2 rounded-full border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-site-azul focus-visible:ring-offset-2"
-      >
-        <FileDown className="h-4 w-4" aria-hidden /> Exportar PDF
-      </button>
     </div>
   );
 }
