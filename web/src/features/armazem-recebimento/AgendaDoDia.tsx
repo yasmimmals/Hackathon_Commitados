@@ -7,6 +7,7 @@ import {
   type Agendamento, type Baia, type Equipamento, type LocalFisico, type SlotDisponibilidade,
 } from "@/shared/services";
 import { dataLocalIso, JANELAS } from "@/shared/utils/janelas";
+import { duracaoMin } from "@/shared/utils/formatacao";
 import { LOCAIS, ROTULO_LOCAL } from "@/shared/utils/locais";
 import CardRecebimento from "./components/CardRecebimento";
 import VagasLiberadas from "./components/VagasLiberadas";
@@ -223,7 +224,7 @@ function AvisosDeAtraso({ agenda }: { agenda: Agendamento[] }) {
       <ul className="mt-2 space-y-1 text-xs text-amber-900">
         {agenda.map((a) => (
           <li key={a.id}>
-            <strong>#AG-{a.id} {a.fornecedor.nome}</strong> (janela das {a.horario}h): atraso de {a.atraso_minutos} min,
+            <strong>#AG-{a.id} {a.fornecedor.nome}</strong> (janela das {a.horario}h): atraso de {duracaoMin(a.atraso_minutos)},
             {" "}avisado às {hora(a.atraso_informado_em as string)}{a.atraso_motivo ? ` • ${a.atraso_motivo}` : ""}
           </li>
         ))}

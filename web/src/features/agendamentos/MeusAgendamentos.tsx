@@ -7,6 +7,8 @@ import { avisarAtraso, cancelarAgendamento, listarAgendamentos, mensagemDeErro }
 import AlertBanner from "./components/AlertBanner";
 import AppointmentCard from "./components/AppointmentCard";
 import EmptyState from "./components/EmptyState";
+import ModalAtraso from "./components/ModalAtraso";
+import { duracaoMin } from "@/shared/utils/formatacao";
 import PageHeader from "./components/PageHeader";
 import SidebarWidgets from "./components/SidebarWidgets";
 import StatusTabs from "./components/StatusTabs";
@@ -27,6 +29,7 @@ export default function MeusAgendamentos() {
   const [search, setSearch] = useState(query);
   const [feedback, setFeedback] = useMensagemTemporaria(5000);
   const [erroAcao, setErroAcao] = useMensagemTemporaria(8000);
+  const [atrasoDe, setAtrasoDe] = useState<ListedAppointment | null>(null);
 
   const [lastQuery, setLastQuery] = useState(query);
   if (query !== lastQuery) {
@@ -71,21 +74,17 @@ export default function MeusAgendamentos() {
   const replace = (atualizado: ListedAppointment) =>
     setAppointments((list) => list.map((a) => (a.id === atualizado.id ? atualizado : a)));
 
-  const reportDelay = async (appointment: ListedAppointment) => {
-    const resposta = window.prompt(`Quantos minutos de atraso para ${appointment.code}?`, "30");
-    if (resposta === null) return;
-    const minutos = Number(resposta.replace(",", "."));
-    if (!Number.isInteger(minutos) || minutos < 5 || minutos > 600) {
-      setErroAcao("Informe o atraso em minutos inteiros, entre 5 e 600.");
-      return;
-    }
-    const motivo = window.prompt("Motivo do atraso (opcional):", "") ?? undefined;
+  const reportDelay = (appointment: ListedAppointment) => setAtrasoDe(appointment);
+
+  const confirmarAtraso = async (dados: { minutos: number; motivo?: string }) => {
+    if (!atrasoDe) return;
     try {
-      replace(mapearAgendamento(await avisarAtraso(Number(appointment.id), { minutos, motivo: motivo || undefined })));
-      setFeedback(`Atraso de ${minutos} min do agendamento ${appointment.code} avisado à equipe do armazém.`);
+      replace(mapearAgendamento(await avisarAtraso(Number(atrasoDe.id), dados)));
     } catch (erro) {
-      setErroAcao(`Não foi possível avisar o atraso de ${appointment.code}: ${mensagemDeErro(erro)}`);
+      throw new Error(`Não foi possível avisar o atraso: ${mensagemDeErro(erro)}`);
     }
+    setFeedback(`Atraso de ${duracaoMin(dados.minutos)} do agendamento ${atrasoDe.code} avisado à equipe do armazém.`);
+    setAtrasoDe(null);
   };
 
   const cancel = async (appointment: ListedAppointment) => {
@@ -166,6 +165,16 @@ export default function MeusAgendamentos() {
           <SidebarWidgets />
         </div>
       </div>
+
+      {atrasoDe && (
+        <ModalAtraso
+          codigo={atrasoDe.code}
+          fornecedor={atrasoDe.product}
+          janela={atrasoDe.dateLabel}
+          aoFechar={() => setAtrasoDe(null)}
+          aoConfirmar={confirmarAtraso}
+        />
+      )}
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import type { Agendamento, MotivoNaoRecebimento, StatusAgendamento } from "@/shared/services";
 import { ROTULO_ACONDICIONAMENTO } from "@/shared/utils/acondicionamento";
+import { duracaoMin } from "@/shared/utils/formatacao";
 import { ROTULO_LOCAL } from "@/shared/utils/locais";
 import type { Appointment, AppointmentAction, AppointmentStatus, ListedAppointment } from "../types";
 
@@ -75,7 +76,7 @@ function rotuloData(ag: Agendamento) {
 function rodape(ag: Agendamento): Pick<Appointment, "footerInfo" | "footerTone"> {
   if (ag.aviso_chuva) return { footerInfo: ag.aviso_chuva, footerTone: "warning" };
   if (ag.atraso_informado_em && ANTES_DA_CHEGADA.has(ag.status)) {
-    return { footerInfo: `Atraso de ${ag.atraso_minutos} min avisado à equipe do armazém`, footerTone: "warning" };
+    return { footerInfo: `Atraso de ${duracaoMin(ag.atraso_minutos)} avisado à equipe do armazém`, footerTone: "warning" };
   }
   switch (ag.status) {
     case "PENDENTE": return { footerInfo: "Aguardando validação da Mesa de Compras", footerTone: "warning" };

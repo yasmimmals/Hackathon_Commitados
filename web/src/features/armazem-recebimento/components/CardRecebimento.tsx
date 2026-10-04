@@ -5,6 +5,7 @@ import {
   type Agendamento, type Baia, type Equipamento, type LocalFisico,
 } from "@/shared/services";
 import { ROTULO_ACONDICIONAMENTO } from "@/shared/utils/acondicionamento";
+import { duracaoMin } from "@/shared/utils/formatacao";
 import { janelaTerminou } from "@/shared/utils/janelas";
 import { LOCAIS, ROTULO_LOCAL } from "@/shared/utils/locais";
 import { autorizacao, TEXTO_STATUS, type Autorizacao } from "../utils/agenda";
@@ -114,7 +115,7 @@ export default function CardRecebimento({ agendamento: ag, baias, equipamentos, 
         <p role="status" className="mt-3 flex items-start gap-2 rounded-xl bg-amber-50 px-3 py-2 text-xs text-amber-900 ring-1 ring-amber-200">
           <AlarmClock className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
           <span>
-            <strong>Fornecedor avisou atraso de {ag.atraso_minutos} min</strong>
+            <strong>Fornecedor avisou atraso de {duracaoMin(ag.atraso_minutos)}</strong>
             {" "}às {new Date(ag.atraso_informado_em).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
             {ag.atraso_motivo && <> • {ag.atraso_motivo}</>}
           </span>
