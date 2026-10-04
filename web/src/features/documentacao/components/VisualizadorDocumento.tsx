@@ -94,14 +94,10 @@ export default function VisualizadorDocumento({ documento }: Props) {
           </h1>
         </div>
 
-        {isRascunho ? (
+        {isRascunho && (
           <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-3 py-1 text-xs font-bold text-amber-800 border border-amber-300">
             <AlertCircle className="h-3.5 w-3.5" />
             Rascunho
-          </span>
-        ) : (
-          <span className="inline-flex items-center rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-800 border border-emerald-300">
-            Completo
           </span>
         )}
       </header>
