@@ -182,6 +182,9 @@ class Agendamento(Base):
     fornecedor_id = Column(Integer, ForeignKey("fornecedores.id"), nullable=False, index=True)
     origem_dado = Column(_enum(Origem), nullable=False, default=Origem.SISTEMA,
                          server_default=Origem.SISTEMA.value)
+    # Usuário que agendou. A NF pode ser de outra empresa (transportadora, revenda...):
+    # o fornecedor logado enxerga o que é da empresa dele E o que ele mesmo agendou.
+    criado_por_id = Column(Integer, ForeignKey("usuarios.id"), index=True)
 
     data = Column(Date, nullable=False, index=True)
     horario = Column(_enum(Horario), nullable=False)

@@ -14,8 +14,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.auth import (
-    cnpj_do_usuario, eh_fornecedor, exigir_perfil, garantir_agendamento_do_fornecedor,
-    garantir_nota_do_fornecedor, usuario_atual,
+    cnpj_do_usuario, eh_fornecedor, exigir_perfil, garantir_agendamento_do_fornecedor, usuario_atual,
 )
 from app.core.database import get_db
 from app.models import Fornecedor, PerfilUsuario, StatusAgendamento, Usuario
@@ -37,19 +36,14 @@ def out(ag) -> AgendamentoOut:
 
 
 @router.post("/nota-fiscal", response_model=NotaFiscalOut, status_code=201)
-async def enviar_nota(arquivo: UploadFile = File(...), db: Session = Depends(get_db),
-                      usuario: Usuario = Depends(usuario_atual)):
-    nota = svc.registrar_nota(db, arquivo.filename or "", await arquivo.read())
-    garantir_nota_do_fornecedor(usuario, nota)
-    return nota
+async def enviar_nota(arquivo: UploadFile = File(...), db: Session = Depends(get_db)):
+    """A nota pode ser de qualquer empresa (não precisa ser a do fornecedor logado)."""
+    return svc.registrar_nota(db, arquivo.filename or "", await arquivo.read())
 
 
 @router.get("/nota-fiscal/{nota_id}", response_model=NotaFiscalOut)
-def ver_nota(nota_id: int, db: Session = Depends(get_db),
-             usuario: Usuario = Depends(usuario_atual)):
-    nota = svc.buscar_nota(db, nota_id)
-    garantir_nota_do_fornecedor(usuario, nota)
-    return nota
+def ver_nota(nota_id: int, db: Session = Depends(get_db)):
+    return svc.buscar_nota(db, nota_id)
 
 
 @router.get("/disponibilidade", response_model=list[SlotDisponibilidade])
@@ -61,18 +55,18 @@ def disponibilidade(data: date, nota_fiscal_id: Optional[int] = None,
 @router.post("", response_model=AgendamentoOut, status_code=201)
 def criar(dados: AgendamentoCreate, db: Session = Depends(get_db),
           usuario: Usuario = Depends(exigir_perfil(PerfilUsuario.FORNECEDOR))):
-    garantir_nota_do_fornecedor(usuario, svc.buscar_nota(db, dados.nota_fiscal_id))
-    return out(svc.criar_agendamento(db, dados))
+    return out(svc.criar_agendamento(db, dados, criado_por_id=usuario.id))
 
 
 @router.get("", response_model=list[AgendamentoOut])
 def listar(data: Optional[date] = None, status: Optional[StatusAgendamento] = None,
            fornecedor_id: Optional[int] = None, db: Session = Depends(get_db),
            usuario: Usuario = Depends(usuario_atual)):
-    """Fornecedor logado vê só a própria empresa (todos os cadastros com o mesmo CNPJ)."""
+    """Fornecedor logado vê o que é da própria empresa (todos os cadastros com o mesmo CNPJ)
+    e o que ele mesmo agendou com nota de outra empresa."""
     if eh_fornecedor(usuario):
         ids = list(db.scalars(select(Fornecedor.id).where(Fornecedor.cnpj == cnpj_do_usuario(usuario))))
-        return [out(a) for a in svc.listar(db, data, status, fornecedor_ids=ids)]
+        return [out(a) for a in svc.listar(db, data, status, fornecedor_ids=ids, criado_por_id=usuario.id)]
     return [out(a) for a in svc.listar(db, data, status, fornecedor_id)]
 
 

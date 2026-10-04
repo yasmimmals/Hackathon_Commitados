@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.exceptions import AcessoNegadoError, NaoAutenticadoError
 from app.core.seguranca import ler_token
-from app.models import Agendamento, NotaFiscal, PerfilUsuario, Usuario
+from app.models import Agendamento, PerfilUsuario, Usuario
 
 _bearer = HTTPBearer(auto_error=False)
 
@@ -46,12 +46,10 @@ def cnpj_do_usuario(usuario: Usuario) -> Optional[str]:
     return usuario.fornecedor.cnpj if usuario.fornecedor else None
 
 
-def garantir_nota_do_fornecedor(usuario: Usuario, nota: NotaFiscal) -> None:
-    """Fornecedor só mexe em notas emitidas pela própria empresa (mesmo CNPJ)."""
-    if eh_fornecedor(usuario) and nota.fornecedor.cnpj != cnpj_do_usuario(usuario):
-        raise AcessoNegadoError("A nota fiscal foi emitida por outra empresa", "NOTA_DE_OUTRO_FORNECEDOR")
-
-
 def garantir_agendamento_do_fornecedor(usuario: Usuario, ag: Agendamento) -> None:
-    if eh_fornecedor(usuario) and ag.fornecedor.cnpj != cnpj_do_usuario(usuario):
+    """Fornecedor acessa o que é da própria empresa (mesmo CNPJ) ou o que ele mesmo agendou.
+    A nota fiscal pode ser de outra empresa, por isso não há restrição sobre a NF."""
+    if not eh_fornecedor(usuario):
+        return
+    if ag.fornecedor.cnpj != cnpj_do_usuario(usuario) and ag.criado_por_id != usuario.id:
         raise AcessoNegadoError("Este agendamento é de outra empresa", "AGENDAMENTO_DE_OUTRO_FORNECEDOR")

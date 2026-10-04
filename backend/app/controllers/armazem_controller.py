@@ -10,7 +10,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app.core import config
-from app.core.auth import exigir_perfil, garantir_nota_do_fornecedor
+from app.core.auth import exigir_perfil
 from app.core.database import get_db
 from app.models import LocalFisico, PerfilUsuario, Usuario
 from app.schemas.agendamento import (
@@ -49,8 +49,7 @@ def fila(data: date, local: Optional[LocalFisico] = None, db: Session = Depends(
 @router.post("/balcao", response_model=AgendamentoOut, status_code=201)
 def balcao(dados: BalcaoCreate, db: Session = Depends(get_db),
            usuario: Usuario = Depends(exigir_perfil(PerfilUsuario.FORNECEDOR, PerfilUsuario.ARMAZEM))):
-    garantir_nota_do_fornecedor(usuario, svc.buscar_nota(db, dados.nota_fiscal_id))
-    return out(svc.agendar_balcao(db, dados))
+    return out(svc.agendar_balcao(db, dados, criado_por_id=usuario.id))
 
 
 @router.put("/agendamentos/{ag_id}/destinos", response_model=AgendamentoOut, dependencies=_SO_ARMAZEM)
