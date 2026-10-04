@@ -330,6 +330,17 @@ def cancelar(db: Session, ag_id: int, agora: Optional[datetime] = None) -> Agend
 
 # ------------------------------------------------------------------ compras
 
+def informar_atraso(db: Session, ag_id: int, dados, agora: Optional[datetime] = None) -> Agendamento:
+    """Fornecedor avisa que o caminhão vai atrasar; o aviso aparece para o armazém."""
+    ag = buscar(db, ag_id, travar=True)
+    _exigir_status(ag, STATUS_ANTES_DA_CHEGADA, "avisar atraso")
+    ag.atraso_minutos = dados.minutos
+    ag.atraso_motivo = (dados.motivo or "").strip() or None
+    ag.atraso_informado_em = _agora(agora)
+    db.commit()
+    return buscar(db, ag_id)
+
+
 def aprovar(db: Session, ag_id: int, dados, agora: Optional[datetime] = None) -> Agendamento:
     ag = buscar(db, ag_id, travar=True)
     _exigir_status(ag, {St.PENDENTE}, "aprovar")

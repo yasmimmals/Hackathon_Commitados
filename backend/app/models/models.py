@@ -216,6 +216,10 @@ class Agendamento(Base):
     # Marco 1: chegada é do caminhão, não do armazém (espera = chegada -> 1ª entrada)
     horario_chegada = Column(DateTime(timezone=True))
 
+    atraso_minutos = Column(Integer)
+    atraso_motivo = Column(Text)
+    atraso_informado_em = Column(DateTime(timezone=True))
+
     criado_em = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     cancelado_em = Column(DateTime(timezone=True))   # para auditar a regra das 24h
 

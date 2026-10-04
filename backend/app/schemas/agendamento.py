@@ -150,6 +150,11 @@ class DestinosIn(BaseModel):
     destinos: list[DestinoIn] = Field(min_length=1)
 
 
+class AtrasoIn(BaseModel):
+    minutos: int = Field(ge=5, le=600)
+    motivo: Optional[str] = Field(default=None, max_length=300)
+
+
 class EntradaIn(BaseModel):
     local: LocalFisico
 
@@ -207,6 +212,9 @@ class AgendamentoOut(BaseModel):
     motivo_nao_recebimento: Optional[MotivoNaoRecebimento]
     reagendado_de_id: Optional[int]
     horario_chegada: Optional[datetime]
+    atraso_minutos: Optional[int] = None
+    atraso_motivo: Optional[str] = None
+    atraso_informado_em: Optional[datetime] = None
     criado_em: datetime
     cancelado_em: Optional[datetime]
     descargas: list[DescargaOut]

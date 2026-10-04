@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { CalendarDays, LoaderCircle, RefreshCw, ServerCrash, Warehouse } from "lucide-react";
+import { AlarmClock, CalendarDays, LoaderCircle, RefreshCw, ServerCrash, Warehouse } from "lucide-react";
 import MensagemStatus from "@/shared/components/ui/MensagemStatus";
 import { useMensagemTemporaria } from "@/shared/hooks/useMensagemTemporaria";
 import {
-  consultarDisponibilidade, listarAgendamentos, listarBaias, mensagemDeErro,
-  type Agendamento, type Baia, type LocalFisico, type SlotDisponibilidade,
+  consultarDisponibilidade, listarAgendamentos, listarBaias, listarEquipamentos, mensagemDeErro,
+  type Agendamento, type Baia, type Equipamento, type LocalFisico, type SlotDisponibilidade,
 } from "@/shared/services";
 import { dataLocalIso, JANELAS } from "@/shared/utils/janelas";
 import { LOCAIS, ROTULO_LOCAL } from "@/shared/utils/locais";
@@ -12,7 +12,11 @@ import CardRecebimento from "./components/CardRecebimento";
 import VagasLiberadas from "./components/VagasLiberadas";
 import { autorizacao, candidatosAVaga, vagasLiberadas } from "./utils/agenda";
 
-type Dados = { agenda: Agendamento[]; slots: SlotDisponibilidade[]; baias: Baia[] };
+type Dados = { agenda: Agendamento[]; slots: SlotDisponibilidade[]; baias: Baia[]; equipamentos: Equipamento[] };
+
+const ATUALIZAR_A_CADA_MS = 60_000;
+const ANTES_DA_CHEGADA = new Set(["PENDENTE", "APROVADO", "DESTINO_DEFINIDO"]);
+const comAtrasoAvisado = (a: Agendamento) => Boolean(a.atraso_informado_em) && ANTES_DA_CHEGADA.has(a.status);
 type Carga = { tipo: "carregando" } | { tipo: "erro"; mensagem: string } | { tipo: "ok"; dados: Dados };
 
 const naAgenda = (a: Agendamento) => !(a.status === "REJEITADO" && a.motivo_nao_recebimento === "SEM_VAGA");
@@ -29,8 +33,9 @@ export default function AgendaDoDia() {
       listarAgendamentos({ data }),
       consultarDisponibilidade(data).catch(() => [] as SlotDisponibilidade[]),
       listarBaias(),
+      listarEquipamentos().catch(() => [] as Equipamento[]),
     ]).then(
-      ([agenda, slots, baias]) => ativo && setCarga({ tipo: "ok", dados: { agenda, slots, baias } }),
+      ([agenda, slots, baias, equipamentos]) => ativo && setCarga({ tipo: "ok", dados: { agenda, slots, baias, equipamentos } }),
       (erro) => ativo && setCarga({ tipo: "erro", mensagem: mensagemDeErro(erro) }),
     );
     return () => {
@@ -39,6 +44,11 @@ export default function AgendaDoDia() {
   }, [data]);
 
   useEffect(carregar, [carregar]);
+
+  useEffect(() => {
+    const id = window.setInterval(() => carregar(), ATUALIZAR_A_CADA_MS);
+    return () => window.clearInterval(id);
+  }, [carregar]);
 
   const recarregar = () => {
     setCarga({ tipo: "carregando" });
@@ -67,6 +77,7 @@ export default function AgendaDoDia() {
       { rotulo: "Autorizados", valor: todos.filter((a) => autorizacao(a).tom === "ok").length },
       { rotulo: "Aguardando Compras", valor: todos.filter((a) => a.status === "PENDENTE").length },
       { rotulo: "Compareceram", valor: todos.filter((a) => a.horario_chegada).length },
+      { rotulo: "Atrasos avisados", valor: todos.filter(comAtrasoAvisado).length },
       { rotulo: "Não compareceram", valor: todos.filter((a) => a.status === "NAO_COMPARECEU").length },
     ];
   }, [dados]);
@@ -80,7 +91,7 @@ export default function AgendaDoDia() {
           </p>
           <h1 className="titulo-pagina">Recebimento — Agenda do Dia</h1>
           <p className="mt-2 max-w-prose text-sm text-gray-600">
-            Confira a autorização e o armazém de destino de cada caminhão, registre o comparecimento e reocupe as vagas liberadas.
+            Confira a autorização e o destino de cada caminhão, registre chegada, início e saída da descarga e reocupe as vagas liberadas.
           </p>
         </div>
         <div className="flex flex-wrap items-end gap-2">
@@ -142,7 +153,9 @@ export default function AgendaDoDia() {
 
       {dados && (
         <>
-          <dl className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+          <AvisosDeAtraso agenda={dados.agenda.filter(comAtrasoAvisado)} />
+
+          <dl className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
             {resumo.map(({ rotulo, valor }) => (
               <div key={rotulo} className="rounded-2xl bg-white px-4 py-3 shadow-sm">
                 <dt className="text-xs font-semibold text-gray-500">{rotulo}</dt>
@@ -172,7 +185,7 @@ export default function AgendaDoDia() {
                       <ul className="space-y-3">
                         {doHorario.map((a) => (
                           <li key={a.id}>
-                            <CardRecebimento agendamento={a} baias={dados.baias} onConcluido={concluir} />
+                            <CardRecebimento agendamento={a} baias={dados.baias} equipamentos={dados.equipamentos} onConcluido={concluir} />
                           </li>
                         ))}
                       </ul>
@@ -193,5 +206,25 @@ export default function AgendaDoDia() {
         </>
       )}
     </div>
+  );
+}
+
+function AvisosDeAtraso({ agenda }: { agenda: Agendamento[] }) {
+  if (agenda.length === 0) return null;
+  const hora = (iso: string) => new Date(iso).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+  return (
+    <section role="status" aria-label="Avisos de atraso" className="rounded-2xl bg-amber-50 px-4 py-3 ring-1 ring-amber-200">
+      <h2 className="flex items-center gap-2 text-sm font-bold text-amber-900">
+        <AlarmClock className="h-4 w-4" aria-hidden /> {agenda.length === 1 ? "1 fornecedor avisou atraso" : `${agenda.length} fornecedores avisaram atraso`}
+      </h2>
+      <ul className="mt-2 space-y-1 text-xs text-amber-900">
+        {agenda.map((a) => (
+          <li key={a.id}>
+            <strong>#AG-{a.id} {a.fornecedor.nome}</strong> (janela das {a.horario}h): atraso de {a.atraso_minutos} min,
+            {" "}avisado às {hora(a.atraso_informado_em as string)}{a.atraso_motivo ? ` • ${a.atraso_motivo}` : ""}
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }

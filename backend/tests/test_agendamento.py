@@ -389,3 +389,28 @@ def test_nao_compareceu_so_depois_da_janela(db, agendar, destinar):
     assert codigo_do_erro(e) == "JANELA_EM_ANDAMENTO"
     ag = svc.marcar_nao_compareceu(db, ag.id, agora=dt(7, 10, 1))
     assert ag.status == S.NAO_COMPARECEU
+
+def test_aviso_de_atraso_fica_gravado_para_o_armazem(db, agendar, destinar):
+    from app.schemas.agendamento import AgendamentoOut, AtrasoIn
+    ag = destinar(aprovar(db, agendar(A.PALETIZADO)), L.INSUMOS)
+    ag = svc.informar_atraso(db, ag.id, AtrasoIn(minutos=40, motivo="  trânsito na rodovia "), agora=dt(7, 7, 30))
+    assert (ag.atraso_minutos, ag.atraso_motivo) == (40, "trânsito na rodovia")
+    assert ag.atraso_informado_em == dt(7, 7, 30) and ag.status == S.DESTINO_DEFINIDO
+    out = AgendamentoOut.model_validate(ag)
+    assert out.atraso_minutos == 40 and out.atraso_informado_em is not None
+
+
+def test_aviso_de_atraso_depois_da_chegada_e_recusado(db, agendar, destinar):
+    from app.schemas.agendamento import AtrasoIn
+    ag = destinar(aprovar(db, agendar(A.PALETIZADO)), L.INSUMOS)
+    svc.registrar_chegada(db, ag.id)
+    with pytest.raises(RegraNegocioError) as e:
+        svc.informar_atraso(db, ag.id, AtrasoIn(minutos=30))
+    assert codigo_do_erro(e) == "TRANSICAO_INVALIDA"
+
+
+def test_aviso_de_atraso_valida_minutos():
+    from pydantic import ValidationError
+    from app.schemas.agendamento import AtrasoIn
+    with pytest.raises(ValidationError):
+        AtrasoIn(minutos=0)
