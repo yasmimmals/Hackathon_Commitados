@@ -1,1 +1,5501 @@
-{"openapi":"3.1.0","info":{"title":"Cocapec - Recebimento Inteligente","version":"1.0.0"},"paths":{"/api/v1/health":{"get":{"tags":["Saúde"],"summary":"Health","operationId":"health_api_v1_health_get","responses":{"200":{"description":"Successful Response","content":{"application/json":{"schema":{}}}}}}},"/api/v1/auth/login":{"post":{"tags":["Acesso (login)"],"summary":"Login","operationId":"login_api_v1_auth_login_post","requestBody":{"content":{"application/json":{"schema":{"$ref":"#/components/schemas/LoginIn"}}},"required":true},"responses":{"200":{"description":"Successful Response","content":{"application/json":{"schema":{"$ref":"#/components/schemas/SessaoOut"}}}},"422":{"description":"Validation Error","content":{"application/json":{"schema":{"$ref":"#/components/schemas/HTTPValidationError"}}}}}}},"/api/v1/auth/cadastro":{"post":{"tags":["Acesso (login)"],"summary":"Cadastro","operationId":"cadastro_api_v1_auth_cadastro_post","requestBody":{"content":{"application/json":{"schema":{"$ref":"#/components/schemas/CadastroIn"}}},"required":true},"responses":{"201":{"description":"Successful Response","content":{"application/json":{"schema":{"$ref":"#/components/schemas/SessaoOut"}}}},"422":{"description":"Validation Error","content":{"application/json":{"schema":{"$ref":"#/components/schemas/HTTPValidationError"}}}}}}},"/api/v1/auth/me":{"get":{"tags":["Acesso (login)"],"summary":"Me","operationId":"me_api_v1_auth_me_get","responses":{"200":{"description":"Successful Response","content":{"application/json":{"schema":{"$ref":"#/components/schemas/UsuarioOut"}}}}},"security":[{"HTTPBearer":[]}]}},"/api/v1/fornecedores":{"post":{"tags":["Fornecedores"],"summary":"Criar","operationId":"criar_api_v1_fornecedores_post","security":[{"HTTPBearer":[]}],"requestBody":{"required":true,"content":{"application/json":{"schema":{"$ref":"#/components/schemas/FornecedorCreate"}}}},"responses":{"201":{"description":"Successful Response","content":{"application/json":{"schema":{"$ref":"#/components/schemas/FornecedorOut"}}}},"422":{"description":"Validation Error","content":{"application/json":{"schema":{"$ref":"#/components/schemas/HTTPValidationError"}}}}}},"get":{"tags":["Fornecedores"],"summary":"Listar","operationId":"listar_api_v1_fornecedores_get","security":[{"HTTPBearer":[]}],"parameters":[{"name":"q","in":"query","required":false,"schema":{"anyOf":[{"type":"string"},{"type":"null"}],"title":"Q"}},{"name":"limite","in":"query","required":false,"schema":{"type":"integer","default":50,"title":"Limite"}}],"responses":{"200":{"description":"Successful Response","content":{"application/json":{"schema":{"type":"array","items":{"$ref":"#/components/schemas/FornecedorOut"},"title":"Response Listar Api V1 Fornecedores Get"}}}},"422":{"description":"Validation Error","content":{"application/json":{"schema":{"$ref":"#/components/schemas/HTTPValidationError"}}}}}}},"/api/v1/agendamentos/nota-fiscal":{"post":{"tags":["Agendamento (fornecedor e Compras)"],"summary":"Enviar Nota","description":"A nota pode ser de qualquer empresa (não precisa ser a do fornecedor logado).","operationId":"enviar_nota_api_v1_agendamentos_nota_fiscal_post","requestBody":{"content":{"multipart/form-data":{"schema":{"$ref":"#/components/schemas/Body_enviar_nota_api_v1_agendamentos_nota_fiscal_post"}}},"required":true},"responses":{"201":{"description":"Successful Response","content":{"application/json":{"schema":{"$ref":"#/components/schemas/NotaFiscalOut"}}}},"422":{"description":"Validation Error","content":{"application/json":{"schema":{"$ref":"#/components/schemas/HTTPValidationError"}}}}},"security":[{"HTTPBearer":[]}]}},"/api/v1/agendamentos/nota-fiscal/{nota_id}":{"get":{"tags":["Agendamento (fornecedor e Compras)"],"summary":"Ver Nota","operationId":"ver_nota_api_v1_agendamentos_nota_fiscal__nota_id__get","security":[{"HTTPBearer":[]}],"parameters":[{"name":"nota_id","in":"path","required":true,"schema":{"type":"integer","title":"Nota Id"}}],"responses":{"200":{"description":"Successful Response","content":{"application/json":{"schema":{"$ref":"#/components/schemas/NotaFiscalOut"}}}},"422":{"description":"Validation Error","content":{"application/json":{"schema":{"$ref":"#/components/schemas/HTTPValidationError"}}}}}}},"/api/v1/agendamentos/disponibilidade":{"get":{"tags":["Agendamento (fornecedor e Compras)"],"summary":"Disponibilidade","operationId":"disponibilidade_api_v1_agendamentos_disponibilidade_get","security":[{"HTTPBearer":[]}],"parameters":[{"name":"data","in":"query","required":true,"schema":{"type":"string","format":"date","title":"Data"}},{"name":"nota_fiscal_id","in":"query","required":false,"schema":{"anyOf":[{"type":"integer"},{"type":"null"}],"title":"Nota Fiscal Id"}}],"responses":{"200":{"description":"Successful Response","content":{"application/json":{"schema":{"type":"array","items":{"$ref":"#/components/schemas/SlotDisponibilidade"},"title":"Response Disponibilidade Api V1 Agendamentos Disponibilidade Get"}}}},"422":{"description":"Validation Error","content":{"application/json":{"schema":{"$ref":"#/components/schemas/HTTPValidationError"}}}}}}},"/api/v1/agendamentos":{"post":{"tags":["Agendamento (fornecedor e Compras)"],"summary":"Criar","operationId":"criar_api_v1_agendamentos_post","security":[{"HTTPBearer":[]}],"requestBody":{"required":true,"content":{"application/json":{"schema":{"$ref":"#/components/schemas/AgendamentoCreate"}}}},"responses":{"201":{"description":"Successful Response","content":{"application/json":{"schema":{"$ref":"#/components/schemas/AgendamentoOut"}}}},"422":{"description":"Validation Error","content":{"application/json":{"schema":{"$ref":"#/components/schemas/HTTPValidationError"}}}}}},"get":{"tags":["Agendamento (fornecedor e Compras)"],"summary":"Listar","description":"Fornecedor logado vê o que é da própria empresa (todos os cadastros com o mesmo CNPJ)\ne o que ele mesmo agendou com nota de outra empresa.","operationId":"listar_api_v1_agendamentos_get","security":[{"HTTPBearer":[]}],"parameters":[{"name":"data","in":"query","required":false,"schema":{"anyOf":[{"type":"string","format":"date"},{"type":"null"}],"title":"Data"}},{"name":"status","in":"query","required":false,"schema":{"anyOf":[{"$ref":"#/components/schemas/StatusAgendamento"},{"type":"null"}],"title":"Status"}},{"name":"fornecedor_id","in":"query","required":false,"schema":{"anyOf":[{"type":"integer"},{"type":"null"}],"title":"Fornecedor Id"}}],"responses":{"200":{"description":"Successful Response","content":{"application/json":{"schema":{"type":"array","items":{"$ref":"#/components/schemas/AgendamentoOut"},"title":"Response Listar Api V1 Agendamentos Get"}}}},"422":{"description":"Validation Error","content":{"application/json":{"schema":{"$ref":"#/components/schemas/HTTPValidationError"}}}}}}},"/api/v1/agendamentos/{ag_id}":{"get":{"tags":["Agendamento (fornecedor e Compras)"],"summary":"Detalhar","operationId":"detalhar_api_v1_agendamentos__ag_id__get","security":[{"HTTPBearer":[]}],"parameters":[{"name":"ag_id","in":"path","required":true,"schema":{"type":"integer","title":"Ag Id"}}],"responses":{"200":{"description":"Successful Response","content":{"application/json":{"schema":{"$ref":"#/components/schemas/AgendamentoOut"}}}},"422":{"description":"Validation Error","content":{"application/json":{"schema":{"$ref":"#/components/schemas/HTTPValidationError"}}}}}}},"/api/v1/agendamentos/{ag_id}/cancelar":{"post":{"tags":["Agendamento (fornecedor e Compras)"],"summary":"Cancelar","operationId":"cancelar_api_v1_agendamentos__ag_id__cancelar_post","security":[{"HTTPBearer":[]}],"parameters":[{"name":"ag_id","in":"path","required":true,"schema":{"type":"integer","title":"Ag Id"}}],"responses":{"200":{"description":"Successful Response","content":{"application/json":{"schema":{"$ref":"#/components/schemas/AgendamentoOut"}}}},"422":{"description":"Validation Error","content":{"application/json":{"schema":{"$ref":"#/components/schemas/HTTPValidationError"}}}}}}},"/api/v1/agendamentos/{ag_id}/notificacoes":{"get":{"tags":["Agendamento (fornecedor e Compras)"],"summary":"Notificacoes","description":"Avisos enviados ao fornecedor sobre este agendamento.","operationId":"notificacoes_api_v1_agendamentos__ag_id__notificacoes_get","security":[{"HTTPBearer":[]}],"parameters":[{"name":"ag_id","in":"path","required":true,"schema":{"type":"integer","title":"Ag Id"}}],"responses":{"200":{"description":"Successful Response","content":{"application/json":{"schema":{"type":"array","items":{"$ref":"#/components/schemas/NotificacaoOut"},"title":"Response Notificacoes Api V1 Agendamentos  Ag Id  Notificacoes Get"}}}},"422":{"description":"Validation Error","content":{"application/json":{"schema":{"$ref":"#/components/schemas/HTTPValidationError"}}}}}}},"/api/v1/agendamentos/{ag_id}/conferencia":{"get":{"tags":["Agendamento (fornecedor e Compras)"],"summary":"Conferencia","description":"Tela do Compras: nota lida + checagens automáticas, para aprovar ou reprovar.","operationId":"conferencia_api_v1_agendamentos__ag_id__conferencia_get","security":[{"HTTPBearer":[]}],"parameters":[{"name":"ag_id","in":"path","required":true,"schema":{"type":"integer","title":"Ag Id"}}],"responses":{"200":{"description":"Successful Response","content":{"application/json":{"schema":{"$ref":"#/components/schemas/ConferenciaOut"}}}},"422":{"description":"Validation Error","content":{"application/json":{"schema":{"$ref":"#/components/schemas/HTTPValidationError"}}}}}}},"/api/v1/agendamentos/{ag_id}/aprovar":{"post":{"tags":["Agendamento (fornecedor e Compras)"],"summary":"Aprovar","operationId":"aprovar_api_v1_agendamentos__ag_id__aprovar_post","security":[{"HTTPBearer":[]}],"parameters":[{"name":"ag_id","in":"path","required":true,"schema":{"type":"integer","title":"Ag Id"}}],"requestBody":{"required":true,"content":{"application/json":{"schema":{"$ref":"#/components/schemas/AprovacaoIn"}}}},"responses":{"200":{"description":"Successful Response","content":{"application/json":{"schema":{"$ref":"#/components/schemas/AgendamentoOut"}}}},"422":{"description":"Validation Error","content":{"application/json":{"schema":{"$ref":"#/components/schemas/HTTPValidationError"}}}}}}},"/api/v1/agendamentos/{ag_id}/rejeitar":{"post":{"tags":["Agendamento (fornecedor e Compras)"],"summary":"Rejeitar","description":"Reprovar exige motivo e observação; o fornecedor recebe o aviso por e-mail.","operationId":"rejeitar_api_v1_agendamentos__ag_id__rejeitar_post","security":[{"HTTPBearer":[]}],"parameters":[{"name":"ag_id","in":"path","required":true,"schema":{"type":"integer","title":"Ag Id"}}],"requestBody":{"required":true,"content":{"application/json":{"schema":{"$ref":"#/components/schemas/RejeicaoIn"}}}},"responses":{"200":{"description":"Successful Response","content":{"application/json":{"schema":{"$ref":"#/components/schemas/AgendamentoOut"}}}},"422":{"description":"Validation Error","content":{"application/json":{"schema":{"$ref":"#/components/schemas/HTTPValidationError"}}}}}}},"/api/v1/armazem/programacao":{"get":{"tags":["Armazém (operador do pátio)"],"summary":"Programacao","description":"O que vai chegar nos próximos dias (padrão: hoje + 6), por armazém, com a equipe\nestimada. Inclui o que o Compras ainda não aprovou (confirmado = false).","operationId":"programacao_api_v1_armazem_programacao_get","security":[{"HTTPBearer":[]}],"parameters":[{"name":"inicio","in":"query","required":false,"schema":{"anyOf":[{"type":"string","format":"date"},{"type":"null"}],"title":"Inicio"}},{"name":"fim","in":"query","required":false,"schema":{"anyOf":[{"type":"string","format":"date"},{"type":"null"}],"title":"Fim"}},{"name":"local","in":"query","required":false,"schema":{"anyOf":[{"$ref":"#/components/schemas/LocalFisico"},{"type":"null"}],"title":"Local"}}],"responses":{"200":{"description":"Successful Response","content":{"application/json":{"schema":{"$ref":"#/components/schemas/Programacao"}}}},"422":{"description":"Validation Error","content":{"application/json":{"schema":{"$ref":"#/components/schemas/HTTPValidationError"}}}}}}},"/api/v1/armazem/aguardando-destino":{"get":{"tags":["Armazém (operador do pátio)"],"summary":"Aguardando Destino","description":"Aprovados por Compras que ainda não têm baia definida.","operationId":"aguardando_destino_api_v1_armazem_aguardando_destino_get","security":[{"HTTPBearer":[]}],"parameters":[{"name":"data","in":"query","required":false,"schema":{"anyOf":[{"type":"string","format":"date"},{"type":"null"}],"title":"Data"}}],"responses":{"200":{"description":"Successful Response","content":{"application/json":{"schema":{"type":"array","items":{"$ref":"#/components/schemas/AgendamentoOut"},"title":"Response Aguardando Destino Api V1 Armazem Aguardando Destino Get"}}}},"422":{"description":"Validation Error","content":{"application/json":{"schema":{"$ref":"#/components/schemas/HTTPValidationError"}}}}}}},"/api/v1/armazem/fila":{"get":{"tags":["Armazém (operador do pátio)"],"summary":"Fila","operationId":"fila_api_v1_armazem_fila_get","security":[{"HTTPBearer":[]}],"parameters":[{"name":"data","in":"query","required":true,"schema":{"type":"string","format":"date","title":"Data"}},{"name":"local","in":"query","required":false,"schema":{"anyOf":[{"$ref":"#/components/schemas/LocalFisico"},{"type":"null"}],"title":"Local"}}],"responses":{"200":{"description":"Successful Response","content":{"application/json":{"schema":{"type":"array","items":{"$ref":"#/components/schemas/AgendamentoOut"},"title":"Response Fila Api V1 Armazem Fila Get"}}}},"422":{"description":"Validation Error","content":{"application/json":{"schema":{"$ref":"#/components/schemas/HTTPValidationError"}}}}}}},"/api/v1/armazem/balcao":{"post":{"tags":["Armazém (operador do pátio)"],"summary":"Balcao","operationId":"balcao_api_v1_armazem_balcao_post","requestBody":{"content":{"application/json":{"schema":{"$ref":"#/components/schemas/BalcaoCreate"}}},"required":true},"responses":{"201":{"description":"Successful Response","content":{"application/json":{"schema":{"$ref":"#/components/schemas/AgendamentoOut"}}}},"422":{"description":"Validation Error","content":{"application/json":{"schema":{"$ref":"#/components/schemas/HTTPValidationError"}}}}},"security":[{"HTTPBearer":[]}]}},"/api/v1/armazem/agendamentos/{ag_id}/destinos":{"put":{"tags":["Armazém (operador do pátio)"],"summary":"Destinos","operationId":"destinos_api_v1_armazem_agendamentos__ag_id__destinos_put","security":[{"HTTPBearer":[]}],"parameters":[{"name":"ag_id","in":"path","required":true,"schema":{"type":"integer","title":"Ag Id"}}],"requestBody":{"required":true,"content":{"application/json":{"schema":{"$ref":"#/components/schemas/DestinosIn"}}}},"responses":{"200":{"description":"Successful Response","content":{"application/json":{"schema":{"$ref":"#/components/schemas/AgendamentoOut"}}}},"422":{"description":"Validation Error","content":{"application/json":{"schema":{"$ref":"#/components/schemas/HTTPValidationError"}}}}}}},"/api/v1/armazem/agendamentos/{ag_id}/chegada":{"post":{"tags":["Armazém (operador do pátio)"],"summary":"Chegada","operationId":"chegada_api_v1_armazem_agendamentos__ag_id__chegada_post","security":[{"HTTPBearer":[]}],"parameters":[{"name":"ag_id","in":"path","required":true,"schema":{"type":"integer","title":"Ag Id"}}],"responses":{"200":{"description":"Successful Response","content":{"application/json":{"schema":{"$ref":"#/components/schemas/AgendamentoOut"}}}},"422":{"description":"Validation Error","content":{"application/json":{"schema":{"$ref":"#/components/schemas/HTTPValidationError"}}}}}}},"/api/v1/armazem/agendamentos/{ag_id}/entrada":{"post":{"tags":["Armazém (operador do pátio)"],"summary":"Entrada","operationId":"entrada_api_v1_armazem_agendamentos__ag_id__entrada_post","security":[{"HTTPBearer":[]}],"parameters":[{"name":"ag_id","in":"path","required":true,"schema":{"type":"integer","title":"Ag Id"}}],"requestBody":{"required":true,"content":{"application/json":{"schema":{"$ref":"#/components/schemas/EntradaIn"}}}},"responses":{"200":{"description":"Successful Response","content":{"application/json":{"schema":{"$ref":"#/components/schemas/AgendamentoOut"}}}},"422":{"description":"Validation Error","content":{"application/json":{"schema":{"$ref":"#/components/schemas/HTTPValidationError"}}}}}}},"/api/v1/armazem/agendamentos/{ag_id}/saida":{"post":{"tags":["Armazém (operador do pátio)"],"summary":"Saida","operationId":"saida_api_v1_armazem_agendamentos__ag_id__saida_post","security":[{"HTTPBearer":[]}],"parameters":[{"name":"ag_id","in":"path","required":true,"schema":{"type":"integer","title":"Ag Id"}}],"requestBody":{"required":true,"content":{"application/json":{"schema":{"$ref":"#/components/schemas/SaidaIn"}}}},"responses":{"200":{"description":"Successful Response","content":{"application/json":{"schema":{"$ref":"#/components/schemas/AgendamentoOut"}}}},"422":{"description":"Validation Error","content":{"application/json":{"schema":{"$ref":"#/components/schemas/HTTPValidationError"}}}}}}},"/api/v1/armazem/agendamentos/{ag_id}/nao-compareceu":{"post":{"tags":["Armazém (operador do pátio)"],"summary":"Nao Compareceu","operationId":"nao_compareceu_api_v1_armazem_agendamentos__ag_id__nao_compareceu_post","security":[{"HTTPBearer":[]}],"parameters":[{"name":"ag_id","in":"path","required":true,"schema":{"type":"integer","title":"Ag Id"}}],"responses":{"200":{"description":"Successful Response","content":{"application/json":{"schema":{"$ref":"#/components/schemas/AgendamentoOut"}}}},"422":{"description":"Validation Error","content":{"application/json":{"schema":{"$ref":"#/components/schemas/HTTPValidationError"}}}}}}},"/api/v1/armazem/agendamentos/{ag_id}/reagendar-chuva":{"post":{"tags":["Armazém (operador do pátio)"],"summary":"Reagendar Chuva","operationId":"reagendar_chuva_api_v1_armazem_agendamentos__ag_id__reagendar_chuva_post","security":[{"HTTPBearer":[]}],"parameters":[{"name":"ag_id","in":"path","required":true,"schema":{"type":"integer","title":"Ag Id"}}],"requestBody":{"required":true,"content":{"application/json":{"schema":{"$ref":"#/components/schemas/ReagendamentoChuvaIn"}}}},"responses":{"200":{"description":"Successful Response","content":{"application/json":{"schema":{"$ref":"#/components/schemas/AgendamentoOut"}}}},"422":{"description":"Validation Error","content":{"application/json":{"schema":{"$ref":"#/components/schemas/HTTPValidationError"}}}}}}},"/api/v1/cadastros/baias":{"get":{"tags":["Cadastros"],"summary":"Listar Baias","operationId":"listar_baias_api_v1_cadastros_baias_get","security":[{"HTTPBearer":[]}],"parameters":[{"name":"local","in":"query","required":false,"schema":{"anyOf":[{"$ref":"#/components/schemas/LocalFisico"},{"type":"null"}],"title":"Local"}},{"name":"incluir_inativas","in":"query","required":false,"schema":{"type":"boolean","default":false,"title":"Incluir Inativas"}}],"responses":{"200":{"description":"Successful Response","content":{"application/json":{"schema":{"type":"array","items":{"$ref":"#/components/schemas/BaiaOut"},"title":"Response Listar Baias Api V1 Cadastros Baias Get"}}}},"422":{"description":"Validation Error","content":{"application/json":{"schema":{"$ref":"#/components/schemas/HTTPValidationError"}}}}}},"post":{"tags":["Cadastros"],"summary":"Criar Baia","operationId":"criar_baia_api_v1_cadastros_baias_post","security":[{"HTTPBearer":[]}],"requestBody":{"required":true,"content":{"application/json":{"schema":{"$ref":"#/components/schemas/BaiaCreate"}}}},"responses":{"201":{"description":"Successful Response","content":{"application/json":{"schema":{"$ref":"#/components/schemas/BaiaOut"}}}},"422":{"description":"Validation Error","content":{"application/json":{"schema":{"$ref":"#/components/schemas/HTTPValidationError"}}}}}}},"/api/v1/cadastros/baias/{baia_id}/ativa":{"patch":{"tags":["Cadastros"],"summary":"Ativar Desativar Baia","operationId":"ativar_desativar_baia_api_v1_cadastros_baias__baia_id__ativa_patch","security":[{"HTTPBearer":[]}],"parameters":[{"name":"baia_id","in":"path","required":true,"schema":{"type":"integer","title":"Baia Id"}},{"name":"ativa","in":"query","required":true,"schema":{"type":"boolean","title":"Ativa"}}],"responses":{"200":{"description":"Successful Response","content":{"application/json":{"schema":{"$ref":"#/components/schemas/BaiaOut"}}}},"422":{"description":"Validation Error","content":{"application/json":{"schema":{"$ref":"#/components/schemas/HTTPValidationError"}}}}}}},"/api/v1/cadastros/equipamentos":{"get":{"tags":["Cadastros"],"summary":"Listar Equipamentos","operationId":"listar_equipamentos_api_v1_cadastros_equipamentos_get","responses":{"200":{"description":"Successful Response","content":{"application/json":{"schema":{"items":{"$ref":"#/components/schemas/EquipamentoOut"},"type":"array","title":"Response Listar Equipamentos Api V1 Cadastros Equipamentos Get"}}}}},"security":[{"HTTPBearer":[]}]}},"/api/v1/cadastros/chapas":{"get":{"tags":["Cadastros"],"summary":"Listar Chapas","operationId":"listar_chapas_api_v1_cadastros_chapas_get","security":[{"HTTPBearer":[]}],"parameters":[{"name":"incluir_inativos","in":"query","required":false,"schema":{"type":"boolean","default":false,"title":"Incluir Inativos"}}],"responses":{"200":{"description":"Successful Response","content":{"application/json":{"schema":{"type":"array","items":{"$ref":"#/components/schemas/ChapaOut"},"title":"Response Listar Chapas Api V1 Cadastros Chapas Get"}}}},"422":{"description":"Validation Error","content":{"application/json":{"schema":{"$ref":"#/components/schemas/HTTPValidationError"}}}}}},"post":{"tags":["Cadastros"],"summary":"Criar Chapa","operationId":"criar_chapa_api_v1_cadastros_chapas_post","security":[{"HTTPBearer":[]}],"requestBody":{"required":true,"content":{"application/json":{"schema":{"$ref":"#/components/schemas/ChapaCreate"}}}},"responses":{"201":{"description":"Successful Response","content":{"application/json":{"schema":{"$ref":"#/components/schemas/ChapaOut"}}}},"422":{"description":"Validation Error","content":{"application/json":{"schema":{"$ref":"#/components/schemas/HTTPValidationError"}}}}}}},"/api/v1/cadastros/tipos-item":{"get":{"tags":["Cadastros"],"summary":"Listar Tipos Item","description":"As 14 linhas do boletim com o preço unitário.","operationId":"listar_tipos_item_api_v1_cadastros_tipos_item_get","responses":{"200":{"description":"Successful Response","content":{"application/json":{"schema":{"items":{"$ref":"#/components/schemas/TipoItemOut"},"type":"array","title":"Response Listar Tipos Item Api V1 Cadastros Tipos Item Get"}}}}},"security":[{"HTTPBearer":[]}]}},"/api/v1/boletins":{"post":{"tags":["Boletim diário (chapas)"],"summary":"Abrir","operationId":"abrir_api_v1_boletins_post","security":[{"HTTPBearer":[]}],"requestBody":{"required":true,"content":{"application/json":{"schema":{"$ref":"#/components/schemas/BoletimCreate"}}}},"responses":{"201":{"description":"Successful Response","content":{"application/json":{"schema":{"$ref":"#/components/schemas/BoletimOut"}}}},"422":{"description":"Validation Error","content":{"application/json":{"schema":{"$ref":"#/components/schemas/HTTPValidationError"}}}}}},"get":{"tags":["Boletim diário (chapas)"],"summary":"Listar","operationId":"listar_api_v1_boletins_get","security":[{"HTTPBearer":[]}],"parameters":[{"name":"inicio","in":"query","required":false,"schema":{"anyOf":[{"type":"string","format":"date"},{"type":"null"}],"title":"Inicio"}},{"name":"fim","in":"query","required":false,"schema":{"anyOf":[{"type":"string","format":"date"},{"type":"null"}],"title":"Fim"}},{"name":"local","in":"query","required":false,"schema":{"anyOf":[{"$ref":"#/components/schemas/LocalFisico"},{"type":"null"}],"title":"Local"}},{"name":"status","in":"query","required":false,"schema":{"anyOf":[{"$ref":"#/components/schemas/StatusBoletim"},{"type":"null"}],"title":"Status"}}],"responses":{"200":{"description":"Successful Response","content":{"application/json":{"schema":{"type":"array","items":{"$ref":"#/components/schemas/BoletimOut"},"title":"Response Listar Api V1 Boletins Get"}}}},"422":{"description":"Validation Error","content":{"application/json":{"schema":{"$ref":"#/components/schemas/HTTPValidationError"}}}}}}},"/api/v1/boletins/{boletim_id}":{"get":{"tags":["Boletim diário (chapas)"],"summary":"Detalhar","operationId":"detalhar_api_v1_boletins__boletim_id__get","security":[{"HTTPBearer":[]}],"parameters":[{"name":"boletim_id","in":"path","required":true,"schema":{"type":"integer","title":"Boletim Id"}}],"responses":{"200":{"description":"Successful Response","content":{"application/json":{"schema":{"$ref":"#/components/schemas/BoletimOut"}}}},"422":{"description":"Validation Error","content":{"application/json":{"schema":{"$ref":"#/components/schemas/HTTPValidationError"}}}}}}},"/api/v1/boletins/{boletim_id}/producao":{"put":{"tags":["Boletim diário (chapas)"],"summary":"Producao","operationId":"producao_api_v1_boletins__boletim_id__producao_put","security":[{"HTTPBearer":[]}],"parameters":[{"name":"boletim_id","in":"path","required":true,"schema":{"type":"integer","title":"Boletim Id"}}],"requestBody":{"required":true,"content":{"application/json":{"schema":{"$ref":"#/components/schemas/ProducaoIn"}}}},"responses":{"200":{"description":"Successful Response","content":{"application/json":{"schema":{"$ref":"#/components/schemas/BoletimOut"}}}},"422":{"description":"Validation Error","content":{"application/json":{"schema":{"$ref":"#/components/schemas/HTTPValidationError"}}}}}}},"/api/v1/boletins/{boletim_id}/equipe":{"put":{"tags":["Boletim diário (chapas)"],"summary":"Equipe","operationId":"equipe_api_v1_boletins__boletim_id__equipe_put","security":[{"HTTPBearer":[]}],"parameters":[{"name":"boletim_id","in":"path","required":true,"schema":{"type":"integer","title":"Boletim Id"}}],"requestBody":{"required":true,"content":{"application/json":{"schema":{"$ref":"#/components/schemas/EquipeIn"}}}},"responses":{"200":{"description":"Successful Response","content":{"application/json":{"schema":{"$ref":"#/components/schemas/BoletimOut"}}}},"422":{"description":"Validation Error","content":{"application/json":{"schema":{"$ref":"#/components/schemas/HTTPValidationError"}}}}}}},"/api/v1/boletins/{boletim_id}/fechar":{"post":{"tags":["Boletim diário (chapas)"],"summary":"Fechar","operationId":"fechar_api_v1_boletins__boletim_id__fechar_post","security":[{"HTTPBearer":[]}],"parameters":[{"name":"boletim_id","in":"path","required":true,"schema":{"type":"integer","title":"Boletim Id"}}],"requestBody":{"required":true,"content":{"application/json":{"schema":{"$ref":"#/components/schemas/FecharIn"}}}},"responses":{"200":{"description":"Successful Response","content":{"application/json":{"schema":{"$ref":"#/components/schemas/BoletimOut"}}}},"422":{"description":"Validation Error","content":{"application/json":{"schema":{"$ref":"#/components/schemas/HTTPValidationError"}}}}}}},"/api/v1/boletins/{boletim_id}/reabrir":{"post":{"tags":["Boletim diário (chapas)"],"summary":"Reabrir","operationId":"reabrir_api_v1_boletins__boletim_id__reabrir_post","security":[{"HTTPBearer":[]}],"parameters":[{"name":"boletim_id","in":"path","required":true,"schema":{"type":"integer","title":"Boletim Id"}}],"responses":{"200":{"description":"Successful Response","content":{"application/json":{"schema":{"$ref":"#/components/schemas/BoletimOut"}}}},"422":{"description":"Validation Error","content":{"application/json":{"schema":{"$ref":"#/components/schemas/HTTPValidationError"}}}}}}},"/api/v1/boletins/{boletim_id}/excel":{"get":{"tags":["Boletim diário (chapas)"],"summary":"Excel","description":"Boletim formatado em .xlsx (cabeçalho, seções, moeda e totais), igual à tela.","operationId":"excel_api_v1_boletins__boletim_id__excel_get","security":[{"HTTPBearer":[]}],"parameters":[{"name":"boletim_id","in":"path","required":true,"schema":{"type":"integer","title":"Boletim Id"}}],"responses":{"200":{"description":"Successful Response","content":{"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":{}}},"422":{"description":"Validation Error","content":{"application/json":{"schema":{"$ref":"#/components/schemas/HTTPValidationError"}}}}}}}},"components":{"schemas":{"Acondicionamento":{"type":"string","enum":["BATIDO","PALETIZADO","BIG_BAG"],"title":"Acondicionamento"},"AgendamentoCreate":{"properties":{"nota_fiscal_id":{"type":"integer","title":"Nota Fiscal Id"},"data":{"type":"string","format":"date","title":"Data"},"horario":{"$ref":"#/components/schemas/Horario"},"acondicionamento":{"$ref":"#/components/schemas/Acondicionamento"},"ciente_risco_chuva":{"type":"boolean","title":"Ciente Risco Chuva","description":"Obrigatório para carga de adubo com risco de chuva: se chover, a descarga é reagendada para o próximo dia útil, com prioridade","default":false},"email_contato":{"anyOf":[{"type":"string"},{"type":"null"}],"title":"Email Contato","description":"Para onde vão os avisos (aprovação, reprovação, doca)"}},"type":"object","required":["nota_fiscal_id","data","horario","acondicionamento"],"title":"AgendamentoCreate","description":"O fornecedor só informa acondicionamento, dia e horário.\nFornecedor, peso e tipo de carga vêm da nota fiscal enviada antes."},"AgendamentoOut":{"properties":{"id":{"type":"integer","title":"Id"},"fornecedor_id":{"type":"integer","title":"Fornecedor Id"},"fornecedor":{"$ref":"#/components/schemas/FornecedorOut"},"origem_dado":{"$ref":"#/components/schemas/Origem"},"nota_fiscal_id":{"anyOf":[{"type":"integer"},{"type":"null"}],"title":"Nota Fiscal Id"},"data":{"type":"string","format":"date","title":"Data"},"horario":{"$ref":"#/components/schemas/Horario"},"acondicionamento":{"$ref":"#/components/schemas/Acondicionamento"},"peso_kg":{"anyOf":[{"type":"string","pattern":"^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"},{"type":"null"}],"title":"Peso Kg"},"carga_adubo":{"type":"boolean","title":"Carga Adubo"},"prob_chuva":{"anyOf":[{"type":"integer"},{"type":"null"}],"title":"Prob Chuva"},"nf_numero":{"anyOf":[{"type":"string"},{"type":"null"}],"title":"Nf Numero"},"nf_chave":{"anyOf":[{"type":"string"},{"type":"null"}],"title":"Nf Chave"},"pedido_compra":{"anyOf":[{"type":"integer"},{"type":"null"}],"title":"Pedido Compra"},"analisado_por":{"anyOf":[{"type":"string"},{"type":"null"}],"title":"Analisado Por"},"analisado_em":{"anyOf":[{"type":"string","format":"date-time"},{"type":"null"}],"title":"Analisado Em"},"observacao_compras":{"anyOf":[{"type":"string"},{"type":"null"}],"title":"Observacao Compras"},"status":{"$ref":"#/components/schemas/StatusAgendamento"},"origem":{"$ref":"#/components/schemas/OrigemAgendamento"},"prioritario":{"type":"boolean","title":"Prioritario"},"ciente_risco_chuva":{"type":"boolean","title":"Ciente Risco Chuva"},"motivo_nao_recebimento":{"anyOf":[{"$ref":"#/components/schemas/MotivoNaoRecebimento"},{"type":"null"}]},"reagendado_de_id":{"anyOf":[{"type":"integer"},{"type":"null"}],"title":"Reagendado De Id"},"horario_chegada":{"anyOf":[{"type":"string","format":"date-time"},{"type":"null"}],"title":"Horario Chegada"},"criado_em":{"type":"string","format":"date-time","title":"Criado Em"},"cancelado_em":{"anyOf":[{"type":"string","format":"date-time"},{"type":"null"}],"title":"Cancelado Em"},"descargas":{"items":{"$ref":"#/components/schemas/DescargaOut"},"type":"array","title":"Descargas"},"chapas_norma":{"anyOf":[{"type":"integer"},{"type":"null"}],"title":"Chapas Norma"},"aviso_chuva":{"anyOf":[{"type":"string"},{"type":"null"}],"title":"Aviso Chuva"}},"type":"object","required":["id","fornecedor_id","fornecedor","origem_dado","nota_fiscal_id","data","horario","acondicionamento","peso_kg","carga_adubo","prob_chuva","nf_numero","nf_chave","pedido_compra","analisado_por","analisado_em","observacao_compras","status","origem","prioritario","ciente_risco_chuva","motivo_nao_recebimento","reagendado_de_id","horario_chegada","criado_em","cancelado_em","descargas"],"title":"AgendamentoOut"},"AprovacaoIn":{"properties":{"pedido_compra":{"type":"integer","title":"Pedido Compra"},"analisado_por":{"type":"string","title":"Analisado Por"},"observacao":{"anyOf":[{"type":"string"},{"type":"null"}],"title":"Observacao"}},"type":"object","required":["pedido_compra","analisado_por"],"title":"AprovacaoIn"},"BaiaCreate":{"properties":{"local":{"$ref":"#/components/schemas/LocalFisico"},"codigo":{"type":"string","maxLength":20,"minLength":1,"title":"Codigo"},"nome":{"type":"string","minLength":1,"title":"Nome"}},"type":"object","required":["local","codigo","nome"],"title":"BaiaCreate"},"BaiaOut":{"properties":{"id":{"type":"integer","title":"Id"},"local":{"$ref":"#/components/schemas/LocalFisico"},"codigo":{"type":"string","title":"Codigo"},"nome":{"type":"string","title":"Nome"},"ativa":{"type":"boolean","title":"Ativa"}},"type":"object","required":["id","local","codigo","nome","ativa"],"title":"BaiaOut"},"BalcaoCreate":{"properties":{"nota_fiscal_id":{"type":"integer","title":"Nota Fiscal Id"},"horario":{"$ref":"#/components/schemas/Horario"},"acondicionamento":{"$ref":"#/components/schemas/Acondicionamento"},"email_contato":{"anyOf":[{"type":"string"},{"type":"null"}],"title":"Email Contato"}},"type":"object","required":["nota_fiscal_id","horario","acondicionamento"],"title":"BalcaoCreate","description":"Caminhão chegou sem agendamento: com a nota lida, o armazém agenda na hora."},"Body_enviar_nota_api_v1_agendamentos_nota_fiscal_post":{"properties":{"arquivo":{"type":"string","format":"binary","title":"Arquivo"}},"type":"object","required":["arquivo"],"title":"Body_enviar_nota_api_v1_agendamentos_nota_fiscal_post"},"BoletimCreate":{"properties":{"data":{"type":"string","format":"date","title":"Data"},"local":{"anyOf":[{"$ref":"#/components/schemas/LocalFisico"},{"type":"null"}]},"observacao":{"anyOf":[{"type":"string"},{"type":"null"}],"title":"Observacao"}},"type":"object","required":["data"],"title":"BoletimCreate","description":"Boletim geral do dia: não informe `local`. Só no modo por armazém\n(config.BOLETIM_POR_ARMAZEM = True) o armazém é obrigatório."},"BoletimOut":{"properties":{"id":{"type":"integer","title":"Id"},"data":{"type":"string","format":"date","title":"Data"},"local":{"anyOf":[{"$ref":"#/components/schemas/LocalFisico"},{"type":"null"}]},"status":{"$ref":"#/components/schemas/StatusBoletim"},"origem_dado":{"$ref":"#/components/schemas/Origem"},"observacao":{"anyOf":[{"type":"string"},{"type":"null"}],"title":"Observacao"},"linhas":{"items":{"$ref":"#/components/schemas/LinhaProducaoOut"},"type":"array","title":"Linhas"},"equipe":{"items":{"$ref":"#/components/schemas/ChapaNoBoletimOut"},"type":"array","title":"Equipe"},"calculo":{"$ref":"#/components/schemas/CalculoOut"},"avisos":{"items":{"type":"string"},"type":"array","title":"Avisos"},"criado_em":{"type":"string","format":"date-time","title":"Criado Em"},"fechado_em":{"anyOf":[{"type":"string","format":"date-time"},{"type":"null"}],"title":"Fechado Em"},"fechado_por":{"anyOf":[{"type":"string"},{"type":"null"}],"title":"Fechado Por"}},"type":"object","required":["id","data","local","status","origem_dado","observacao","linhas","equipe","calculo","avisos","criado_em","fechado_em","fechado_por"],"title":"BoletimOut"},"CadastroIn":{"properties":{"perfil":{"$ref":"#/components/schemas/PerfilUsuario"},"nome":{"type":"string","minLength":2,"title":"Nome"},"email":{"type":"string","title":"Email"},"senha":{"type":"string","minLength":8,"title":"Senha"},"empresa":{"anyOf":[{"type":"string"},{"type":"null"}],"title":"Empresa"},"cnpj":{"anyOf":[{"type":"string"},{"type":"null"}],"title":"Cnpj"},"codigo_interno":{"anyOf":[{"type":"string"},{"type":"null"}],"title":"Codigo Interno"}},"type":"object","required":["perfil","nome","email","senha"],"title":"CadastroIn","description":"Fornecedor se cadastra livremente (informa a empresa). Compras e armazém\nprecisam do código interno (config.CODIGO_CADASTRO_INTERNO)."},"CalculoOut":{"properties":{"producao_total":{"type":"string","pattern":"^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$","title":"Producao Total"},"chapas":{"type":"integer","title":"Chapas"},"meias_diarias":{"type":"integer","title":"Meias Diarias"},"diarias_equivalentes":{"type":"string","pattern":"^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$","title":"Diarias Equivalentes"},"valor_por_diaria":{"anyOf":[{"type":"string","pattern":"^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"},{"type":"null"}],"title":"Valor Por Diaria"},"piso_diaria":{"type":"string","pattern":"^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$","title":"Piso Diaria"},"piso_total":{"type":"string","pattern":"^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$","title":"Piso Total"},"total_pagar":{"type":"string","pattern":"^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$","title":"Total Pagar"},"complemento":{"type":"string","pattern":"^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$","title":"Complemento"},"abaixo_do_piso":{"type":"boolean","title":"Abaixo Do Piso"}},"type":"object","required":["producao_total","chapas","meias_diarias","diarias_equivalentes","valor_por_diaria","piso_diaria","piso_total","total_pagar","complemento","abaixo_do_piso"],"title":"CalculoOut","description":"Valores arredondados a 2 casas só aqui, na saída."},"CaminhaoPrevisto":{"properties":{"agendamento_id":{"type":"integer","title":"Agendamento Id"},"data":{"type":"string","format":"date","title":"Data"},"horario":{"$ref":"#/components/schemas/Horario"},"status":{"$ref":"#/components/schemas/StatusAgendamento"},"confirmado":{"type":"boolean","title":"Confirmado"},"prioritario":{"type":"boolean","title":"Prioritario"},"fornecedor":{"type":"string","title":"Fornecedor"},"nf_numero":{"anyOf":[{"type":"string"},{"type":"null"}],"title":"Nf Numero"},"acondicionamento":{"$ref":"#/components/schemas/Acondicionamento"},"peso_kg":{"anyOf":[{"type":"string","pattern":"^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"},{"type":"null"}],"title":"Peso Kg"},"volumes_estimados":{"anyOf":[{"type":"integer"},{"type":"null"}],"title":"Volumes Estimados"},"locais":{"items":{"$ref":"#/components/schemas/LocalFisico"},"type":"array","title":"Locais"},"locais_sugeridos":{"type":"boolean","title":"Locais Sugeridos"},"doca":{"anyOf":[{"type":"string"},{"type":"null"}],"title":"Doca"},"chapas_norma":{"anyOf":[{"type":"integer"},{"type":"null"}],"title":"Chapas Norma"},"equipamento_sugerido":{"anyOf":[{"type":"string"},{"type":"null"}],"title":"Equipamento Sugerido"},"minutos_caminhao":{"type":"integer","title":"Minutos Caminhao"},"minutos_equipe":{"type":"integer","title":"Minutos Equipe"},"carga_adubo":{"type":"boolean","title":"Carga Adubo"},"prob_chuva":{"anyOf":[{"type":"integer"},{"type":"null"}],"title":"Prob Chuva"},"situacao_chuva":{"anyOf":[{"type":"string"},{"type":"null"}],"title":"Situacao Chuva"}},"type":"object","required":["agendamento_id","data","horario","status","confirmado","prioritario","fornecedor","nf_numero","acondicionamento","peso_kg","volumes_estimados","locais","locais_sugeridos","doca","chapas_norma","equipamento_sugerido","minutos_caminhao","minutos_equipe","carga_adubo","prob_chuva","situacao_chuva"],"title":"CaminhaoPrevisto"},"ChapaCreate":{"properties":{"matricula":{"type":"string","maxLength":20,"minLength":1,"title":"Matricula"},"nome":{"type":"string","minLength":1,"title":"Nome"}},"type":"object","required":["matricula","nome"],"title":"ChapaCreate"},"ChapaNoBoletimIn":{"properties":{"matricula":{"type":"string","title":"Matricula"},"meia_diaria":{"type":"boolean","title":"Meia Diaria","default":false}},"type":"object","required":["matricula"],"title":"ChapaNoBoletimIn"},"ChapaNoBoletimOut":{"properties":{"matricula":{"type":"string","title":"Matricula"},"nome":{"type":"string","title":"Nome"},"meia_diaria":{"type":"boolean","title":"Meia Diaria"}},"type":"object","required":["matricula","nome","meia_diaria"],"title":"ChapaNoBoletimOut"},"ChapaOut":{"properties":{"id":{"type":"integer","title":"Id"},"matricula":{"type":"string","title":"Matricula"},"nome":{"type":"string","title":"Nome"},"ativo":{"type":"boolean","title":"Ativo"}},"type":"object","required":["id","matricula","nome","ativo"],"title":"ChapaOut"},"ConferenciaOut":{"properties":{"agendamento":{"$ref":"#/components/schemas/AgendamentoOut"},"nota":{"$ref":"#/components/schemas/NotaFiscalOut"},"verificacoes":{"items":{"$ref":"#/components/schemas/Verificacao"},"type":"array","title":"Verificacoes"},"pedido_compra":{"anyOf":[{"additionalProperties":true,"type":"object"},{"type":"null"}],"title":"Pedido Compra"}},"type":"object","required":["agendamento","nota","verificacoes"],"title":"ConferenciaOut","description":"O que o Compras precisa ver para aprovar ou reprovar."},"DescargaOut":{"properties":{"id":{"type":"integer","title":"Id"},"local":{"$ref":"#/components/schemas/LocalFisico"},"baia":{"anyOf":[{"$ref":"#/components/schemas/BaiaOut"},{"type":"null"}]},"horario_entrada":{"anyOf":[{"type":"string","format":"date-time"},{"type":"null"}],"title":"Horario Entrada"},"horario_saida":{"anyOf":[{"type":"string","format":"date-time"},{"type":"null"}],"title":"Horario Saida"},"qtd_chapas":{"anyOf":[{"type":"integer"},{"type":"null"}],"title":"Qtd Chapas"},"equipamentos":{"items":{},"type":"array","title":"Equipamentos"}},"type":"object","required":["id","local","baia","horario_entrada","horario_saida","qtd_chapas","equipamentos"],"title":"DescargaOut"},"DestinoIn":{"properties":{"local":{"$ref":"#/components/schemas/LocalFisico"},"baia_id":{"anyOf":[{"type":"integer"},{"type":"null"}],"title":"Baia Id"}},"type":"object","required":["local"],"title":"DestinoIn"},"DestinosIn":{"properties":{"destinos":{"items":{"$ref":"#/components/schemas/DestinoIn"},"type":"array","minItems":1,"title":"Destinos"}},"type":"object","required":["destinos"],"title":"DestinosIn","description":"Logo após o Compras aprovar, o armazém pré-programa onde o caminhão vai parar.\nPode ser mais de um armazém (uma nota com itens de grupos diferentes)."},"EmpresaOut":{"properties":{"id":{"type":"integer","title":"Id"},"nome":{"type":"string","title":"Nome"},"cnpj":{"type":"string","title":"Cnpj"}},"type":"object","required":["id","nome","cnpj"],"title":"EmpresaOut"},"EntradaIn":{"properties":{"local":{"$ref":"#/components/schemas/LocalFisico"}},"type":"object","required":["local"],"title":"EntradaIn"},"EquipamentoOut":{"properties":{"id":{"type":"integer","title":"Id"},"codigo":{"type":"string","title":"Codigo"},"nome":{"type":"string","title":"Nome"},"quantidade":{"anyOf":[{"type":"integer"},{"type":"null"}],"title":"Quantidade"},"observacao":{"anyOf":[{"type":"string"},{"type":"null"}],"title":"Observacao"}},"type":"object","required":["id","codigo","nome","quantidade","observacao"],"title":"EquipamentoOut"},"EquipamentoUsado":{"properties":{"codigo":{"type":"string","title":"Codigo"},"qtd":{"type":"integer","minimum":1.0,"title":"Qtd","default":1}},"type":"object","required":["codigo"],"title":"EquipamentoUsado"},"EquipeIn":{"properties":{"equipe":{"items":{"$ref":"#/components/schemas/ChapaNoBoletimIn"},"type":"array","title":"Equipe"}},"type":"object","required":["equipe"],"title":"EquipeIn","description":"Substitui a equipe do boletim inteira. Até 20 chapas, por matrícula."},"FecharIn":{"properties":{"fechado_por":{"type":"string","minLength":1,"title":"Fechado Por"}},"type":"object","required":["fechado_por"],"title":"FecharIn"},"FornecedorCreate":{"properties":{"nome":{"type":"string","minLength":2,"title":"Nome"},"cnpj":{"type":"string","title":"Cnpj"},"codigo":{"anyOf":[{"type":"string"},{"type":"null"}],"title":"Codigo"},"email":{"anyOf":[{"type":"string"},{"type":"null"}],"title":"Email"}},"type":"object","required":["nome","cnpj"],"title":"FornecedorCreate"},"FornecedorOut":{"properties":{"id":{"type":"integer","title":"Id"},"nome":{"type":"string","title":"Nome"},"cnpj":{"type":"string","title":"Cnpj"},"codigo":{"anyOf":[{"type":"string"},{"type":"null"}],"title":"Codigo"},"origem_dado":{"$ref":"#/components/schemas/Origem"}},"type":"object","required":["id","nome","cnpj","codigo","origem_dado"],"title":"FornecedorOut"},"HTTPValidationError":{"properties":{"detail":{"items":{"$ref":"#/components/schemas/ValidationError"},"type":"array","title":"Detail"}},"type":"object","title":"HTTPValidationError"},"Horario":{"type":"string","enum":["08:00","10:00","13:00","15:00"],"title":"Horario"},"LinhaProducaoIn":{"properties":{"tipo_item_id":{"type":"integer","title":"Tipo Item Id"},"descarga":{"type":"integer","minimum":0.0,"title":"Descarga","default":0},"remocao":{"type":"integer","minimum":0.0,"title":"Remocao","default":0},"transferencia":{"type":"integer","minimum":0.0,"title":"Transferencia","default":0}},"type":"object","required":["tipo_item_id"],"title":"LinhaProducaoIn"},"LinhaProducaoOut":{"properties":{"tipo_item_id":{"type":"integer","title":"Tipo Item Id"},"tipo_item":{"type":"string","title":"Tipo Item"},"descarga":{"type":"integer","title":"Descarga"},"remocao":{"type":"integer","title":"Remocao"},"transferencia":{"type":"integer","title":"Transferencia"},"quantidade_total":{"type":"integer","title":"Quantidade Total"},"preco_unitario":{"type":"string","pattern":"^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$","title":"Preco Unitario"},"valor_linha":{"type":"string","pattern":"^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$","title":"Valor Linha"}},"type":"object","required":["tipo_item_id","tipo_item","descarga","remocao","transferencia","quantidade_total","preco_unitario","valor_linha"],"title":"LinhaProducaoOut"},"LocalFisico":{"type":"string","enum":["INSUMOS","ADUBO","MAQUINAS","LOJA"],"title":"LocalFisico","description":"Armazém físico. É por ele que o boletim e os indicadores são agregados.\nO depósito do SAP (MATLoja, MATFerti...) só serve para descobrir o local."},"LoginIn":{"properties":{"email":{"type":"string","title":"Email"},"senha":{"type":"string","minLength":1,"title":"Senha"}},"type":"object","required":["email","senha"],"title":"LoginIn"},"MotivoNaoRecebimento":{"type":"string","enum":["SEM_VAGA","SEM_PEDIDO","CHUVA","DIVERGENCIA_NF_PEDIDO","REJEITADO_COMPRAS","NAO_COMPARECEU","CANCELADO_FORNECEDOR","OUTRO"],"title":"MotivoNaoRecebimento"},"NotaFiscalOut":{"properties":{"id":{"type":"integer","title":"Id"},"chave":{"type":"string","title":"Chave"},"numero":{"anyOf":[{"type":"string"},{"type":"null"}],"title":"Numero"},"serie":{"anyOf":[{"type":"string"},{"type":"null"}],"title":"Serie"},"data_emissao":{"anyOf":[{"type":"string","format":"date"},{"type":"null"}],"title":"Data Emissao"},"fornecedor":{"$ref":"#/components/schemas/FornecedorOut"},"valor_total":{"anyOf":[{"type":"string","pattern":"^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"},{"type":"null"}],"title":"Valor Total"},"peso_bruto_kg":{"anyOf":[{"type":"string","pattern":"^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"},{"type":"null"}],"title":"Peso Bruto Kg"},"peso_liquido_kg":{"anyOf":[{"type":"string","pattern":"^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"},{"type":"null"}],"title":"Peso Liquido Kg"},"volumes":{"anyOf":[{"type":"integer"},{"type":"null"}],"title":"Volumes"},"especie":{"anyOf":[{"type":"string"},{"type":"null"}],"title":"Especie"},"carga_adubo":{"type":"boolean","title":"Carga Adubo"},"itens":{"items":{"additionalProperties":true,"type":"object"},"type":"array","title":"Itens"},"alertas":{"items":{"type":"string"},"type":"array","title":"Alertas"},"formato":{"type":"string","title":"Formato"}},"type":"object","required":["id","chave","numero","serie","data_emissao","fornecedor","valor_total","peso_bruto_kg","peso_liquido_kg","volumes","especie","carga_adubo","itens","alertas","formato"],"title":"NotaFiscalOut"},"NotificacaoOut":{"properties":{"id":{"type":"integer","title":"Id"},"tipo":{"$ref":"#/components/schemas/TipoNotificacao"},"destinatario":{"anyOf":[{"type":"string"},{"type":"null"}],"title":"Destinatario"},"assunto":{"type":"string","title":"Assunto"},"corpo":{"type":"string","title":"Corpo"},"status":{"$ref":"#/components/schemas/StatusNotificacao"},"erro":{"anyOf":[{"type":"string"},{"type":"null"}],"title":"Erro"},"criado_em":{"type":"string","format":"date-time","title":"Criado Em"}},"type":"object","required":["id","tipo","destinatario","assunto","corpo","status","erro","criado_em"],"title":"NotificacaoOut"},"Origem":{"type":"string","enum":["HISTORICO","SISTEMA","TESTE"],"title":"Origem","description":"Procedência do registro (campo `origem_dado`). O painel declara de onde vêm os números.\nNão confundir com OrigemAgendamento (NORMAL/BALCAO/CHUVA), que é como o agendamento nasceu."},"OrigemAgendamento":{"type":"string","enum":["NORMAL","BALCAO","CHUVA"],"title":"OrigemAgendamento"},"PerfilUsuario":{"type":"string","enum":["FORNECEDOR","COMPRAS","ARMAZEM","ADMIN"],"title":"PerfilUsuario","description":"Quem acessa o sistema. ADMIN pode tudo (manutenção e testes)."},"ProducaoIn":{"properties":{"linhas":{"items":{"$ref":"#/components/schemas/LinhaProducaoIn"},"type":"array","title":"Linhas"}},"type":"object","required":["linhas"],"title":"ProducaoIn","description":"Substitui a produção do boletim inteira (o que não vier, sai)."},"Programacao":{"properties":{"inicio":{"type":"string","format":"date","title":"Inicio"},"fim":{"type":"string","format":"date","title":"Fim"},"premissas":{"items":{"type":"string"},"type":"array","title":"Premissas"},"resumo":{"items":{"$ref":"#/components/schemas/ResumoDiaLocal"},"type":"array","title":"Resumo"},"caminhoes":{"items":{"$ref":"#/components/schemas/CaminhaoPrevisto"},"type":"array","title":"Caminhoes"}},"type":"object","required":["inicio","fim","premissas","resumo","caminhoes"],"title":"Programacao"},"ReagendamentoChuvaIn":{"properties":{"nova_data":{"anyOf":[{"type":"string","format":"date"},{"type":"null"}],"title":"Nova Data"},"novo_horario":{"$ref":"#/components/schemas/Horario","default":"08:00"}},"type":"object","title":"ReagendamentoChuvaIn"},"RejeicaoIn":{"properties":{"motivo":{"$ref":"#/components/schemas/MotivoNaoRecebimento","description":"DIVERGENCIA_NF_PEDIDO | SEM_PEDIDO | REJEITADO_COMPRAS | OUTRO"},"analisado_por":{"type":"string","minLength":1,"title":"Analisado Por"},"observacao":{"type":"string","minLength":5,"title":"Observacao","description":"O que está errado e o que fazer"}},"type":"object","required":["motivo","analisado_por","observacao"],"title":"RejeicaoIn","description":"Reprovar exige motivo e explicação: o texto vai no e-mail ao fornecedor."},"ResumoDiaLocal":{"properties":{"data":{"type":"string","format":"date","title":"Data"},"local":{"anyOf":[{"$ref":"#/components/schemas/LocalFisico"},{"type":"null"}]},"caminhoes":{"type":"integer","title":"Caminhoes"},"confirmados":{"type":"integer","title":"Confirmados"},"peso_total_kg":{"type":"string","pattern":"^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$","title":"Peso Total Kg"},"chapa_minutos":{"type":"integer","title":"Chapa Minutos"},"tem_batido":{"type":"boolean","title":"Tem Batido"},"chapas_recomendados":{"type":"integer","title":"Chapas Recomendados"},"caminhoes_com_risco_chuva":{"type":"integer","title":"Caminhoes Com Risco Chuva"}},"type":"object","required":["data","local","caminhoes","confirmados","peso_total_kg","chapa_minutos","tem_batido","chapas_recomendados","caminhoes_com_risco_chuva"],"title":"ResumoDiaLocal"},"SaidaIn":{"properties":{"local":{"$ref":"#/components/schemas/LocalFisico"},"qtd_chapas":{"type":"integer","minimum":0.0,"title":"Qtd Chapas"},"equipamentos":{"items":{"$ref":"#/components/schemas/EquipamentoUsado"},"type":"array","title":"Equipamentos","default":[]}},"type":"object","required":["local","qtd_chapas"],"title":"SaidaIn"},"SessaoOut":{"properties":{"token":{"type":"string","title":"Token"},"tipo":{"type":"string","title":"Tipo","default":"Bearer"},"expira_em":{"type":"integer","title":"Expira Em"},"usuario":{"$ref":"#/components/schemas/UsuarioOut"}},"type":"object","required":["token","expira_em","usuario"],"title":"SessaoOut"},"SlotDisponibilidade":{"properties":{"horario":{"$ref":"#/components/schemas/Horario"},"ocupados":{"type":"integer","title":"Ocupados"},"tem_batido":{"type":"boolean","title":"Tem Batido"},"aceita_batido":{"type":"boolean","title":"Aceita Batido"},"aceita_unitizado":{"type":"boolean","title":"Aceita Unitizado"},"vagas_restantes":{"type":"integer","title":"Vagas Restantes"},"encaixes_chuva":{"type":"integer","title":"Encaixes Chuva"},"prob_chuva":{"anyOf":[{"type":"integer"},{"type":"null"}],"title":"Prob Chuva"},"situacao_chuva":{"anyOf":[{"type":"string"},{"type":"null"}],"title":"Situacao Chuva"}},"type":"object","required":["horario","ocupados","tem_batido","aceita_batido","aceita_unitizado","vagas_restantes","encaixes_chuva"],"title":"SlotDisponibilidade"},"StatusAgendamento":{"type":"string","enum":["PENDENTE","APROVADO","DESTINO_DEFINIDO","REJEITADO","CANCELADO","NA_FILA","EM_DESCARGA","CONCLUIDO","NAO_COMPARECEU","REAGENDADO"],"title":"StatusAgendamento"},"StatusBoletim":{"type":"string","enum":["RASCUNHO","FECHADO"],"title":"StatusBoletim"},"StatusNotificacao":{"type":"string","enum":["ENVIADA","SIMULADA","SEM_DESTINATARIO","FALHOU"],"title":"StatusNotificacao"},"TipoItemOut":{"properties":{"id":{"type":"integer","title":"Id"},"descricao":{"type":"string","title":"Descricao"},"preco_unitario":{"type":"string","pattern":"^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$","title":"Preco Unitario"},"ativo":{"type":"boolean","title":"Ativo"}},"type":"object","required":["id","descricao","preco_unitario","ativo"],"title":"TipoItemOut"},"TipoNotificacao":{"type":"string","enum":["APROVADO","REPROVADO","DESTINO_DEFINIDO","REAGENDADO_CHUVA"],"title":"TipoNotificacao"},"UsuarioOut":{"properties":{"id":{"type":"integer","title":"Id"},"email":{"type":"string","title":"Email"},"nome":{"type":"string","title":"Nome"},"perfil":{"$ref":"#/components/schemas/PerfilUsuario"},"fornecedor":{"anyOf":[{"$ref":"#/components/schemas/EmpresaOut"},{"type":"null"}]}},"type":"object","required":["id","email","nome","perfil"],"title":"UsuarioOut"},"ValidationError":{"properties":{"loc":{"items":{"anyOf":[{"type":"string"},{"type":"integer"}]},"type":"array","title":"Location"},"msg":{"type":"string","title":"Message"},"type":{"type":"string","title":"Error Type"}},"type":"object","required":["loc","msg","type"],"title":"ValidationError"},"Verificacao":{"properties":{"item":{"type":"string","title":"Item"},"ok":{"type":"boolean","title":"Ok"},"detalhe":{"type":"string","title":"Detalhe"}},"type":"object","required":["item","ok","detalhe"],"title":"Verificacao"}},"securitySchemes":{"HTTPBearer":{"type":"http","scheme":"bearer"}}}}
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Cocapec - Recebimento Inteligente",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/api/v1/health": {
+      "get": {
+        "tags": [
+          "Saúde"
+        ],
+        "summary": "Health",
+        "operationId": "health_api_v1_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/login": {
+      "post": {
+        "tags": [
+          "Acesso (login)"
+        ],
+        "summary": "Login",
+        "operationId": "login_api_v1_auth_login_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessaoOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/cadastro": {
+      "post": {
+        "tags": [
+          "Acesso (login)"
+        ],
+        "summary": "Cadastro",
+        "operationId": "cadastro_api_v1_auth_cadastro_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CadastroIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessaoOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/me": {
+      "get": {
+        "tags": [
+          "Acesso (login)"
+        ],
+        "summary": "Me",
+        "operationId": "me_api_v1_auth_me_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UsuarioOut"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/fornecedores": {
+      "post": {
+        "tags": [
+          "Fornecedores"
+        ],
+        "summary": "Criar",
+        "operationId": "criar_api_v1_fornecedores_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FornecedorCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FornecedorOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Fornecedores"
+        ],
+        "summary": "Listar",
+        "operationId": "listar_api_v1_fornecedores_get",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          },
+          {
+            "name": "limite",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 50,
+              "title": "Limite"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/FornecedorOut"
+                  },
+                  "title": "Response Listar Api V1 Fornecedores Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/agendamentos/nota-fiscal": {
+      "post": {
+        "tags": [
+          "Agendamento (fornecedor e Compras)"
+        ],
+        "summary": "Enviar Nota",
+        "description": "A nota pode ser de qualquer empresa (não precisa ser a do fornecedor logado).",
+        "operationId": "enviar_nota_api_v1_agendamentos_nota_fiscal_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_enviar_nota_api_v1_agendamentos_nota_fiscal_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotaFiscalOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/agendamentos/nota-fiscal/{nota_id}": {
+      "get": {
+        "tags": [
+          "Agendamento (fornecedor e Compras)"
+        ],
+        "summary": "Ver Nota",
+        "operationId": "ver_nota_api_v1_agendamentos_nota_fiscal__nota_id__get",
+        "parameters": [
+          {
+            "name": "nota_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Nota Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotaFiscalOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/agendamentos/disponibilidade": {
+      "get": {
+        "tags": [
+          "Agendamento (fornecedor e Compras)"
+        ],
+        "summary": "Disponibilidade",
+        "operationId": "disponibilidade_api_v1_agendamentos_disponibilidade_get",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "title": "Data"
+            }
+          },
+          {
+            "name": "nota_fiscal_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Nota Fiscal Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SlotDisponibilidade"
+                  },
+                  "title": "Response Disponibilidade Api V1 Agendamentos Disponibilidade Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/agendamentos": {
+      "post": {
+        "tags": [
+          "Agendamento (fornecedor e Compras)"
+        ],
+        "summary": "Criar",
+        "operationId": "criar_api_v1_agendamentos_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AgendamentoCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgendamentoOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Agendamento (fornecedor e Compras)"
+        ],
+        "summary": "Listar",
+        "description": "Fornecedor logado vê o que é da própria empresa (todos os cadastros com o mesmo CNPJ)\ne o que ele mesmo agendou com nota de outra empresa.",
+        "operationId": "listar_api_v1_agendamentos_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "data",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Data"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/StatusAgendamento"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "name": "fornecedor_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Fornecedor Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AgendamentoOut"
+                  },
+                  "title": "Response Listar Api V1 Agendamentos Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/agendamentos/{ag_id}": {
+      "get": {
+        "tags": [
+          "Agendamento (fornecedor e Compras)"
+        ],
+        "summary": "Detalhar",
+        "operationId": "detalhar_api_v1_agendamentos__ag_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "ag_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Ag Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgendamentoOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/agendamentos/{ag_id}/cancelar": {
+      "post": {
+        "tags": [
+          "Agendamento (fornecedor e Compras)"
+        ],
+        "summary": "Cancelar",
+        "operationId": "cancelar_api_v1_agendamentos__ag_id__cancelar_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "ag_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Ag Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgendamentoOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/agendamentos/{ag_id}/atraso": {
+      "post": {
+        "tags": [
+          "Agendamento (fornecedor e Compras)"
+        ],
+        "summary": "Avisar Atraso",
+        "description": "Fornecedor avisa atraso; a equipe do armazém vê o aviso na agenda do dia.",
+        "operationId": "avisar_atraso_api_v1_agendamentos__ag_id__atraso_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "ag_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Ag Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AtrasoIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgendamentoOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/agendamentos/{ag_id}/notificacoes": {
+      "get": {
+        "tags": [
+          "Agendamento (fornecedor e Compras)"
+        ],
+        "summary": "Notificacoes",
+        "description": "Avisos enviados ao fornecedor sobre este agendamento.",
+        "operationId": "notificacoes_api_v1_agendamentos__ag_id__notificacoes_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "ag_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Ag Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/NotificacaoOut"
+                  },
+                  "title": "Response Notificacoes Api V1 Agendamentos  Ag Id  Notificacoes Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/agendamentos/{ag_id}/conferencia": {
+      "get": {
+        "tags": [
+          "Agendamento (fornecedor e Compras)"
+        ],
+        "summary": "Conferencia",
+        "description": "Tela do Compras: nota lida, pedido de compra e checagens automáticas.\n`pedido` (opcional): número a conferir antes de aprovar.",
+        "operationId": "conferencia_api_v1_agendamentos__ag_id__conferencia_get",
+        "parameters": [
+          {
+            "name": "ag_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Ag Id"
+            }
+          },
+          {
+            "name": "pedido",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Pedido"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConferenciaOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/agendamentos/{ag_id}/aprovar": {
+      "post": {
+        "tags": [
+          "Agendamento (fornecedor e Compras)"
+        ],
+        "summary": "Aprovar",
+        "operationId": "aprovar_api_v1_agendamentos__ag_id__aprovar_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "ag_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Ag Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AprovacaoIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgendamentoOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/agendamentos/{ag_id}/rejeitar": {
+      "post": {
+        "tags": [
+          "Agendamento (fornecedor e Compras)"
+        ],
+        "summary": "Rejeitar",
+        "description": "Reprovar exige motivo e observação; o fornecedor recebe o aviso por e-mail.",
+        "operationId": "rejeitar_api_v1_agendamentos__ag_id__rejeitar_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "ag_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Ag Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RejeicaoIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgendamentoOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/armazem/programacao": {
+      "get": {
+        "tags": [
+          "Armazém (operador do pátio)"
+        ],
+        "summary": "Programacao",
+        "description": "O que vai chegar nos próximos dias (padrão: hoje + 6), por armazém, com a equipe\nestimada. Inclui o que o Compras ainda não aprovou (confirmado = false).",
+        "operationId": "programacao_api_v1_armazem_programacao_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "inicio",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Inicio"
+            }
+          },
+          {
+            "name": "fim",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Fim"
+            }
+          },
+          {
+            "name": "local",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/LocalFisico"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Local"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Programacao"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/armazem/aguardando-destino": {
+      "get": {
+        "tags": [
+          "Armazém (operador do pátio)"
+        ],
+        "summary": "Aguardando Destino",
+        "description": "Aprovados por Compras que ainda não têm baia definida.",
+        "operationId": "aguardando_destino_api_v1_armazem_aguardando_destino_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "data",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Data"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AgendamentoOut"
+                  },
+                  "title": "Response Aguardando Destino Api V1 Armazem Aguardando Destino Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/armazem/fila": {
+      "get": {
+        "tags": [
+          "Armazém (operador do pátio)"
+        ],
+        "summary": "Fila",
+        "operationId": "fila_api_v1_armazem_fila_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "data",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "title": "Data"
+            }
+          },
+          {
+            "name": "local",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/LocalFisico"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Local"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AgendamentoOut"
+                  },
+                  "title": "Response Fila Api V1 Armazem Fila Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/armazem/balcao": {
+      "post": {
+        "tags": [
+          "Armazém (operador do pátio)"
+        ],
+        "summary": "Balcao",
+        "operationId": "balcao_api_v1_armazem_balcao_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BalcaoCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgendamentoOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/armazem/agendamentos/{ag_id}/destinos": {
+      "put": {
+        "tags": [
+          "Armazém (operador do pátio)"
+        ],
+        "summary": "Destinos",
+        "operationId": "destinos_api_v1_armazem_agendamentos__ag_id__destinos_put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "ag_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Ag Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DestinosIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgendamentoOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/armazem/agendamentos/{ag_id}/chegada": {
+      "post": {
+        "tags": [
+          "Armazém (operador do pátio)"
+        ],
+        "summary": "Chegada",
+        "operationId": "chegada_api_v1_armazem_agendamentos__ag_id__chegada_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "ag_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Ag Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgendamentoOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/armazem/agendamentos/{ag_id}/entrada": {
+      "post": {
+        "tags": [
+          "Armazém (operador do pátio)"
+        ],
+        "summary": "Entrada",
+        "operationId": "entrada_api_v1_armazem_agendamentos__ag_id__entrada_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "ag_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Ag Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EntradaIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgendamentoOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/armazem/agendamentos/{ag_id}/saida": {
+      "post": {
+        "tags": [
+          "Armazém (operador do pátio)"
+        ],
+        "summary": "Saida",
+        "operationId": "saida_api_v1_armazem_agendamentos__ag_id__saida_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "ag_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Ag Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaidaIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgendamentoOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/armazem/agendamentos/{ag_id}/nao-compareceu": {
+      "post": {
+        "tags": [
+          "Armazém (operador do pátio)"
+        ],
+        "summary": "Nao Compareceu",
+        "operationId": "nao_compareceu_api_v1_armazem_agendamentos__ag_id__nao_compareceu_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "ag_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Ag Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgendamentoOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/armazem/agendamentos/{ag_id}/reagendar-chuva": {
+      "post": {
+        "tags": [
+          "Armazém (operador do pátio)"
+        ],
+        "summary": "Reagendar Chuva",
+        "operationId": "reagendar_chuva_api_v1_armazem_agendamentos__ag_id__reagendar_chuva_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "ag_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Ag Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReagendamentoChuvaIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgendamentoOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/cadastros/baias": {
+      "get": {
+        "tags": [
+          "Cadastros"
+        ],
+        "summary": "Listar Baias",
+        "operationId": "listar_baias_api_v1_cadastros_baias_get",
+        "parameters": [
+          {
+            "name": "local",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/LocalFisico"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Local"
+            }
+          },
+          {
+            "name": "incluir_inativas",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Incluir Inativas"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BaiaOut"
+                  },
+                  "title": "Response Listar Baias Api V1 Cadastros Baias Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Cadastros"
+        ],
+        "summary": "Criar Baia",
+        "operationId": "criar_baia_api_v1_cadastros_baias_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BaiaCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaiaOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/cadastros/baias/{baia_id}/ativa": {
+      "patch": {
+        "tags": [
+          "Cadastros"
+        ],
+        "summary": "Ativar Desativar Baia",
+        "operationId": "ativar_desativar_baia_api_v1_cadastros_baias__baia_id__ativa_patch",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "baia_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Baia Id"
+            }
+          },
+          {
+            "name": "ativa",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "boolean",
+              "title": "Ativa"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaiaOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/cadastros/equipamentos": {
+      "get": {
+        "tags": [
+          "Cadastros"
+        ],
+        "summary": "Listar Equipamentos",
+        "operationId": "listar_equipamentos_api_v1_cadastros_equipamentos_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/EquipamentoOut"
+                  },
+                  "type": "array",
+                  "title": "Response Listar Equipamentos Api V1 Cadastros Equipamentos Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/cadastros/chapas": {
+      "get": {
+        "tags": [
+          "Cadastros"
+        ],
+        "summary": "Listar Chapas",
+        "operationId": "listar_chapas_api_v1_cadastros_chapas_get",
+        "parameters": [
+          {
+            "name": "incluir_inativos",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Incluir Inativos"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ChapaOut"
+                  },
+                  "title": "Response Listar Chapas Api V1 Cadastros Chapas Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Cadastros"
+        ],
+        "summary": "Criar Chapa",
+        "operationId": "criar_chapa_api_v1_cadastros_chapas_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChapaCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChapaOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/cadastros/tipos-item": {
+      "get": {
+        "tags": [
+          "Cadastros"
+        ],
+        "summary": "Listar Tipos Item",
+        "description": "As 14 linhas do boletim com o preço unitário.",
+        "operationId": "listar_tipos_item_api_v1_cadastros_tipos_item_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/TipoItemOut"
+                  },
+                  "type": "array",
+                  "title": "Response Listar Tipos Item Api V1 Cadastros Tipos Item Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/boletins": {
+      "post": {
+        "tags": [
+          "Boletim diário (chapas)"
+        ],
+        "summary": "Abrir",
+        "operationId": "abrir_api_v1_boletins_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BoletimCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BoletimOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Boletim diário (chapas)"
+        ],
+        "summary": "Listar",
+        "operationId": "listar_api_v1_boletins_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "inicio",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Inicio"
+            }
+          },
+          {
+            "name": "fim",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Fim"
+            }
+          },
+          {
+            "name": "local",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/LocalFisico"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Local"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/StatusBoletim"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BoletimOut"
+                  },
+                  "title": "Response Listar Api V1 Boletins Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/boletins/{boletim_id}": {
+      "get": {
+        "tags": [
+          "Boletim diário (chapas)"
+        ],
+        "summary": "Detalhar",
+        "operationId": "detalhar_api_v1_boletins__boletim_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "boletim_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Boletim Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BoletimOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/boletins/{boletim_id}/producao": {
+      "put": {
+        "tags": [
+          "Boletim diário (chapas)"
+        ],
+        "summary": "Producao",
+        "operationId": "producao_api_v1_boletins__boletim_id__producao_put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "boletim_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Boletim Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProducaoIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BoletimOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/boletins/{boletim_id}/equipe": {
+      "put": {
+        "tags": [
+          "Boletim diário (chapas)"
+        ],
+        "summary": "Equipe",
+        "operationId": "equipe_api_v1_boletins__boletim_id__equipe_put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "boletim_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Boletim Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EquipeIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BoletimOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/boletins/{boletim_id}/fechar": {
+      "post": {
+        "tags": [
+          "Boletim diário (chapas)"
+        ],
+        "summary": "Fechar",
+        "operationId": "fechar_api_v1_boletins__boletim_id__fechar_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "boletim_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Boletim Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FecharIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BoletimOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/boletins/{boletim_id}/reabrir": {
+      "post": {
+        "tags": [
+          "Boletim diário (chapas)"
+        ],
+        "summary": "Reabrir",
+        "operationId": "reabrir_api_v1_boletins__boletim_id__reabrir_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "boletim_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Boletim Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BoletimOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/boletins/{boletim_id}/excel": {
+      "get": {
+        "tags": [
+          "Boletim diário (chapas)"
+        ],
+        "summary": "Excel",
+        "description": "Boletim formatado em .xlsx (cabeçalho, seções, moeda e totais), igual à tela.",
+        "operationId": "excel_api_v1_boletins__boletim_id__excel_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "boletim_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Boletim Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {}
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/painel/resumo": {
+      "get": {
+        "tags": [
+          "Painel gerencial (Tarefa 3)"
+        ],
+        "summary": "Resumo",
+        "description": "Visão executiva: a resposta à direção e os números principais.",
+        "operationId": "resumo_api_v1_painel_resumo_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "inicio",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Inicio"
+            }
+          },
+          {
+            "name": "fim",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Fim"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/painel/sobra-falta": {
+      "get": {
+        "tags": [
+          "Painel gerencial (Tarefa 3)"
+        ],
+        "summary": "Sobra Falta",
+        "description": "A pergunta da direção. `historico`: estimativa mês a mês (folha x caminhões).\n`sistema`: medição pelo boletim (complemento pago sem produção).",
+        "operationId": "sobra_falta_api_v1_painel_sobra_falta_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "inicio",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Inicio"
+            }
+          },
+          {
+            "name": "fim",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Fim"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/painel/cargas": {
+      "get": {
+        "tags": [
+          "Painel gerencial (Tarefa 3)"
+        ],
+        "summary": "Cargas",
+        "description": "Quantidade de cargas recebidas por dia e por armazém.",
+        "operationId": "cargas_api_v1_painel_cargas_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "inicio",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Inicio"
+            }
+          },
+          {
+            "name": "fim",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Fim"
+            }
+          },
+          {
+            "name": "local",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/LocalFisico"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Local"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/painel/tempos": {
+      "get": {
+        "tags": [
+          "Painel gerencial (Tarefa 3)"
+        ],
+        "summary": "Tempos",
+        "description": "Tempo médio de espera (chegada -> entrada) e de descarga (entrada -> saída).",
+        "operationId": "tempos_api_v1_painel_tempos_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "inicio",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Inicio"
+            }
+          },
+          {
+            "name": "fim",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Fim"
+            }
+          },
+          {
+            "name": "local",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/LocalFisico"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Local"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/painel/chapas-por-recebimento": {
+      "get": {
+        "tags": [
+          "Painel gerencial (Tarefa 3)"
+        ],
+        "summary": "Chapas Por Recebimento",
+        "operationId": "chapas_por_recebimento_api_v1_painel_chapas_por_recebimento_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "inicio",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Inicio"
+            }
+          },
+          {
+            "name": "fim",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Fim"
+            }
+          },
+          {
+            "name": "local",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/LocalFisico"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Local"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/painel/utilizacao": {
+      "get": {
+        "tags": [
+          "Painel gerencial (Tarefa 3)"
+        ],
+        "summary": "Utilizacao",
+        "description": "Utilização das docas e dos equipamentos.",
+        "operationId": "utilizacao_api_v1_painel_utilizacao_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "inicio",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Inicio"
+            }
+          },
+          {
+            "name": "fim",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Fim"
+            }
+          },
+          {
+            "name": "local",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/LocalFisico"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Local"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/painel/fornecedores": {
+      "get": {
+        "tags": [
+          "Painel gerencial (Tarefa 3)"
+        ],
+        "summary": "Fornecedores",
+        "description": "Fornecedores com maior volume.",
+        "operationId": "fornecedores_api_v1_painel_fornecedores_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "inicio",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Inicio"
+            }
+          },
+          {
+            "name": "fim",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Fim"
+            }
+          },
+          {
+            "name": "limite",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 10,
+              "title": "Limite"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/painel/movimento": {
+      "get": {
+        "tags": [
+          "Painel gerencial (Tarefa 3)"
+        ],
+        "summary": "Movimento",
+        "description": "Horários, dias da semana e meses de maior movimento.",
+        "operationId": "movimento_api_v1_painel_movimento_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "inicio",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Inicio"
+            }
+          },
+          {
+            "name": "fim",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Fim"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/painel/nao-recebimentos": {
+      "get": {
+        "tags": [
+          "Painel gerencial (Tarefa 3)"
+        ],
+        "summary": "Nao Recebimentos",
+        "description": "Quantidade de não recebimentos, por motivo.",
+        "operationId": "nao_recebimentos_api_v1_painel_nao_recebimentos_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "inicio",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Inicio"
+            }
+          },
+          {
+            "name": "fim",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Fim"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/painel/custo": {
+      "get": {
+        "tags": [
+          "Painel gerencial (Tarefa 3)"
+        ],
+        "summary": "Custo",
+        "description": "Custo estimado da operação (mão de obra dos chapas, sem encargos).",
+        "operationId": "custo_api_v1_painel_custo_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "inicio",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Inicio"
+            }
+          },
+          {
+            "name": "fim",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Fim"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/painel/qualidade-dados": {
+      "get": {
+        "tags": [
+          "Painel gerencial (Tarefa 3)"
+        ],
+        "summary": "Qualidade Dados",
+        "description": "Problemas encontrados nos dados históricos e como foram tratados.",
+        "operationId": "qualidade_dados_api_v1_painel_qualidade_dados_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/painel/previsao": {
+      "get": {
+        "tags": [
+          "Painel gerencial (Tarefa 3)"
+        ],
+        "summary": "Previsao",
+        "description": "Próximas semanas: caminhões previstos (com faixa de erro), chapas recomendados,\nação (reforçar/reduzir/manter) e custo previsto.",
+        "operationId": "previsao_api_v1_painel_previsao_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "semanas",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 12,
+              "title": "Semanas"
+            }
+          },
+          {
+            "name": "reserva",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Reserva"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/painel/custo-mensal": {
+      "get": {
+        "tags": [
+          "Painel gerencial (Tarefa 3)"
+        ],
+        "summary": "Custo Mensal",
+        "description": "Custo do chapeiro mês a mês: valor pago, custo por caminhão e reajuste da diária.",
+        "operationId": "custo_mensal_api_v1_painel_custo_mensal_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/painel/plano-escala": {
+      "get": {
+        "tags": [
+          "Painel gerencial (Tarefa 3)"
+        ],
+        "summary": "Plano Escala",
+        "description": "Plano de escala recomendado x prática atual, com a diferença de custo.\nSimulador: informe `equipe_fixa` para ver o que acontece com N chapas o ano todo.",
+        "operationId": "plano_escala_api_v1_painel_plano_escala_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "meses",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 12,
+              "title": "Meses"
+            }
+          },
+          {
+            "name": "reserva",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Reserva"
+            }
+          },
+          {
+            "name": "equipe_fixa",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Equipe Fixa"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Acondicionamento": {
+        "type": "string",
+        "enum": [
+          "BATIDO",
+          "PALETIZADO",
+          "BIG_BAG"
+        ],
+        "title": "Acondicionamento"
+      },
+      "AgendamentoCreate": {
+        "properties": {
+          "nota_fiscal_id": {
+            "type": "integer",
+            "title": "Nota Fiscal Id"
+          },
+          "data": {
+            "type": "string",
+            "format": "date",
+            "title": "Data"
+          },
+          "horario": {
+            "$ref": "#/components/schemas/Horario"
+          },
+          "acondicionamento": {
+            "$ref": "#/components/schemas/Acondicionamento"
+          },
+          "ciente_risco_chuva": {
+            "type": "boolean",
+            "title": "Ciente Risco Chuva",
+            "description": "Obrigatório para carga de adubo com risco de chuva: se chover, a descarga é reagendada para o próximo dia útil, com prioridade",
+            "default": false
+          },
+          "email_contato": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email Contato",
+            "description": "Para onde vão os avisos (aprovação, reprovação, doca)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "nota_fiscal_id",
+          "data",
+          "horario",
+          "acondicionamento"
+        ],
+        "title": "AgendamentoCreate",
+        "description": "O fornecedor só informa acondicionamento, dia e horário.\nFornecedor, peso e tipo de carga vêm da nota fiscal enviada antes."
+      },
+      "AgendamentoOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "fornecedor_id": {
+            "type": "integer",
+            "title": "Fornecedor Id"
+          },
+          "fornecedor": {
+            "$ref": "#/components/schemas/FornecedorOut"
+          },
+          "origem_dado": {
+            "$ref": "#/components/schemas/Origem"
+          },
+          "nota_fiscal_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nota Fiscal Id"
+          },
+          "data": {
+            "type": "string",
+            "format": "date",
+            "title": "Data"
+          },
+          "horario": {
+            "$ref": "#/components/schemas/Horario"
+          },
+          "acondicionamento": {
+            "$ref": "#/components/schemas/Acondicionamento"
+          },
+          "peso_kg": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Peso Kg"
+          },
+          "carga_adubo": {
+            "type": "boolean",
+            "title": "Carga Adubo"
+          },
+          "prob_chuva": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prob Chuva"
+          },
+          "nf_numero": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nf Numero"
+          },
+          "nf_chave": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nf Chave"
+          },
+          "pedido_compra": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pedido Compra"
+          },
+          "analisado_por": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Analisado Por"
+          },
+          "analisado_em": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Analisado Em"
+          },
+          "observacao_compras": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Observacao Compras"
+          },
+          "status": {
+            "$ref": "#/components/schemas/StatusAgendamento"
+          },
+          "origem": {
+            "$ref": "#/components/schemas/OrigemAgendamento"
+          },
+          "prioritario": {
+            "type": "boolean",
+            "title": "Prioritario"
+          },
+          "ciente_risco_chuva": {
+            "type": "boolean",
+            "title": "Ciente Risco Chuva"
+          },
+          "motivo_nao_recebimento": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MotivoNaoRecebimento"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "reagendado_de_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reagendado De Id"
+          },
+          "horario_chegada": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Horario Chegada"
+          },
+          "atraso_minutos": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Atraso Minutos"
+          },
+          "atraso_motivo": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Atraso Motivo"
+          },
+          "atraso_informado_em": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Atraso Informado Em"
+          },
+          "criado_em": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Criado Em"
+          },
+          "cancelado_em": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cancelado Em"
+          },
+          "descargas": {
+            "items": {
+              "$ref": "#/components/schemas/DescargaOut"
+            },
+            "type": "array",
+            "title": "Descargas"
+          },
+          "chapas_norma": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Chapas Norma"
+          },
+          "aviso_chuva": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Aviso Chuva"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "fornecedor_id",
+          "fornecedor",
+          "origem_dado",
+          "nota_fiscal_id",
+          "data",
+          "horario",
+          "acondicionamento",
+          "peso_kg",
+          "carga_adubo",
+          "prob_chuva",
+          "nf_numero",
+          "nf_chave",
+          "pedido_compra",
+          "analisado_por",
+          "analisado_em",
+          "observacao_compras",
+          "status",
+          "origem",
+          "prioritario",
+          "ciente_risco_chuva",
+          "motivo_nao_recebimento",
+          "reagendado_de_id",
+          "horario_chegada",
+          "criado_em",
+          "cancelado_em",
+          "descargas"
+        ],
+        "title": "AgendamentoOut"
+      },
+      "AprovacaoIn": {
+        "properties": {
+          "pedido_compra": {
+            "type": "integer",
+            "title": "Pedido Compra"
+          },
+          "analisado_por": {
+            "type": "string",
+            "title": "Analisado Por"
+          },
+          "observacao": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Observacao"
+          }
+        },
+        "type": "object",
+        "required": [
+          "pedido_compra",
+          "analisado_por"
+        ],
+        "title": "AprovacaoIn"
+      },
+      "AtrasoIn": {
+        "properties": {
+          "minutos": {
+            "type": "integer",
+            "maximum": 600,
+            "minimum": 5,
+            "title": "Minutos"
+          },
+          "motivo": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 300
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Motivo"
+          }
+        },
+        "type": "object",
+        "required": [
+          "minutos"
+        ],
+        "title": "AtrasoIn"
+      },
+      "BaiaCreate": {
+        "properties": {
+          "local": {
+            "$ref": "#/components/schemas/LocalFisico"
+          },
+          "codigo": {
+            "type": "string",
+            "maxLength": 20,
+            "minLength": 1,
+            "title": "Codigo"
+          },
+          "nome": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Nome"
+          }
+        },
+        "type": "object",
+        "required": [
+          "local",
+          "codigo",
+          "nome"
+        ],
+        "title": "BaiaCreate"
+      },
+      "BaiaOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "local": {
+            "$ref": "#/components/schemas/LocalFisico"
+          },
+          "codigo": {
+            "type": "string",
+            "title": "Codigo"
+          },
+          "nome": {
+            "type": "string",
+            "title": "Nome"
+          },
+          "ativa": {
+            "type": "boolean",
+            "title": "Ativa"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "local",
+          "codigo",
+          "nome",
+          "ativa"
+        ],
+        "title": "BaiaOut"
+      },
+      "BalcaoCreate": {
+        "properties": {
+          "nota_fiscal_id": {
+            "type": "integer",
+            "title": "Nota Fiscal Id"
+          },
+          "horario": {
+            "$ref": "#/components/schemas/Horario"
+          },
+          "acondicionamento": {
+            "$ref": "#/components/schemas/Acondicionamento"
+          },
+          "email_contato": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email Contato"
+          }
+        },
+        "type": "object",
+        "required": [
+          "nota_fiscal_id",
+          "horario",
+          "acondicionamento"
+        ],
+        "title": "BalcaoCreate",
+        "description": "Caminhão chegou sem agendamento: com a nota lida, o armazém agenda na hora."
+      },
+      "Body_enviar_nota_api_v1_agendamentos_nota_fiscal_post": {
+        "properties": {
+          "arquivo": {
+            "type": "string",
+            "format": "binary",
+            "title": "Arquivo"
+          }
+        },
+        "type": "object",
+        "required": [
+          "arquivo"
+        ],
+        "title": "Body_enviar_nota_api_v1_agendamentos_nota_fiscal_post"
+      },
+      "BoletimCreate": {
+        "properties": {
+          "data": {
+            "type": "string",
+            "format": "date",
+            "title": "Data"
+          },
+          "local": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LocalFisico"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "observacao": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Observacao"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data"
+        ],
+        "title": "BoletimCreate",
+        "description": "Boletim geral do dia: não informe `local`. Só no modo por armazém\n(config.BOLETIM_POR_ARMAZEM = True) o armazém é obrigatório."
+      },
+      "BoletimOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "data": {
+            "type": "string",
+            "format": "date",
+            "title": "Data"
+          },
+          "local": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LocalFisico"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "status": {
+            "$ref": "#/components/schemas/StatusBoletim"
+          },
+          "origem_dado": {
+            "$ref": "#/components/schemas/Origem"
+          },
+          "observacao": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Observacao"
+          },
+          "linhas": {
+            "items": {
+              "$ref": "#/components/schemas/LinhaProducaoOut"
+            },
+            "type": "array",
+            "title": "Linhas"
+          },
+          "equipe": {
+            "items": {
+              "$ref": "#/components/schemas/ChapaNoBoletimOut"
+            },
+            "type": "array",
+            "title": "Equipe"
+          },
+          "calculo": {
+            "$ref": "#/components/schemas/CalculoOut"
+          },
+          "avisos": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Avisos"
+          },
+          "criado_em": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Criado Em"
+          },
+          "fechado_em": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fechado Em"
+          },
+          "fechado_por": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fechado Por"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "data",
+          "local",
+          "status",
+          "origem_dado",
+          "observacao",
+          "linhas",
+          "equipe",
+          "calculo",
+          "avisos",
+          "criado_em",
+          "fechado_em",
+          "fechado_por"
+        ],
+        "title": "BoletimOut"
+      },
+      "CadastroIn": {
+        "properties": {
+          "perfil": {
+            "$ref": "#/components/schemas/PerfilUsuario"
+          },
+          "nome": {
+            "type": "string",
+            "minLength": 2,
+            "title": "Nome"
+          },
+          "email": {
+            "type": "string",
+            "title": "Email"
+          },
+          "senha": {
+            "type": "string",
+            "minLength": 8,
+            "title": "Senha"
+          },
+          "empresa": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Empresa"
+          },
+          "cnpj": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cnpj"
+          },
+          "codigo_interno": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Codigo Interno"
+          }
+        },
+        "type": "object",
+        "required": [
+          "perfil",
+          "nome",
+          "email",
+          "senha"
+        ],
+        "title": "CadastroIn",
+        "description": "Fornecedor se cadastra livremente (informa a empresa). Compras e armazém\nprecisam do código interno (config.CODIGO_CADASTRO_INTERNO)."
+      },
+      "CalculoOut": {
+        "properties": {
+          "producao_total": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Producao Total"
+          },
+          "chapas": {
+            "type": "integer",
+            "title": "Chapas"
+          },
+          "meias_diarias": {
+            "type": "integer",
+            "title": "Meias Diarias"
+          },
+          "diarias_equivalentes": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Diarias Equivalentes"
+          },
+          "valor_por_diaria": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Valor Por Diaria"
+          },
+          "piso_diaria": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Piso Diaria"
+          },
+          "piso_total": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Piso Total"
+          },
+          "total_pagar": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Total Pagar"
+          },
+          "complemento": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Complemento"
+          },
+          "abaixo_do_piso": {
+            "type": "boolean",
+            "title": "Abaixo Do Piso"
+          }
+        },
+        "type": "object",
+        "required": [
+          "producao_total",
+          "chapas",
+          "meias_diarias",
+          "diarias_equivalentes",
+          "valor_por_diaria",
+          "piso_diaria",
+          "piso_total",
+          "total_pagar",
+          "complemento",
+          "abaixo_do_piso"
+        ],
+        "title": "CalculoOut",
+        "description": "Valores arredondados a 2 casas só aqui, na saída."
+      },
+      "CaminhaoPrevisto": {
+        "properties": {
+          "agendamento_id": {
+            "type": "integer",
+            "title": "Agendamento Id"
+          },
+          "data": {
+            "type": "string",
+            "format": "date",
+            "title": "Data"
+          },
+          "horario": {
+            "$ref": "#/components/schemas/Horario"
+          },
+          "status": {
+            "$ref": "#/components/schemas/StatusAgendamento"
+          },
+          "confirmado": {
+            "type": "boolean",
+            "title": "Confirmado"
+          },
+          "prioritario": {
+            "type": "boolean",
+            "title": "Prioritario"
+          },
+          "fornecedor": {
+            "type": "string",
+            "title": "Fornecedor"
+          },
+          "nf_numero": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nf Numero"
+          },
+          "acondicionamento": {
+            "$ref": "#/components/schemas/Acondicionamento"
+          },
+          "peso_kg": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Peso Kg"
+          },
+          "volumes_estimados": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Volumes Estimados"
+          },
+          "locais": {
+            "items": {
+              "$ref": "#/components/schemas/LocalFisico"
+            },
+            "type": "array",
+            "title": "Locais"
+          },
+          "locais_sugeridos": {
+            "type": "boolean",
+            "title": "Locais Sugeridos"
+          },
+          "doca": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Doca"
+          },
+          "chapas_norma": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Chapas Norma"
+          },
+          "equipamento_sugerido": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Equipamento Sugerido"
+          },
+          "minutos_caminhao": {
+            "type": "integer",
+            "title": "Minutos Caminhao"
+          },
+          "minutos_equipe": {
+            "type": "integer",
+            "title": "Minutos Equipe"
+          },
+          "carga_adubo": {
+            "type": "boolean",
+            "title": "Carga Adubo"
+          },
+          "prob_chuva": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prob Chuva"
+          },
+          "situacao_chuva": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Situacao Chuva"
+          }
+        },
+        "type": "object",
+        "required": [
+          "agendamento_id",
+          "data",
+          "horario",
+          "status",
+          "confirmado",
+          "prioritario",
+          "fornecedor",
+          "nf_numero",
+          "acondicionamento",
+          "peso_kg",
+          "volumes_estimados",
+          "locais",
+          "locais_sugeridos",
+          "doca",
+          "chapas_norma",
+          "equipamento_sugerido",
+          "minutos_caminhao",
+          "minutos_equipe",
+          "carga_adubo",
+          "prob_chuva",
+          "situacao_chuva"
+        ],
+        "title": "CaminhaoPrevisto"
+      },
+      "ChapaCreate": {
+        "properties": {
+          "matricula": {
+            "type": "string",
+            "maxLength": 20,
+            "minLength": 1,
+            "title": "Matricula"
+          },
+          "nome": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Nome"
+          }
+        },
+        "type": "object",
+        "required": [
+          "matricula",
+          "nome"
+        ],
+        "title": "ChapaCreate"
+      },
+      "ChapaNoBoletimIn": {
+        "properties": {
+          "matricula": {
+            "type": "string",
+            "title": "Matricula"
+          },
+          "meia_diaria": {
+            "type": "boolean",
+            "title": "Meia Diaria",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "matricula"
+        ],
+        "title": "ChapaNoBoletimIn"
+      },
+      "ChapaNoBoletimOut": {
+        "properties": {
+          "matricula": {
+            "type": "string",
+            "title": "Matricula"
+          },
+          "nome": {
+            "type": "string",
+            "title": "Nome"
+          },
+          "meia_diaria": {
+            "type": "boolean",
+            "title": "Meia Diaria"
+          }
+        },
+        "type": "object",
+        "required": [
+          "matricula",
+          "nome",
+          "meia_diaria"
+        ],
+        "title": "ChapaNoBoletimOut"
+      },
+      "ChapaOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "matricula": {
+            "type": "string",
+            "title": "Matricula"
+          },
+          "nome": {
+            "type": "string",
+            "title": "Nome"
+          },
+          "ativo": {
+            "type": "boolean",
+            "title": "Ativo"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "matricula",
+          "nome",
+          "ativo"
+        ],
+        "title": "ChapaOut"
+      },
+      "ConferenciaOut": {
+        "properties": {
+          "agendamento": {
+            "$ref": "#/components/schemas/AgendamentoOut"
+          },
+          "nota": {
+            "$ref": "#/components/schemas/NotaFiscalOut"
+          },
+          "verificacoes": {
+            "items": {
+              "$ref": "#/components/schemas/Verificacao"
+            },
+            "type": "array",
+            "title": "Verificacoes"
+          },
+          "pedido_compra": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pedido Compra"
+          },
+          "pedidos_recentes_do_fornecedor": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Pedidos Recentes Do Fornecedor",
+            "default": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "agendamento",
+          "nota",
+          "verificacoes"
+        ],
+        "title": "ConferenciaOut",
+        "description": "O que o Compras precisa ver para aprovar ou reprovar."
+      },
+      "DescargaOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "local": {
+            "$ref": "#/components/schemas/LocalFisico"
+          },
+          "baia": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BaiaOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "horario_entrada": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Horario Entrada"
+          },
+          "horario_saida": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Horario Saida"
+          },
+          "qtd_chapas": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Qtd Chapas"
+          },
+          "equipamentos": {
+            "items": {},
+            "type": "array",
+            "title": "Equipamentos"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "local",
+          "baia",
+          "horario_entrada",
+          "horario_saida",
+          "qtd_chapas",
+          "equipamentos"
+        ],
+        "title": "DescargaOut"
+      },
+      "DestinoIn": {
+        "properties": {
+          "local": {
+            "$ref": "#/components/schemas/LocalFisico"
+          },
+          "baia_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Baia Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "local"
+        ],
+        "title": "DestinoIn"
+      },
+      "DestinosIn": {
+        "properties": {
+          "destinos": {
+            "items": {
+              "$ref": "#/components/schemas/DestinoIn"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Destinos"
+          }
+        },
+        "type": "object",
+        "required": [
+          "destinos"
+        ],
+        "title": "DestinosIn",
+        "description": "Logo após o Compras aprovar, o armazém pré-programa onde o caminhão vai parar.\nPode ser mais de um armazém (uma nota com itens de grupos diferentes)."
+      },
+      "EmpresaOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "nome": {
+            "type": "string",
+            "title": "Nome"
+          },
+          "cnpj": {
+            "type": "string",
+            "title": "Cnpj"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "nome",
+          "cnpj"
+        ],
+        "title": "EmpresaOut"
+      },
+      "EntradaIn": {
+        "properties": {
+          "local": {
+            "$ref": "#/components/schemas/LocalFisico"
+          }
+        },
+        "type": "object",
+        "required": [
+          "local"
+        ],
+        "title": "EntradaIn"
+      },
+      "EquipamentoOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "codigo": {
+            "type": "string",
+            "title": "Codigo"
+          },
+          "nome": {
+            "type": "string",
+            "title": "Nome"
+          },
+          "quantidade": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quantidade"
+          },
+          "observacao": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Observacao"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "codigo",
+          "nome",
+          "quantidade",
+          "observacao"
+        ],
+        "title": "EquipamentoOut"
+      },
+      "EquipamentoUsado": {
+        "properties": {
+          "codigo": {
+            "type": "string",
+            "title": "Codigo"
+          },
+          "qtd": {
+            "type": "integer",
+            "minimum": 1,
+            "title": "Qtd",
+            "default": 1
+          }
+        },
+        "type": "object",
+        "required": [
+          "codigo"
+        ],
+        "title": "EquipamentoUsado"
+      },
+      "EquipeIn": {
+        "properties": {
+          "equipe": {
+            "items": {
+              "$ref": "#/components/schemas/ChapaNoBoletimIn"
+            },
+            "type": "array",
+            "title": "Equipe"
+          }
+        },
+        "type": "object",
+        "required": [
+          "equipe"
+        ],
+        "title": "EquipeIn",
+        "description": "Substitui a equipe do boletim inteira. Até 20 chapas, por matrícula."
+      },
+      "FecharIn": {
+        "properties": {
+          "fechado_por": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Fechado Por"
+          }
+        },
+        "type": "object",
+        "required": [
+          "fechado_por"
+        ],
+        "title": "FecharIn"
+      },
+      "FornecedorCreate": {
+        "properties": {
+          "nome": {
+            "type": "string",
+            "minLength": 2,
+            "title": "Nome"
+          },
+          "cnpj": {
+            "type": "string",
+            "title": "Cnpj"
+          },
+          "codigo": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Codigo"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          }
+        },
+        "type": "object",
+        "required": [
+          "nome",
+          "cnpj"
+        ],
+        "title": "FornecedorCreate"
+      },
+      "FornecedorOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "nome": {
+            "type": "string",
+            "title": "Nome"
+          },
+          "cnpj": {
+            "type": "string",
+            "title": "Cnpj"
+          },
+          "codigo": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Codigo"
+          },
+          "origem_dado": {
+            "$ref": "#/components/schemas/Origem"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "nome",
+          "cnpj",
+          "codigo",
+          "origem_dado"
+        ],
+        "title": "FornecedorOut"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "Horario": {
+        "type": "string",
+        "enum": [
+          "08:00",
+          "10:00",
+          "13:00",
+          "15:00"
+        ],
+        "title": "Horario"
+      },
+      "LinhaProducaoIn": {
+        "properties": {
+          "tipo_item_id": {
+            "type": "integer",
+            "title": "Tipo Item Id"
+          },
+          "descarga": {
+            "type": "integer",
+            "minimum": 0,
+            "title": "Descarga",
+            "default": 0
+          },
+          "remocao": {
+            "type": "integer",
+            "minimum": 0,
+            "title": "Remocao",
+            "default": 0
+          },
+          "transferencia": {
+            "type": "integer",
+            "minimum": 0,
+            "title": "Transferencia",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "required": [
+          "tipo_item_id"
+        ],
+        "title": "LinhaProducaoIn"
+      },
+      "LinhaProducaoOut": {
+        "properties": {
+          "tipo_item_id": {
+            "type": "integer",
+            "title": "Tipo Item Id"
+          },
+          "tipo_item": {
+            "type": "string",
+            "title": "Tipo Item"
+          },
+          "descarga": {
+            "type": "integer",
+            "title": "Descarga"
+          },
+          "remocao": {
+            "type": "integer",
+            "title": "Remocao"
+          },
+          "transferencia": {
+            "type": "integer",
+            "title": "Transferencia"
+          },
+          "quantidade_total": {
+            "type": "integer",
+            "title": "Quantidade Total"
+          },
+          "preco_unitario": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Preco Unitario"
+          },
+          "valor_linha": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Valor Linha"
+          }
+        },
+        "type": "object",
+        "required": [
+          "tipo_item_id",
+          "tipo_item",
+          "descarga",
+          "remocao",
+          "transferencia",
+          "quantidade_total",
+          "preco_unitario",
+          "valor_linha"
+        ],
+        "title": "LinhaProducaoOut"
+      },
+      "LocalFisico": {
+        "type": "string",
+        "enum": [
+          "INSUMOS",
+          "ADUBO",
+          "MAQUINAS",
+          "LOJA"
+        ],
+        "title": "LocalFisico",
+        "description": "Armazém físico. É por ele que o boletim e os indicadores são agregados.\nO depósito do SAP (MATLoja, MATFerti...) só serve para descobrir o local."
+      },
+      "LoginIn": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "title": "Email"
+          },
+          "senha": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Senha"
+          }
+        },
+        "type": "object",
+        "required": [
+          "email",
+          "senha"
+        ],
+        "title": "LoginIn"
+      },
+      "MotivoNaoRecebimento": {
+        "type": "string",
+        "enum": [
+          "SEM_VAGA",
+          "SEM_PEDIDO",
+          "CHUVA",
+          "DIVERGENCIA_NF_PEDIDO",
+          "REJEITADO_COMPRAS",
+          "NAO_COMPARECEU",
+          "CANCELADO_FORNECEDOR",
+          "OUTRO"
+        ],
+        "title": "MotivoNaoRecebimento"
+      },
+      "NotaFiscalOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "chave": {
+            "type": "string",
+            "title": "Chave"
+          },
+          "numero": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Numero"
+          },
+          "serie": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Serie"
+          },
+          "data_emissao": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Data Emissao"
+          },
+          "fornecedor": {
+            "$ref": "#/components/schemas/FornecedorOut"
+          },
+          "valor_total": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Valor Total"
+          },
+          "peso_bruto_kg": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Peso Bruto Kg"
+          },
+          "peso_liquido_kg": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Peso Liquido Kg"
+          },
+          "volumes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Volumes"
+          },
+          "especie": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Especie"
+          },
+          "carga_adubo": {
+            "type": "boolean",
+            "title": "Carga Adubo"
+          },
+          "itens": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Itens"
+          },
+          "alertas": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Alertas"
+          },
+          "formato": {
+            "type": "string",
+            "title": "Formato"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "chave",
+          "numero",
+          "serie",
+          "data_emissao",
+          "fornecedor",
+          "valor_total",
+          "peso_bruto_kg",
+          "peso_liquido_kg",
+          "volumes",
+          "especie",
+          "carga_adubo",
+          "itens",
+          "alertas",
+          "formato"
+        ],
+        "title": "NotaFiscalOut"
+      },
+      "NotificacaoOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "tipo": {
+            "$ref": "#/components/schemas/TipoNotificacao"
+          },
+          "destinatario": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Destinatario"
+          },
+          "assunto": {
+            "type": "string",
+            "title": "Assunto"
+          },
+          "corpo": {
+            "type": "string",
+            "title": "Corpo"
+          },
+          "status": {
+            "$ref": "#/components/schemas/StatusNotificacao"
+          },
+          "erro": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Erro"
+          },
+          "criado_em": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Criado Em"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "tipo",
+          "destinatario",
+          "assunto",
+          "corpo",
+          "status",
+          "erro",
+          "criado_em"
+        ],
+        "title": "NotificacaoOut"
+      },
+      "Origem": {
+        "type": "string",
+        "enum": [
+          "HISTORICO",
+          "SISTEMA",
+          "TESTE"
+        ],
+        "title": "Origem",
+        "description": "Procedência do registro (campo `origem_dado`). O painel declara de onde vêm os números.\nNão confundir com OrigemAgendamento (NORMAL/BALCAO/CHUVA), que é como o agendamento nasceu."
+      },
+      "OrigemAgendamento": {
+        "type": "string",
+        "enum": [
+          "NORMAL",
+          "BALCAO",
+          "CHUVA"
+        ],
+        "title": "OrigemAgendamento"
+      },
+      "PerfilUsuario": {
+        "type": "string",
+        "enum": [
+          "FORNECEDOR",
+          "COMPRAS",
+          "ARMAZEM",
+          "ADMIN"
+        ],
+        "title": "PerfilUsuario",
+        "description": "Quem acessa o sistema. ADMIN pode tudo (manutenção e testes)."
+      },
+      "ProducaoIn": {
+        "properties": {
+          "linhas": {
+            "items": {
+              "$ref": "#/components/schemas/LinhaProducaoIn"
+            },
+            "type": "array",
+            "title": "Linhas"
+          }
+        },
+        "type": "object",
+        "required": [
+          "linhas"
+        ],
+        "title": "ProducaoIn",
+        "description": "Substitui a produção do boletim inteira (o que não vier, sai)."
+      },
+      "Programacao": {
+        "properties": {
+          "inicio": {
+            "type": "string",
+            "format": "date",
+            "title": "Inicio"
+          },
+          "fim": {
+            "type": "string",
+            "format": "date",
+            "title": "Fim"
+          },
+          "premissas": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Premissas"
+          },
+          "resumo": {
+            "items": {
+              "$ref": "#/components/schemas/ResumoDiaLocal"
+            },
+            "type": "array",
+            "title": "Resumo"
+          },
+          "caminhoes": {
+            "items": {
+              "$ref": "#/components/schemas/CaminhaoPrevisto"
+            },
+            "type": "array",
+            "title": "Caminhoes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "inicio",
+          "fim",
+          "premissas",
+          "resumo",
+          "caminhoes"
+        ],
+        "title": "Programacao"
+      },
+      "ReagendamentoChuvaIn": {
+        "properties": {
+          "nova_data": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nova Data"
+          },
+          "novo_horario": {
+            "$ref": "#/components/schemas/Horario",
+            "default": "08:00"
+          }
+        },
+        "type": "object",
+        "title": "ReagendamentoChuvaIn"
+      },
+      "RejeicaoIn": {
+        "properties": {
+          "motivo": {
+            "$ref": "#/components/schemas/MotivoNaoRecebimento",
+            "description": "DIVERGENCIA_NF_PEDIDO | SEM_PEDIDO | REJEITADO_COMPRAS | OUTRO"
+          },
+          "analisado_por": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Analisado Por"
+          },
+          "observacao": {
+            "type": "string",
+            "minLength": 5,
+            "title": "Observacao",
+            "description": "O que está errado e o que fazer"
+          }
+        },
+        "type": "object",
+        "required": [
+          "motivo",
+          "analisado_por",
+          "observacao"
+        ],
+        "title": "RejeicaoIn",
+        "description": "Reprovar exige motivo e explicação: o texto vai no e-mail ao fornecedor."
+      },
+      "ResumoDiaLocal": {
+        "properties": {
+          "data": {
+            "type": "string",
+            "format": "date",
+            "title": "Data"
+          },
+          "local": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LocalFisico"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "caminhoes": {
+            "type": "integer",
+            "title": "Caminhoes"
+          },
+          "confirmados": {
+            "type": "integer",
+            "title": "Confirmados"
+          },
+          "peso_total_kg": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Peso Total Kg"
+          },
+          "chapa_minutos": {
+            "type": "integer",
+            "title": "Chapa Minutos"
+          },
+          "tem_batido": {
+            "type": "boolean",
+            "title": "Tem Batido"
+          },
+          "chapas_recomendados": {
+            "type": "integer",
+            "title": "Chapas Recomendados"
+          },
+          "caminhoes_com_risco_chuva": {
+            "type": "integer",
+            "title": "Caminhoes Com Risco Chuva"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "local",
+          "caminhoes",
+          "confirmados",
+          "peso_total_kg",
+          "chapa_minutos",
+          "tem_batido",
+          "chapas_recomendados",
+          "caminhoes_com_risco_chuva"
+        ],
+        "title": "ResumoDiaLocal"
+      },
+      "SaidaIn": {
+        "properties": {
+          "local": {
+            "$ref": "#/components/schemas/LocalFisico"
+          },
+          "qtd_chapas": {
+            "type": "integer",
+            "minimum": 0,
+            "title": "Qtd Chapas"
+          },
+          "equipamentos": {
+            "items": {
+              "$ref": "#/components/schemas/EquipamentoUsado"
+            },
+            "type": "array",
+            "title": "Equipamentos",
+            "default": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "local",
+          "qtd_chapas"
+        ],
+        "title": "SaidaIn"
+      },
+      "SessaoOut": {
+        "properties": {
+          "token": {
+            "type": "string",
+            "title": "Token"
+          },
+          "tipo": {
+            "type": "string",
+            "title": "Tipo",
+            "default": "Bearer"
+          },
+          "expira_em": {
+            "type": "integer",
+            "title": "Expira Em"
+          },
+          "usuario": {
+            "$ref": "#/components/schemas/UsuarioOut"
+          }
+        },
+        "type": "object",
+        "required": [
+          "token",
+          "expira_em",
+          "usuario"
+        ],
+        "title": "SessaoOut"
+      },
+      "SlotDisponibilidade": {
+        "properties": {
+          "horario": {
+            "$ref": "#/components/schemas/Horario"
+          },
+          "ocupados": {
+            "type": "integer",
+            "title": "Ocupados"
+          },
+          "tem_batido": {
+            "type": "boolean",
+            "title": "Tem Batido"
+          },
+          "aceita_batido": {
+            "type": "boolean",
+            "title": "Aceita Batido"
+          },
+          "aceita_unitizado": {
+            "type": "boolean",
+            "title": "Aceita Unitizado"
+          },
+          "vagas_restantes": {
+            "type": "integer",
+            "title": "Vagas Restantes"
+          },
+          "encaixes_chuva": {
+            "type": "integer",
+            "title": "Encaixes Chuva"
+          },
+          "prob_chuva": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prob Chuva"
+          },
+          "situacao_chuva": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Situacao Chuva"
+          }
+        },
+        "type": "object",
+        "required": [
+          "horario",
+          "ocupados",
+          "tem_batido",
+          "aceita_batido",
+          "aceita_unitizado",
+          "vagas_restantes",
+          "encaixes_chuva"
+        ],
+        "title": "SlotDisponibilidade"
+      },
+      "StatusAgendamento": {
+        "type": "string",
+        "enum": [
+          "PENDENTE",
+          "APROVADO",
+          "DESTINO_DEFINIDO",
+          "REJEITADO",
+          "CANCELADO",
+          "NA_FILA",
+          "EM_DESCARGA",
+          "CONCLUIDO",
+          "NAO_COMPARECEU",
+          "REAGENDADO"
+        ],
+        "title": "StatusAgendamento"
+      },
+      "StatusBoletim": {
+        "type": "string",
+        "enum": [
+          "RASCUNHO",
+          "FECHADO"
+        ],
+        "title": "StatusBoletim"
+      },
+      "StatusNotificacao": {
+        "type": "string",
+        "enum": [
+          "ENVIADA",
+          "SIMULADA",
+          "SEM_DESTINATARIO",
+          "FALHOU"
+        ],
+        "title": "StatusNotificacao"
+      },
+      "TipoItemOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "descricao": {
+            "type": "string",
+            "title": "Descricao"
+          },
+          "preco_unitario": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Preco Unitario"
+          },
+          "ativo": {
+            "type": "boolean",
+            "title": "Ativo"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "descricao",
+          "preco_unitario",
+          "ativo"
+        ],
+        "title": "TipoItemOut"
+      },
+      "TipoNotificacao": {
+        "type": "string",
+        "enum": [
+          "APROVADO",
+          "REPROVADO",
+          "DESTINO_DEFINIDO",
+          "REAGENDADO_CHUVA"
+        ],
+        "title": "TipoNotificacao"
+      },
+      "UsuarioOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "email": {
+            "type": "string",
+            "title": "Email"
+          },
+          "nome": {
+            "type": "string",
+            "title": "Nome"
+          },
+          "perfil": {
+            "$ref": "#/components/schemas/PerfilUsuario"
+          },
+          "fornecedor": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EmpresaOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "email",
+          "nome",
+          "perfil"
+        ],
+        "title": "UsuarioOut"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      },
+      "Verificacao": {
+        "properties": {
+          "item": {
+            "type": "string",
+            "title": "Item"
+          },
+          "ok": {
+            "type": "boolean",
+            "title": "Ok"
+          },
+          "detalhe": {
+            "type": "string",
+            "title": "Detalhe"
+          }
+        },
+        "type": "object",
+        "required": [
+          "item",
+          "ok",
+          "detalhe"
+        ],
+        "title": "Verificacao"
+      }
+    },
+    "securitySchemes": {
+      "HTTPBearer": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
+  }
+}

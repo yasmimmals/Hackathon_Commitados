@@ -9,10 +9,10 @@ O Recebimento Inteligente organiza a entrega de mercadorias de fornecedores à C
 
 - **Solução.** Um sistema em que o fornecedor agenda a entrega, Compras valida a nota, o armazém registra o recebimento e o boletim diário registra a produção e o pagamento dos chapas, com piso e complemento.
 
-- **Tarefa 1.** Agendamento e recebimento, do fornecedor ao armazém.
+- **Tarefa 1.** Plataforma de agendamento, com os dados efetivamente gravados: o fornecedor agenda com a nota fiscal, o Compras valida, o armazém define o destino e registra chegada, início e fim da descarga, com chapas e equipamentos. É eliminatória e é a base das outras duas.
 
-- **Tarefa 2.** [confirmar o enunciado da Tarefa 2 no dossiê]
+- **Tarefa 2.** Boletim diário de serviços: lançar a produção e a equipe do dia, aplicar a regra do piso e apurar o complemento.
 
-- **Tarefa 3.** Painel gerencial e relatório que respondem se as chapas estão sobrando ou faltando, em reais.
+- **Tarefa 3.** Painel gerencial sobre o que os dois módulos registram, com os indicadores pedidos pela cooperativa e, no centro, a resposta à pergunta da direção: sobra ou falta chapa, por armazém e por período, em reais.
 
 As integrações com o SAP da Cocapec e com o serviço de previsão do tempo são externas ao sistema.

@@ -69,7 +69,7 @@ A aplicação adota separação estrita de escopo por perfil, mantendo o Adminis
 
 1. **Fornecedor (`fornecedor@cocapec.com.br`):**
    - Agendar entrega regular e agendar na hora.
-   - Acompanhar status em *Meus Agendamentos*.
+   - Acompanhar status em *Meus Agendamentos*, cancelar e avisar atraso (modal com horas, minutos e motivo; o aviso vai para a equipe do armazém).
    - Consultar previsão agrometeorológica.
    - Cabeçalho específico com busca rápida por placa/NF e botão de ação rápida.
 
@@ -78,9 +78,9 @@ A aplicação adota separação estrita de escopo por perfil, mantendo o Adminis
    - *Histórico de Validações*: consulta aos pareceres emitidos.
 
 3. **Responsável pelo Armazém (`armazem@cocapec.com.br`):**
-   - *Recebimento*: agenda do dia, alocação de baia e marcos de descarga.
+   - *Recebimento*: agenda do dia, alocação de baia, quadro de atrasos avisados e os três marcos do caminhão (Caminhão chegou, Iniciar descarregamento e Caminhão saiu, com chapas e equipamentos). A agenda se atualiza sozinha a cada minuto.
    - *Boletim de Produção*: fechamento de diárias, horas trabalhadas e chapas alocados.
-   - *Painel Gerencial*: acompanhamento de saldo de diárias e custo das operações.
+   - *Painel Gerencial*: abas Próximas semanas, Plano de escala, Custo do chapeiro, Sobra ou falta, Tempo do caminhão (média mensal de espera e descarga) e Boletins. Os cálculos vêm do backend (`/api/v1/painel`).
 
 4. **Administrador (`admin@cocapec.com.br`):**
    - Acesso irrestrito a todos os módulos das três áreas de negócio.
@@ -89,12 +89,25 @@ A aplicação adota separação estrita de escopo por perfil, mantendo o Adminis
 
 ---
 
-## 4. Como Executar e Validar
+## 4. Acessibilidade e Idioma
+
+- **Central de Acessibilidade** (`src/shared/acessibilidade/`), aberta pelo botão no canto da tela ou por `Alt + A`. As preferências ficam salvas no navegador e são aplicadas no `<html>` como atributos `data-*`, então valem em todas as telas.
+  - Perfis prontos: baixa visão, daltonismo, dislexia, foco (TDAH), mobilidade reduzida e leitor de tela.
+  - Tema claro, escuro ou alto contraste; tamanho do texto; fonte para dislexia; espaçamento; máscara de leitura; links destacados; foco reforçado; botões maiores; cursor grande; menos movimento; leitura em voz alta.
+  - **Daltonismo:** troca as cores do site inteiro e dos gráficos pela paleta Okabe-Ito, escolhendo o par que a pessoa confunde (vermelho e verde, ou azul e amarelo). A troca é feita redefinindo as variáveis de cor do Tailwind em `globals.css`. Campos com erro ganham borda tracejada e links em texto ficam sublinhados, para não depender só da cor.
+  - **Simular visão (para testes):** filtros SVG que mostram a tela como uma pessoa com protanopia, deuteranopia ou tritanopia a vê.
+- **Gráficos** (`src/shared/components/graficos/`): cada gráfico tem versão em tabela, resumo para leitor de tela, navegação por teclado e download.
+- **Idioma:** o sistema é só em português (pt-BR).
+
+---
+
+## 5. Como Executar e Validar
 
 1. **Instalar Dependências:**
    ```bash
    npm install
    ```
+   Variáveis de ambiente (em `web/.env.local`): `NEXT_PUBLIC_API_URL`, endereço da API; sem ela, o front usa `http://127.0.0.1:8000/api/v1`.
 
 2. **Executar em Modo de Desenvolvimento:**
    ```bash

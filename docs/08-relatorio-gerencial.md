@@ -191,3 +191,17 @@ A conclusão qualitativa não muda com a produtividade: a sobra continua entre 6
 - O histórico mostra a operação com fila; o sistema novo opera com agendamento obrigatório. São regimes diferentes.
 - Faltam folha de ago/2025 e dez/2025 e as folhas posteriores a ago/2026; os recebimentos do SAP vão até 22/09/2026.
 - A média do dia esconde a concentração por janela: dois batidos seguidos de manhã podem exigir mais gente ao mesmo tempo do que o cálculo diário indica.
+
+---
+
+## 11. Origem dos dados do painel
+
+O regulamento pede que a origem de cada informação esteja declarada. Todo registro do banco tem o campo `origem_dado`, e o painel separa as três origens:
+
+| Origem | O que é | Período | Onde aparece |
+|---|---|---|---|
+| `HISTORICO` | Dados da Cocapec carregados do pacote do hackathon: 18.434 recebimentos (uma linha por nota fiscal) e a folha diária dos chapas (428 dias, do `chapas_por_dia.csv`). As análises deste relatório usaram também as planilhas mensais da folha, que têm 450 dias. | Recebimentos de 01/06/2022 a 22/09/2026; folha de 02/01/2025 a 31/08/2026 | Abas "Custo do chapeiro", "Próximas semanas", "Plano de escala" e a parte histórica de "Sobra ou falta" |
+| `TESTE` | Simulação de uso do sistema gerada pela equipe com `backend/scripts/popular_demo.py`: 22 boletins diários fechados (R$ 19.084,42 pagos, dos quais R$ 1.481,07 de complemento), descargas com chegada, entrada e saída, não recebimentos e agendamentos futuros. A demanda segue o mesmo modelo de previsão do painel, e os tempos e chapas seguem as estimativas das seções 7 e 9 do dossiê. | 4 semanas, de 08/09/2026 a 02/10/2026, mais agendamentos das 2 semanas seguintes | Abas "Tempo do caminhão" e "Boletins", a parte "sistema" de "Sobra ou falta" (complemento dos boletins fechados) e os indicadores que dependem do sistema (tempos, chapas por descarga, não recebimentos) |
+| `SISTEMA` | O que for registrado ao vivo na plataforma (agendamentos, boletins, chegadas e descargas). | A partir da implantação | Em todas as abas, junto com os dados de teste |
+
+Os números das seções 1 a 10 vêm só do histórico (`HISTORICO`). A simulação (`TESTE`) serve para demonstrar o sistema funcionando e não entra na resposta sobre sobra ou falta de chapas. Ela pode ser apagada a qualquer momento (`python -m scripts.popular_demo --limpar`) sem afetar o histórico nem os registros ao vivo.

@@ -5,102 +5,130 @@ status: completo
 
 # Referência da API REST
 
-A API do **Recebimento Inteligente Cocapec** é construída com **FastAPI** e segue o padrão RESTful, disponibilizando endpoints para todas as etapas do fluxo de agendamento, validação fiscal, pátio e inteligência analítica.
+A API do **Recebimento Inteligente Cocapec** é feita em **FastAPI**. Todas as rotas ficam sob `/api/v1` e o mapa completo está em `backend/app/routes.py`. A lista abaixo foi conferida contra a especificação gerada pelo próprio backend (`docs/fontes/openapi.json`, 57 operações).
 
 ---
 
-## 1. Informações Gerais
+## 1. Informações gerais
 
-- **Base URL (Local):** `http://localhost:8000/api/v1`
-- **Formato das Requisições e Respostas:** `application/json`
-- **Upload de Arquivos:** `multipart/form-data` (para notas fiscais em XML e DANFE em PDF)
-- **Convenção de Códigos HTTP:**
-  - `200 OK`: Requisição processada com sucesso.
-  - `201 Created`: Recurso criado com sucesso.
-  - `400 Bad Request`: Parâmetros ou regras de negócio inválidas.
-  - `401 Unauthorized` / `403 Forbidden`: Falha de autenticação ou escopo insuficiente.
-  - `422 Unprocessable Entity`: Erro de validação de payload pelo Pydantic.
-  - `500 Internal Server Error`: Erro interno no servidor.
+- **Base URL (local):** `http://localhost:8000/api/v1`
+- **Formato:** `application/json`; envio de nota fiscal em `multipart/form-data` (XML ou PDF)
+- **Autenticação:** `POST /auth/login` devolve um token, enviado em `Authorization: Bearer <token>`
+- **Perfis:** `FORNECEDOR`, `COMPRAS`, `ARMAZEM` e `ADMIN`. O `ADMIN` passa em todas as rotas. O fornecedor só acessa agendamentos da própria empresa (mesmo CNPJ) ou que ele mesmo criou.
+- **Atenção:** as rotas marcadas como "sem login" respondem sem token. Para produção, elas devem passar a exigir autenticação; hoje isso fica para depois do hackathon.
+- **Erros:** regras de negócio voltam com `codigo` e `mensagem` (por exemplo `TRANSICAO_INVALIDA`, `PRAZO_CANCELAMENTO`, `SEM_VAGA`); `401`/`403` para login ou perfil; `422` para dados inválidos.
 
 ---
 
-## 2. Visão Geral dos Grupos de Endpoints
+## 2. Endpoints
 
-### 2.1. Agendamentos (`/agendamentos`)
-
-| Método | Endpoint | Perfil | Descrição |
-|---|---|---|---|
-| `GET` | `/agendamentos/` | Fornecedor, Armazém, Admin | Lista agendamentos com filtros por status, data e empresa |
-| `POST` | `/agendamentos/` | Fornecedor | Cria nova solicitação com envio de XML/PDF e escolha de horário |
-| `POST` | `/agendamentos/na-hora` | Fornecedor, Armazém | Registra agendamento imediato para caminhão que já está na fila |
-| `GET` | `/agendamentos/{id}` | Todos | Detalhes do agendamento, nota fiscal vinculada e histórico |
-| `PUT` | `/agendamentos/{id}/cancelar` | Fornecedor | Cancela agendamento (calcula se foi com antecedência $\ge 24\text{h}$) |
-| `PUT` | `/agendamentos/{id}/reagendar` | Fornecedor | Altera a data/horário para nova janela disponível |
-
-### 2.2. Mesa de Compras (`/compras`)
+### 2.1. Acesso e saúde
 
 | Método | Endpoint | Perfil | Descrição |
 |---|---|---|---|
-| `GET` | `/compras/validacoes` | Compras, Admin | Lista notas pendentes de conferência fiscal |
-| `POST` | `/compras/validacoes/{id}/aprovar` | Compras | Aprova a entrega e autoriza a entrada no armazém |
-| `POST` | `/compras/validacoes/{id}/reprovar` | Compras | Reprova a entrega registrando motivo e notificando o fornecedor |
-| `GET` | `/compras/historico` | Compras, Admin | Consulta o histórico de pareceres emitidos pela mesa |
+| `GET` | `/health` | sem login | Situação da API e do banco |
+| `POST` | `/auth/login` | sem login | Login; devolve token e usuário |
+| `POST` | `/auth/cadastro` | sem login | Cadastro; Compras e Armazém exigem o código interno da Cocapec |
+| `GET` | `/auth/me` | logado | Usuário da sessão |
 
-### 2.3. Pátio e Armazém (`/armazem`)
-
-| Método | Endpoint | Perfil | Descrição |
-|---|---|---|---|
-| `GET` | `/armazem/agenda` | Armazém, Admin | Consulta a ocupação das docas e horários previstos para o dia |
-| `POST` | `/armazem/descargas/{id}/iniciar` | Armazém | Registra chegada na doca e marco inicial da descarga |
-| `POST` | `/armazem/descargas/{id}/finalizar` | Armazém | Registra término, chapas alocados e libera a vaga física |
-| `GET` | `/armazem/baias` | Armazém, Admin | Lista baias e disponibilidade em tempo real |
-
-### 2.4. Boletim de Produção (`/boletim`)
+### 2.2. Agendamento (fornecedor e Compras)
 
 | Método | Endpoint | Perfil | Descrição |
 |---|---|---|---|
-| `GET` | `/boletim/hoje` | Armazém, Admin | Retorna o boletim em aberto do dia corrente |
-| `POST` | `/boletim/lancamentos` | Armazém | Adiciona apontamento de carga e equipe de chapas |
-| `POST` | `/boletim/fechar` | Armazém | Executa fechamento do dia, calcula diárias e aplica complemento do piso |
+| `POST` | `/agendamentos/nota-fiscal` | sem login | Envia a NF (XML ou PDF); o sistema lê fornecedor, peso, volumes e itens |
+| `GET` | `/agendamentos/nota-fiscal/{nota_id}` | sem login | Dados lidos da nota |
+| `GET` | `/agendamentos/disponibilidade` | sem login | Vagas por horário (regra de ocupação) e previsão de chuva para adubo |
+| `POST` | `/agendamentos` | Fornecedor | Cria o agendamento (status `PENDENTE`) |
+| `GET` | `/agendamentos` | logado | Lista, com filtros de data, status e fornecedor |
+| `GET` | `/agendamentos/{ag_id}` | logado | Detalhe do agendamento |
+| `POST` | `/agendamentos/{ag_id}/cancelar` | Fornecedor | Cancela, até 24 h antes do horário |
+| `POST` | `/agendamentos/{ag_id}/atraso` | Fornecedor | Avisa atraso (minutos e motivo); aparece para a equipe do armazém |
+| `GET` | `/agendamentos/{ag_id}/notificacoes` | logado | E-mails enviados ao fornecedor sobre o agendamento |
+| `GET` | `/agendamentos/{ag_id}/conferencia` | sem login | Itens da NF lado a lado com o pedido de compra |
+| `POST` | `/agendamentos/{ag_id}/aprovar` | Compras | Aprova, informando o pedido de compra (status `APROVADO`) |
+| `POST` | `/agendamentos/{ag_id}/rejeitar` | Compras | Recusa com motivo (status `REJEITADO`) |
 
-### 2.5. Painel Gerencial e Indicadores (`/painel`)
+### 2.3. Armazém (operador do pátio)
 
 | Método | Endpoint | Perfil | Descrição |
 |---|---|---|---|
-| `GET` | `/painel/sobra-falta/historico` | Admin, Armazém | Cruza notas com folha histórica (2022–2026) e aponta sazonalidade |
-| `GET` | `/painel/sobra-falta/sistema` | Admin, Armazém | Mede a ociosidade real via complemento pago no boletim diário |
-| `GET` | `/painel/resumo` | Admin | Consolidação dos principais KPIs operacionais da cooperativa |
+| `GET` | `/armazem/programacao` | Armazém | Caminhões previstos e chapas recomendados por dia e armazém |
+| `GET` | `/armazem/aguardando-destino` | Armazém | Aprovados pelo Compras que ainda não têm armazém e baia |
+| `GET` | `/armazem/fila` | Armazém | Fila do dia, por armazém |
+| `POST` | `/armazem/balcao` | Fornecedor, Armazém | Caminhão que chegou sem agendar: agenda na hora se houver vaga; senão registra não recebimento por falta de vaga |
+| `PUT` | `/armazem/agendamentos/{ag_id}/destinos` | Armazém | Define um ou mais armazéns e a baia de cada um |
+| `POST` | `/armazem/agendamentos/{ag_id}/chegada` | Armazém | Marco 1: caminhão chegou (status `NA_FILA`) |
+| `POST` | `/armazem/agendamentos/{ag_id}/entrada` | Armazém | Marco 2: início da descarga em um armazém (status `EM_DESCARGA`) |
+| `POST` | `/armazem/agendamentos/{ag_id}/saida` | Armazém | Marco 3: fim da descarga, com chapas e equipamentos; na última, status `CONCLUIDO` |
+| `POST` | `/armazem/agendamentos/{ag_id}/nao-compareceu` | Armazém | Não comparecimento, depois do fim da janela |
+| `POST` | `/armazem/agendamentos/{ag_id}/reagendar-chuva` | Armazém | Reagenda por chuva, com prioridade e fora do limite do horário |
+
+### 2.4. Cadastros
+
+| Método | Endpoint | Perfil | Descrição |
+|---|---|---|---|
+| `GET` / `POST` | `/cadastros/baias` | sem login / Armazém | Lista e cria baias (docas) por armazém |
+| `PATCH` | `/cadastros/baias/{baia_id}/ativa` | Armazém | Ativa ou desativa uma baia |
+| `GET` | `/cadastros/equipamentos` | sem login | Catálogo de equipamentos (seção 6 do dossiê) |
+| `GET` / `POST` | `/cadastros/chapas` | sem login / Armazém | Lista e cadastra chapas por matrícula |
+| `GET` | `/cadastros/tipos-item` | sem login | Os 14 tipos de item do boletim, com preço unitário |
+| `GET` / `POST` | `/fornecedores` | sem login / Compras, Armazém | Lista e cadastra fornecedores |
+
+### 2.5. Boletim diário (Tarefa 2)
+
+Todas as rotas exigem o perfil Armazém.
+
+| Método | Endpoint | Descrição |
+|---|---|---|
+| `POST` | `/boletins` | Abre o boletim do dia (geral, um por dia) |
+| `GET` | `/boletins` | Lista por período |
+| `GET` | `/boletins/{boletim_id}` | Detalhe com o cálculo |
+| `PUT` | `/boletins/{boletim_id}/producao` | Lança a produção por tipo de item (descarga, remoção, transferência) |
+| `PUT` | `/boletins/{boletim_id}/equipe` | Lança a equipe por matrícula, com meia diária |
+| `POST` | `/boletins/{boletim_id}/fechar` | Fecha e congela os totais (piso e complemento) |
+| `POST` | `/boletins/{boletim_id}/reabrir` | Volta para rascunho |
+| `GET` | `/boletins/{boletim_id}/excel` | Exporta o boletim no formato da planilha da Cocapec |
+
+### 2.6. Painel gerencial (Tarefa 3)
+
+Todas as rotas exigem o perfil Compras ou Armazém.
+
+| Método | Endpoint | Descrição |
+|---|---|---|
+| `GET` | `/painel/resumo` | Resumo dos indicadores do período |
+| `GET` | `/painel/sobra-falta` | Sobra ou falta de chapas: histórico (folha × SAP) e sistema (complemento do boletim) |
+| `GET` | `/painel/cargas` | Cargas recebidas por dia e por armazém |
+| `GET` | `/painel/tempos` | Tempo médio de espera (chegada → entrada) e de descarga (entrada → saída) |
+| `GET` | `/painel/chapas-por-recebimento` | Chapas por descarga comparados à norma |
+| `GET` | `/painel/utilizacao` | Utilização das baias e equipamentos |
+| `GET` | `/painel/fornecedores` | Fornecedores com maior volume |
+| `GET` | `/painel/movimento` | Horários e dias de maior movimento |
+| `GET` | `/painel/nao-recebimentos` | Não recebimentos por motivo |
+| `GET` | `/painel/custo` | Custo da mão de obra dos chapas (total dos boletins) |
+| `GET` | `/painel/qualidade-dados` | Inconsistências encontradas nos dados |
+| `GET` | `/painel/previsao` | Previsão das próximas semanas (caminhões e chapas recomendados) |
+| `GET` | `/painel/custo-mensal` | Custo mensal da folha e custo por caminhão |
+| `GET` | `/painel/plano-escala` | Plano de escala mensal e simulação com equipe fixa |
 
 ---
 
-## 3. Exemplo Prático de Requisição
-
-### Aprovação de Agendamento por Compras
+## 3. Exemplo: aprovação pelo Compras
 
 ```bash
-curl -X POST "http://localhost:8000/api/v1/compras/validacoes/12/aprovar" \
+curl -X POST "http://localhost:8000/api/v1/agendamentos/12/aprovar" \
+  -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
-  -d '{
-    "pedido_compra": "PC-2026-8841",
-    "observacao": "Itens conferidos contra o pedido. Doca liberada para Adubo."
-  }'
+  -d '{"pedido_compra": 26841, "analisado_por": "compras"}'
 ```
 
-**Resposta (`200 OK`):**
-```json
-{
-  "id": 12,
-  "status": "APROVADO",
-  "pedido_compra": "PC-2026-8841",
-  "data_aprovacao": "2026-10-04T08:30:00-03:00",
-  "mensagem": "Agendamento aprovado com sucesso. Notificação enviada ao fornecedor."
-}
-```
+A resposta é o agendamento atualizado, com `status: "APROVADO"`. O fornecedor recebe um e-mail; sem `SMTP_HOST` configurado, o aviso fica registrado como `SIMULADA`.
 
 ---
 
-## 4. Especificação Interativa OpenAPI / Swagger
+## 4. Especificação OpenAPI
 
-A especificação completa em formato OpenAPI 3.0 pode ser consultada tanto de forma estática através da visualização gráfica embutida abaixo (carregada de `docs/fontes/openapi.json`), quanto via Swagger UI interativo no backend em:
+A especificação completa (parâmetros e esquemas de cada rota) aparece abaixo, carregada de `docs/fontes/openapi.json`. Com o backend rodando, também está em:
 - **Swagger UI:** `http://localhost:8000/docs`
 - **ReDoc:** `http://localhost:8000/redoc`
+
+Para atualizar o arquivo depois de mudar a API: `curl http://localhost:8000/openapi.json -o docs/fontes/openapi.json`.

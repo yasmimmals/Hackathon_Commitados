@@ -35,32 +35,60 @@ Este documento apresenta a especificação técnica e a arquitetura do backend c
 
 ## 3. Máquina de Estados do Agendamento
 
+Os status abaixo são os do enum `StatusAgendamento` (`backend/app/models/models.py`), e as transições são as permitidas em `backend/app/services/agendamento_service.py`.
+
 ```
-[SOLICITADO] ──(Compras valida)──> [APROVADO] ──(Chega na baia)──> [EM_DESCARGA] ──(Fim)──> [CONCLUIDO]
-     │                                   │
-     ├──(Compras recusa)─> [RECUSADO]   ├──(Fornecedor cancela)─> [CANCELADO]
-     │                                   │
-     └───────────────────────────────────┴──(Não comparece na janela)─> [NAO_COMPARECEU]
+PENDENTE ──(Compras aprova)──> APROVADO ──(armazém define destino)──> DESTINO_DEFINIDO
+    │                              │                                        │
+    │                              │                                (Caminhão chegou)
+    │                              │                                        ▼
+    │                              │                                     NA_FILA
+    │                              │                                        │
+    │                              │                           (Iniciar descarregamento)
+    │                              │                                        ▼
+    │                              │                                   EM_DESCARGA
+    │                              │                                        │
+    │                              │                   (Caminhão saiu na última descarga)
+    │                              │                                        ▼
+    │                              │                                    CONCLUIDO
+    ├──(Compras rejeita)──> REJEITADO
+    ├──(fornecedor cancela, até 24h antes)──> CANCELADO        (de PENDENTE, APROVADO ou DESTINO_DEFINIDO)
+    ├──(não veio na janela)──> NAO_COMPARECEU                  (de PENDENTE, APROVADO ou DESTINO_DEFINIDO)
+    └──(chuva no Adubo)──> REAGENDADO + novo agendamento prioritário  (de APROVADO, DESTINO_DEFINIDO ou NA_FILA)
 ```
 
-1. `SOLICITADO`: Criado pelo fornecedor com upload de nota fiscal, aguardando análise de Compras.
-2. `APROVADO`: Autorizado pela Mesa de Compras; vaga reservada na agenda do armazém.
-3. `RECUSADO`: Rejeitado por divergência fiscal ou ausência de pedido de compra ativo.
-4. `CANCELADO`: Cancelado pelo fornecedor (identificado como tardio se comunicado com menos de 24h).
-5. `EM_DESCARGA`: Caminhão posicionado na doca indicada e operação iniciada.
-6. `CONCLUIDO`: Descarga finalizada com assinatura de conferência e liberação da vaga.
-7. `NAO_COMPARECEU`: Caminhão ausente na janela estipulada.
+1. `PENDENTE`: criado pelo fornecedor com a nota fiscal, aguardando o Compras. O balcão (caminhão sem agendamento) também começa aqui quando há vaga.
+2. `APROVADO`: o Compras conferiu a NF contra o pedido de compra.
+3. `DESTINO_DEFINIDO`: o armazém escolheu o armazém (ou mais de um) e a baia.
+4. `NA_FILA`: chegada registrada (marco 1).
+5. `EM_DESCARGA`: pelo menos uma descarga iniciada (marco 2).
+6. `CONCLUIDO`: todas as descargas com saída registrada (marco 3), com chapas e equipamentos.
+7. `REJEITADO`: recusado pelo Compras, ou balcão sem vaga (motivo `SEM_VAGA`).
+8. `CANCELADO`: cancelado pelo fornecedor; só é aceito até 24 horas antes do horário.
+9. `NAO_COMPARECEU`: o caminhão não veio; só pode ser marcado depois do fim da janela.
+10. `REAGENDADO`: substituído por um novo agendamento (origem `CHUVA`, prioritário e fora do limite do horário).
+
+**Aviso de atraso.** Antes da chegada (`PENDENTE`, `APROVADO` ou `DESTINO_DEFINIDO`), o fornecedor pode avisar atraso pelo `POST /agendamentos/{id}/atraso`, com minutos (de 5 a 600) e motivo opcional. O aviso fica nas colunas `atraso_minutos`, `atraso_motivo` e `atraso_informado_em` e aparece para a equipe do armazém na agenda do dia. Ele não muda o status.
 
 ---
 
 ## 4. Regra de Remuneração e Garantia do Piso
 
-O sistema implementa o fechamento automático da produção de acordo com a Convenção Coletiva e as diretrizes da Cocapec:
-- **Piso Garantido por Diária:** **R$ 90,1731** por diária equivalente.
-- **Cálculo das Diárias Equivalentes:**
-  $$\text{Diárias} = \text{Chapas Integrais} + (0,5 \times \text{Meias Diárias})$$
-- **Aplicação do Complemento:**
-  Se a produção total atingir um valor por diária inferior a R$ 90,1731, o sistema calcula a diferença e a divide entre os profissionais, garantindo transparência contábil e eliminação de erros manuais.
+A conta está em `backend/app/services/boletim_calculo.py` e é a mesma da planilha da Cocapec (célula J65):
+
+```
+diárias equivalentes = nº de chapas − 0,5 × meias diárias
+valor por diária     = produção total ÷ diárias equivalentes
+se valor por diária < R$ 90,1731:
+    total a pagar = R$ 90,1731 × diárias equivalentes
+    complemento   = total a pagar − produção total
+senão:
+    total a pagar = produção total;  complemento = 0      (não há teto)
+```
+
+- Os valores são calculados em `Decimal`, sem arredondar no meio da conta; só a apresentação arredonda para 2 casas. Assim o exemplo do dossiê fecha: R$ 918,20 de produção, R$ 991,90 pagos, R$ 73,71 de complemento.
+- O complemento é do boletim do dia como um todo, e não por pessoa. É ele que mede quanto se pagou acima do que a equipe produziu, e é o número usado no painel.
+- O preço unitário de cada linha é copiado no lançamento: um reajuste na tabela não muda boletins anteriores.
 
 ---
 
@@ -71,6 +99,7 @@ O backend conta com serviços analíticos dedicados em `app/services/painel_serv
 - **Identificação da Sazonalidade:** Classifica cada mês em `SOBRA`, `EQUILIBRIO`, `RISCO_DE_FALTA` ou `FALTA`.
 - **Métricas em Tempo Real:** Conecta-se diretamente aos boletins diários para mensurar o valor exato pago em complemento (horas ociosas).
 - **Carga de Dados Automatizada:** Script `backend/scripts/carregar_historico.py` com suporte à migração das planilhas de pedidos e notas para o PostgreSQL.
+- **Dados de demonstração:** `backend/scripts/popular_demo.py` gera 4 semanas de operação simulada (boletins fechados, descargas com os três marcos, não recebimentos e agendamentos futuros), tudo com `origem_dado = TESTE`. Rodar de novo substitui a simulação anterior, e `--limpar` apaga só ela; dados históricos e registros ao vivo não são tocados.
 
 ---
 
@@ -85,7 +114,7 @@ Sempre que a equipe de Compras aprova ou recusa um agendamento:
 
 ## 7. Orquestração com Docker Compose
 
-A infraestrutura completa é executada via Docker Compose:
+A infraestrutura completa é executada via Docker Compose. Ao subir, o container do backend aplica as migrações (`alembic upgrade head`) e popula as tabelas de referência (`scripts/seed.py`). O `docker-compose.yml` da raiz inclui o Mailpit; o `backend/docker-compose.yaml` sobe só banco, API e Adminer.
 - **`backend`**: Aplicação FastAPI rodando na porta `8000`.
 - **`db`**: PostgreSQL 16 na porta `5435` com volume persistente `pgdata`.
 - **`adminer`**: Gerenciador de banco web na porta `8080`.
