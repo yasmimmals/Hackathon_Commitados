@@ -62,3 +62,20 @@
     break-inside: avoid;
   }
 }
+
+html.alto-contraste {
+  filter: contrast(135%);
+}
+
+html.alto-contraste body {
+  background-color: #f8fafc;
+}
+
+html.fonte-grande {
+  font-size: 110%;
+}
+
+html.fonte-extragrande {
+  font-size: 120%;
+}
+
