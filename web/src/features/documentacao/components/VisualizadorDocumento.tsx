@@ -4,7 +4,6 @@ import remarkGfm from "remark-gfm";
 import { AlertCircle, Clock, FileText } from "lucide-react";
 import type { DocumentoItem } from "../docsMetadata";
 import VisualizadorImagem from "./VisualizadorImagem";
-import GaleriaUml from "./GaleriaUml";
 import ReferenciaApi from "./ReferenciaApi";
 
 type Props = {
@@ -33,29 +32,30 @@ function extrairFrontmatter(conteudo: string): {
 }
 
 export default function VisualizadorDocumento({ documento }: Props) {
-  const [conteudo, setConteudo] = useState<string | null>(null);
-  const [carregando, setCarregando] = useState(true);
-  const [erro, setErro] = useState(false);
+  // Guarda o slug junto do resultado: enquanto não bate com o documento atual, está carregando.
+  const [resultado, setResultado] = useState<{ slug: string; conteudo: string | null } | null>(null);
 
   useEffect(() => {
-    setCarregando(true);
-    setErro(false);
-
+    let ativo = true;
     fetch(`/api/documentacao/${documento.slug}.md`)
       .then((res) => {
         if (!res.ok) throw new Error("Documento não encontrado");
         return res.text();
       })
       .then((texto) => {
-        setConteudo(texto);
-        setCarregando(false);
+        if (ativo) setResultado({ slug: documento.slug, conteudo: texto });
       })
       .catch(() => {
-        setConteudo(null);
-        setErro(true);
-        setCarregando(false);
+        if (ativo) setResultado({ slug: documento.slug, conteudo: null });
       });
+    return () => {
+      ativo = false;
+    };
   }, [documento.slug]);
+
+  const carregando = resultado?.slug !== documento.slug;
+  const conteudo = carregando ? null : resultado.conteudo;
+  const erro = !carregando && conteudo === null;
 
   if (carregando) {
     return (
