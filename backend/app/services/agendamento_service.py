@@ -20,10 +20,14 @@ from app.core.exceptions import NaoEncontradoError, RegraNegocioError
 from app.models import (
     Acondicionamento, Agendamento, Baia, Descarga, Equipamento, Fornecedor, Horario,
     LocalFisico, MotivoNaoRecebimento as Motivo, NotaFiscal, OrigemAgendamento as Origem,
-    StatusAgendamento as St,
+    StatusAgendamento as St, TipoNotificacao,
 )
-from app.services import clima_service
-from app.services.nfe_parser import ler_nota
+from app.services import clima_service, notificacao_service
+from app.services.nfe_parser import chave_valida, ler_nota
+
+# Motivos que o Compras pode usar ao reprovar
+MOTIVOS_COMPRAS = {Motivo.DIVERGENCIA_NF_PEDIDO, Motivo.SEM_PEDIDO,
+                   Motivo.REJEITADO_COMPRAS, Motivo.OUTRO}
 
 # Status em que o agendamento segura a vaga do horário
 STATUS_OCUPAM_VAGA = {St.PENDENTE, St.APROVADO, St.DESTINO_DEFINIDO, St.NA_FILA,
@@ -293,6 +297,8 @@ def criar_agendamento(db: Session, dados, agora: Optional[datetime] = None) -> A
             db, dados.data, dados.acondicionamento, nota.carga_adubo, agora)},
             codigo="VAGA_OCUPADA")
 
+    if dados.email_contato:                                        # NOVO
+        nota.fornecedor.email = dados.email_contato                # NOVO
     ag = Agendamento(
         **_dados_da_nota(nota), data=dados.data, horario=dados.horario,
         acondicionamento=dados.acondicionamento, prob_chuva=prob,
@@ -332,10 +338,16 @@ def aprovar(db: Session, ag_id: int, dados, agora: Optional[datetime] = None) ->
     ag.observacao_compras = dados.observacao
     ag.status = St.APROVADO      # próximo passo: o armazém define armazém e baia
     db.commit()
+    ag = buscar(db, ag_id)                                                  # NOVO
+    notificacao_service.notificar(db, ag, TipoNotificacao.APROVADO)         # NOVO
     return buscar(db, ag_id)
 
 
 def rejeitar(db: Session, ag_id: int, dados, agora: Optional[datetime] = None) -> Agendamento:
+    if dados.motivo not in MOTIVOS_COMPRAS:                                 # NOVO
+        raise RegraNegocioError(
+            "Motivo inválido para reprovação do Compras",
+            {"permitidos": sorted(m.value for m in MOTIVOS_COMPRAS)}, codigo="MOTIVO_INVALIDO")
     ag = buscar(db, ag_id, travar=True)
     _exigir_status(ag, {St.PENDENTE}, "rejeitar")
     ag.status = St.REJEITADO
@@ -343,7 +355,9 @@ def rejeitar(db: Session, ag_id: int, dados, agora: Optional[datetime] = None) -
     ag.analisado_por = dados.analisado_por
     ag.analisado_em = _agora(agora)
     ag.observacao_compras = dados.observacao
-    db.commit()
+    db.commit()                  # libera o horário e a nota (pode ser reenviada e reagendada)
+    ag = buscar(db, ag_id)                                                  # NOVO
+    notificacao_service.notificar(db, ag, TipoNotificacao.REPROVADO)        # NOVO
     return buscar(db, ag_id)
 
 
@@ -365,6 +379,8 @@ def definir_destinos(db: Session, ag_id: int, destinos: list) -> Agendamento:
     ag = buscar(db, ag_id, travar=True)
     _exigir_status(ag, {St.APROVADO, St.DESTINO_DEFINIDO, St.NA_FILA, St.EM_DESCARGA},
                    "definir destino")
+    # o fornecedor é avisado da doca enquanto o caminhão ainda não chegou     # NOVO
+    avisar = ag.status in (St.APROVADO, St.DESTINO_DEFINIDO) and not ag.horario_chegada
 
     por_local = {}
     for d in destinos:                      # último informado vale, sem repetir armazém
@@ -399,6 +415,8 @@ def definir_destinos(db: Session, ag_id: int, destinos: list) -> Agendamento:
         # Caminhão de balcão já está no pátio: com destino definido, entra direto na fila
         ag.status = St.NA_FILA if ag.horario_chegada else St.DESTINO_DEFINIDO
     db.commit()
+    if avisar:                                                                          # NOVO
+        notificacao_service.notificar(db, buscar(db, ag_id), TipoNotificacao.DESTINO_DEFINIDO)
     return buscar(db, ag_id)
 
 
@@ -488,6 +506,8 @@ def agendar_balcao(db: Session, dados, agora: Optional[datetime] = None) -> Agen
 
     _travar_horario(db, hoje, dados.horario)
     motivo = _motivo_sem_vaga(_ocupantes(db, hoje, dados.horario), dados.acondicionamento)
+    if dados.email_contato:                                        # NOVO
+        nota.fornecedor.email = dados.email_contato                # NOVO
     ag = Agendamento(
         **_dados_da_nota(nota), data=hoje, horario=dados.horario,
         acondicionamento=dados.acondicionamento,
@@ -534,7 +554,36 @@ def reagendar_por_chuva(db: Session, ag_id: int, dados) -> Agendamento:
     )
     db.add(novo)
     db.commit()
+    notificacao_service.notificar(db, buscar(db, novo.id), TipoNotificacao.REAGENDADO_CHUVA)  # NOVO
     return buscar(db, novo.id)
+
+
+# ------------------------------------------------------------------ compras: conferência (NOVO)
+
+def conferencia(db: Session, ag_id: int) -> dict:
+    """Tudo que o Compras precisa para decidir: a nota lida e checagens automáticas.
+    A decisão é humana: o sistema só aponta o que conferiu."""
+    ag = buscar(db, ag_id)
+    if not ag.nota_fiscal_id:
+        raise RegraNegocioError("Agendamento sem nota fiscal vinculada", codigo="SEM_NOTA")
+    nota = buscar_nota(db, ag.nota_fiscal_id)
+    v = []
+    v.append({"item": "Chave de acesso", "ok": chave_valida(nota.chave),
+              "detalhe": "dígito verificador confere" if chave_valida(nota.chave)
+              else "dígito verificador NÃO confere"})
+    v.append({"item": "Emitente = fornecedor do agendamento",
+              "ok": nota.fornecedor_id == ag.fornecedor_id,
+              "detalhe": f"CNPJ {nota.fornecedor.cnpj} ({nota.fornecedor.nome})"})
+    v.append({"item": "Peso informado na nota", "ok": nota.peso_bruto_kg is not None,
+              "detalhe": f"{nota.peso_bruto_kg} kg" if nota.peso_bruto_kg else "nota sem peso"})
+    v.append({"item": "Itens lidos da nota", "ok": bool(nota.itens),
+              "detalhe": f"{len(nota.itens)} item(ns)" if nota.itens else "nenhum item identificado"})
+    v.append({"item": "Alertas da leitura", "ok": not [a for a in nota.alertas
+                                                       if "cadastrado automaticamente" not in a],
+              "detalhe": "; ".join(nota.alertas) or "nenhum"})
+    v.append({"item": "Fornecedor com e-mail para aviso", "ok": bool(ag.fornecedor.email),
+              "detalhe": ag.fornecedor.email or "sem e-mail: o aviso só ficará registrado"})
+    return {"agendamento": ag, "nota": nota, "verificacoes": v, "pedido_compra": None}
 
 
 # ------------------------------------------------------------------ consultas

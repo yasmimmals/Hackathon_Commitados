@@ -48,6 +48,11 @@ def limpar(tmp_path, monkeypatch):
 
 
 @pytest.fixture(autouse=True)
+def sem_smtp(monkeypatch):
+    """Nos testes nenhum e-mail sai: avisos ficam registrados como SIMULADA."""
+    monkeypatch.setattr("app.core.config.SMTP_HOST", None)
+
+@pytest.fixture(autouse=True)
 def chuva(monkeypatch):
     """Previsão simulada. Padrão 0%. Use chuva[(data, Horario)] = 85 ou chuva['padrao'] = None."""
     previsao = {"padrao": 0}

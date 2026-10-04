@@ -7,7 +7,8 @@ módulo novo (ex.: boletim), crie o controller e registre UMA linha aqui.
     /fornecedores    -> fornecedor_controller
     /agendamentos    -> agendamento_controller   (fornecedor e Compras)
     /armazem         -> armazem_controller       (operador do pátio / PWA)
-    /cadastros       -> cadastro_controller      (baias e equipamentos)
+    /cadastros       -> cadastro_controller      (docas, equipamentos, chapas, tipos de item)
+    /boletins        -> boletim_controller       (boletim diário dos chapas - Tarefa 2)
 
 Tudo fica sob /api/v1 (prefixo aplicado no main.py).
 """
@@ -16,6 +17,7 @@ from fastapi import APIRouter
 from app.controllers import (
     agendamento_controller,
     armazem_controller,
+    boletim_controller,
     cadastro_controller,
     fornecedor_controller,
     health_controller,
@@ -28,3 +30,4 @@ api_router.include_router(fornecedor_controller.router)
 api_router.include_router(agendamento_controller.router)
 api_router.include_router(armazem_controller.router)
 api_router.include_router(cadastro_controller.router)
+api_router.include_router(boletim_controller.router)

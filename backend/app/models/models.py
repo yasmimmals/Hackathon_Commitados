@@ -1,8 +1,8 @@
 import enum
 
 from sqlalchemy import (
-    Boolean, CheckConstraint, Column, Date, DateTime, Enum, ForeignKey,
-    Integer, Numeric, String, Text, UniqueConstraint, func,
+    Boolean, CheckConstraint, Column, Date, DateTime, Enum, ForeignKey, Index,
+    Integer, Numeric, String, Text, UniqueConstraint, func, text,
 )
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship
@@ -66,6 +66,7 @@ class OrigemAgendamento(str, enum.Enum):
 
 class MotivoNaoRecebimento(str, enum.Enum):
     SEM_VAGA = "SEM_VAGA"
+    SEM_PEDIDO = "SEM_PEDIDO"                  # Compras: não há pedido para esta nota
     CHUVA = "CHUVA"
     DIVERGENCIA_NF_PEDIDO = "DIVERGENCIA_NF_PEDIDO"
     REJEITADO_COMPRAS = "REJEITADO_COMPRAS"
@@ -73,6 +74,18 @@ class MotivoNaoRecebimento(str, enum.Enum):
     CANCELADO_FORNECEDOR = "CANCELADO_FORNECEDOR"
     OUTRO = "OUTRO"
 
+class TipoNotificacao(str, enum.Enum):
+    APROVADO = "APROVADO"                    # Compras liberou a entrega
+    REPROVADO = "REPROVADO"                  # Compras recusou (com motivo)
+    DESTINO_DEFINIDO = "DESTINO_DEFINIDO"    # armazém e doca onde o caminhão vai parar
+    REAGENDADO_CHUVA = "REAGENDADO_CHUVA"    # choveu: nova data, com prioridade
+
+
+class StatusNotificacao(str, enum.Enum):
+    ENVIADA = "ENVIADA"                      # entregue ao servidor SMTP
+    SIMULADA = "SIMULADA"                    # SMTP não configurado: só registrada
+    SEM_DESTINATARIO = "SEM_DESTINATARIO"    # fornecedor sem e-mail cadastrado
+    FALHOU = "FALHOU"
 
 class StatusBoletim(str, enum.Enum):
     RASCUNHO = "RASCUNHO"            # vai sendo preenchido ao longo do dia
@@ -97,6 +110,7 @@ class Fornecedor(Base):
     cnpj = Column(String(14), index=True, nullable=False)          # só dígitos
     origem_dado = Column(_enum(Origem), nullable=False, default=Origem.SISTEMA,
                          server_default=Origem.SISTEMA.value)
+    email = Column(String)        # contato para avisos; o cadastro da Cocapec não traz
 
     agendamentos = relationship("Agendamento", back_populates="fornecedor")
 
@@ -228,7 +242,20 @@ class Descarga(Base):
     agendamento = relationship("Agendamento", back_populates="descargas")
     baia = relationship("Baia")
 
+class Notificacao(Base):
+    """E-mail enviado (ou registrado) para o fornecedor a cada etapa relevante.
+    Fica gravado mesmo sem SMTP: serve de histórico e de prova do aviso."""
+    __tablename__ = "notificacoes"
 
+    id = Column(Integer, primary_key=True)
+    agendamento_id = Column(Integer, ForeignKey("agendamentos.id"), nullable=False, index=True)
+    tipo = Column(_enum(TipoNotificacao), nullable=False)
+    destinatario = Column(String)
+    assunto = Column(String, nullable=False)
+    corpo = Column(Text, nullable=False)
+    status = Column(_enum(StatusNotificacao), nullable=False)
+    erro = Column(Text)
+    criado_em = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 # ==========================================
 # 2. BOLETIM DIÁRIO E CUSTO
 # ==========================================
@@ -255,30 +282,44 @@ class Chapa(Base):
 
 
 class BoletimDiario(Base):
+    """Boletim Diário de Serviços dos Ensacadores: um geral por dia (ou um por armazém,
+    conforme config.BOLETIM_POR_ARMAZEM).
+    Registra TODA a movimentação da equipe (descarga, remoção, transferência), não só
+    o recebimento. O total apurado é o custo da operação (dossiê, seção 8)."""
     __tablename__ = "boletins_diarios"
-    __table_args__ = (UniqueConstraint("data", "local", name="uq_boletim_data_local"),)
+    __table_args__ = (
+        UniqueConstraint("data", "local", name="uq_boletim_data_local"),
+        # boletim geral (local vazio): no máximo um por dia
+        Index("uq_boletim_geral_dia", "data", unique=True,
+              postgresql_where=text("local IS NULL")),
+    )
 
     id = Column(Integer, primary_key=True)
     data = Column(Date, nullable=False, index=True)
-    local = Column(_enum(LocalFisico), nullable=False)
+    local = Column(_enum(LocalFisico))     # vazio = boletim geral do dia (padrão da Cocapec)
     status = Column(_enum(StatusBoletim), nullable=False, default=StatusBoletim.RASCUNHO)
+    origem_dado = Column(_enum(Origem), nullable=False, default=Origem.SISTEMA,
+                         server_default=Origem.SISTEMA.value)
     observacao = Column(Text)
 
-    # Snapshot calculado pelo service (recalcula a cada alteração, congela ao fechar)
-    producao_total = Column(Numeric(12, 2), nullable=False, default=0)
+    # Snapshot do cálculo, recalculado a cada alteração e congelado ao fechar.
+    # Sem arredondar no meio: 991,9041 - 918,1952 = 73,7089 -> 73,71
+    # (com 2 casas: 991,90 - 918,20 = 73,70, e o exemplo do dossiê não fecha).
+    # 6 casas porque meio piso (0,5 x 90,1731 = 45,08655) já tem 5.
+    producao_total = Column(Numeric(16, 6), nullable=False, default=0)
     diarias_equivalentes = Column(Numeric(6, 1), nullable=False, default=0)
-    valor_por_diaria = Column(Numeric(12, 2))
-    total_pagar = Column(Numeric(12, 2), nullable=False, default=0)   # = custo da operação
-    complemento = Column(Numeric(12, 2), nullable=False, default=0)
+    valor_por_diaria = Column(Numeric(16, 6))
+    total_pagar = Column(Numeric(16, 6), nullable=False, default=0)   # = custo da operação
+    complemento = Column(Numeric(16, 6), nullable=False, default=0)
 
     criado_em = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     fechado_em = Column(DateTime(timezone=True))
+    fechado_por = Column(String)
 
     producoes = relationship("BoletimProducao", back_populates="boletim",
-                             cascade="all, delete-orphan")
+                             cascade="all, delete-orphan", order_by="BoletimProducao.tipo_item_id")
     chapas_alocados = relationship("BoletimChapa", back_populates="boletim",
                                    cascade="all, delete-orphan")
-
 
 class BoletimProducao(Base):
     """Uma linha por tipo de item, igual ao formulário de papel."""

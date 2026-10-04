@@ -1,3 +1,4 @@
+import re
 from datetime import date, datetime
 from decimal import Decimal
 from typing import Optional
@@ -6,8 +7,19 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from app.models import (
     Acondicionamento, Horario, LocalFisico, MotivoNaoRecebimento, Origem,
-    OrigemAgendamento, StatusAgendamento,
+    OrigemAgendamento, StatusAgendamento, StatusNotificacao, TipoNotificacao,
 )
+
+_EMAIL = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+
+
+def _validar_email(v: Optional[str]) -> Optional[str]:
+    if v is None or not v.strip():
+        return None
+    v = v.strip().lower()
+    if not _EMAIL.match(v):
+        raise ValueError("E-mail inválido")
+    return v
 
 
 # ---------- Fornecedor ----------
@@ -16,6 +28,7 @@ class FornecedorCreate(BaseModel):
     nome: str = Field(min_length=2)
     cnpj: str
     codigo: Optional[str] = None
+    email: Optional[str] = None
 
     @field_validator("cnpj")
     @classmethod
@@ -24,6 +37,7 @@ class FornecedorCreate(BaseModel):
         if len(digitos) != 14:
             raise ValueError("CNPJ deve ter 14 dígitos")
         return digitos
+        
 
 
 class FornecedorOut(BaseModel):
@@ -96,6 +110,10 @@ class AgendamentoCreate(BaseModel):
         description="Obrigatório para carga de adubo com risco de chuva: se chover, "
                     "a descarga é reagendada para o próximo dia útil, com prioridade",
     )
+    email_contato: Optional[str] = Field(
+        default=None, description="Para onde vão os avisos (aprovação, reprovação, doca)")
+
+    _email = field_validator("email_contato")(lambda cls, v: _validar_email(v))
 
 
 class BalcaoCreate(BaseModel):
@@ -103,6 +121,9 @@ class BalcaoCreate(BaseModel):
     nota_fiscal_id: int
     horario: Horario
     acondicionamento: Acondicionamento
+    email_contato: Optional[str] = None
+
+    _email = field_validator("email_contato")(lambda cls, v: _validar_email(v))
 
 
 class AprovacaoIn(BaseModel):
@@ -112,9 +133,11 @@ class AprovacaoIn(BaseModel):
 
 
 class RejeicaoIn(BaseModel):
-    motivo: MotivoNaoRecebimento = MotivoNaoRecebimento.REJEITADO_COMPRAS
-    analisado_por: str
-    observacao: Optional[str] = None
+    """Reprovar exige motivo e explicação: o texto vai no e-mail ao fornecedor."""
+    motivo: MotivoNaoRecebimento = Field(
+        description="DIVERGENCIA_NF_PEDIDO | SEM_PEDIDO | REJEITADO_COMPRAS | OUTRO")
+    analisado_por: str = Field(min_length=1)
+    observacao: str = Field(min_length=5, description="O que está errado e o que fazer")
 
 
 class DestinoIn(BaseModel):
@@ -249,3 +272,32 @@ class Programacao(BaseModel):
     premissas: list[str]
     resumo: list[ResumoDiaLocal]
     caminhoes: list[CaminhaoPrevisto]
+
+
+
+# ---------- Compras: conferência e notificações ----------
+
+class Verificacao(BaseModel):
+    item: str
+    ok: bool
+    detalhe: str
+
+
+class ConferenciaOut(BaseModel):
+    """O que o Compras precisa ver para aprovar ou reprovar."""
+    agendamento: AgendamentoOut
+    nota: NotaFiscalOut
+    verificacoes: list[Verificacao]
+    pedido_compra: Optional[dict] = None   # entra com a carga dos pedidos (Parte 4)
+
+
+class NotificacaoOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    tipo: TipoNotificacao
+    destinatario: Optional[str]
+    assunto: str
+    corpo: str
+    status: StatusNotificacao
+    erro: Optional[str]
+    criado_em: datetime

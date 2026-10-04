@@ -9,7 +9,7 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
       TZ: America/Sao_Paulo
     ports:
-      - "5435:5432"            
+      - "5435:5432"            # 5435 na sua máquina -> 5432 no container
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -23,9 +23,12 @@ services:
     container_name: cocapec_backend
     restart: unless-stopped
     environment:
-      # Dentro da rede do compose o host é "db" e a porta é 5432 (não 5433!)
+      # Dentro da rede do compose o host é "db" e a porta é 5432 (não 5435!)
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
       TZ: America/Sao_Paulo
+      # avisos ao fornecedor vão para o Mailpit (caixa de teste): http://localhost:8025
+      SMTP_HOST: mailpit
+      SMTP_PORT: 1025
     ports:
       - "8000:8000"
     volumes:
@@ -33,6 +36,14 @@ services:
     depends_on:
       db:
         condition: service_healthy
+
+  mailpit:                     # caixa de e-mail de teste: http://localhost:8025
+    image: axllent/mailpit
+    container_name: cocapec_mailpit
+    restart: unless-stopped
+    ports:
+      - "8025:8025"            # tela web com os e-mails recebidos
+      - "1025:1025"            # SMTP
 
   adminer:                     # interface web para olhar o banco: http://localhost:8080
     image: adminer
