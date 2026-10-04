@@ -3,6 +3,8 @@ title: Casos de Uso (UML)
 status: completo
 ---
 
+![Diagrama de Casos de Uso UML](assets/uml-casos-de-uso.png)
+
 O diagrama de casos de uso mostra o que cada ator faz no sistema; a ordem das etapas está no BPMN.
 
 | Ator | Casos de uso principais |

@@ -3,6 +3,8 @@ title: Modelo de Dados (DER)
 status: completo
 ---
 
+![Diagrama Entidade-Relacionamento DER](assets/der.png)
+
 O DER tem 16 tabelas em três grupos e foi montado a partir do diagrama de classes do backend, que a equipe gerou do código dos models e services.
 
 ### Tabelas por grupo

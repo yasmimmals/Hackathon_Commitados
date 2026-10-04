@@ -165,6 +165,13 @@ export default function VisualizadorDocumento({ documento }: Props) {
                 {children}
               </blockquote>
             ),
+            img: ({ src, alt }) => {
+              const url = typeof src === "string" ? src : "";
+              if (documento.especial && (url.includes("bpmn") || url.includes("uml") || url.includes("der"))) {
+                return null;
+              }
+              return <img src={src} alt={alt} className="my-4 max-w-full rounded-xl border border-gray-200 shadow-xs" />;
+            },
           }}
         >
           {corpo}

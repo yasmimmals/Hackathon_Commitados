@@ -3,6 +3,8 @@ title: Processos (BPMN)
 status: completo
 ---
 
+![Diagrama de Processos BPMN](assets/bpmn.png)
+
 O BPMN descreve dois processos: o recebimento de mercadorias, uma vez por caminhão, e o boletim diário com o painel, uma vez por dia.
 
 **Processo 1: recebimento de mercadorias.** Tem quatro raias: Fornecedor, Sistema, Compras e Responsável pelo Armazém.
