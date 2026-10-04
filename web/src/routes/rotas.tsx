@@ -14,28 +14,19 @@ import EmConstrucao from "@/shared/components/ui/EmConstrucao";
 import { TELAS_EM_CONSTRUCAO as TELAS } from "./telasEmConstrucao";
 
 type Rota = {
-  /** Caminho relativo à base do grupo (sem barra inicial). */
   path: string;
   element: ReactNode;
-  /** Rótulo no menu do cabeçalho; sem ele a rota não aparece no menu. */
   menu?: string;
 };
 
 type GrupoRotas = {
   rotulo: string;
-  /** Prefixo do grupo: só o perfil dono do grupo acessa as rotas abaixo dele. */
   base: string;
-  /** A primeira rota é a página inicial do perfil. */
   rotas: Rota[];
 };
 
 export type ItemMenu = { href: string; rotulo: string };
 
-/**
- * Fonte única das rotas do sistema: cada grupo pertence a um perfil e
- * define rotas, menu e página inicial. Para criar uma tela, adicione uma
- * entrada em `rotas` (com `menu` se ela deve aparecer no cabeçalho).
- */
 export const GRUPOS: Record<Perfil, GrupoRotas> = {
   fornecedor: {
     rotulo: "Fornecedor",
