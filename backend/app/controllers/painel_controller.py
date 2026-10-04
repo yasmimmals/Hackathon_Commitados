@@ -13,6 +13,7 @@ from app.core.auth import exigir_perfil
 from app.core.database import get_db
 from app.models import LocalFisico, PerfilUsuario
 from app.services import painel_service as svc
+from app.services import previsao_service as prev
 
 # Custo e mão de obra são informação de gestão: só Compras e Armazém
 router = APIRouter(prefix="/painel", tags=["Painel gerencial (Tarefa 3)"],
@@ -93,3 +94,27 @@ def custo(inicio: Optional[date] = None, fim: Optional[date] = None,
 def qualidade_dados(db: Session = Depends(get_db)):
     """Problemas encontrados nos dados históricos e como foram tratados."""
     return svc.qualidade_dados(db)
+
+
+
+# ---- Previsibilidade (para a frente) ----
+
+@router.get("/previsao")
+def previsao(semanas: int = 12, reserva: Optional[int] = None, db: Session = Depends(get_db)):
+    """Próximas semanas: caminhões previstos (com faixa de erro), chapas recomendados,
+    ação (reforçar/reduzir/manter) e custo previsto."""
+    return prev.previsao_semanal(db, min(max(semanas, 1), 26), reserva)
+
+
+@router.get("/custo-mensal")
+def custo_mensal(db: Session = Depends(get_db)):
+    """Custo do chapeiro mês a mês: valor pago, custo por caminhão e reajuste da diária."""
+    return prev.custo_mensal(db)
+
+
+@router.get("/plano-escala")
+def plano_escala(meses: int = 12, reserva: Optional[int] = None,
+                 equipe_fixa: Optional[int] = None, db: Session = Depends(get_db)):
+    """Plano de escala recomendado x prática atual, com a diferença de custo.
+    Simulador: informe `equipe_fixa` para ver o que acontece com N chapas o ano todo."""
+    return prev.plano_escala(db, min(max(meses, 1), 24), reserva, equipe_fixa)
