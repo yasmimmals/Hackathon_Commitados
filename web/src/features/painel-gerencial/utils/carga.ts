@@ -16,7 +16,8 @@ export function useCarga<T>(buscar: () => Promise<T>, chave: string) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chave]);
   const atual = estado.chave === chave ? estado : undefined;
-  return { dados: atual?.dados, erro: atual?.erro, carregando: !atual };
+  // enquanto recalcula, mantém o resultado anterior na tela (sem "piscar" ao mexer num controle)
+  return { dados: atual?.dados ?? estado.dados, erro: atual?.erro, carregando: !atual };
 }
 
 export const COR = {

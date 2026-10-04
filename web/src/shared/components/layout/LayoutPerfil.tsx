@@ -4,7 +4,6 @@ import { useAuth } from "@/features/auth/AuthContext";
 import { itemMenuAtivo } from "@/routes/rotas";
 import Footer from "./Footer";
 import Header from "./Header";
-import BarraAcessibilidade from "../ui/BarraAcessibilidade";
 
 const TITULO_PADRAO = "COCAPEC • Agendamento de Cargas";
 
@@ -33,7 +32,6 @@ export default function LayoutPerfil() {
         <Outlet />
       </main>
       <Footer />
-      <BarraAcessibilidade />
     </div>
   );
 }
