@@ -8,7 +8,7 @@ type SecaoProps = {
   children: ReactNode;
 };
 
-/** Bloco numerado do formulário de agendamento. */
+
 export default function Secao({ numero, titulo, descricao, aside, children }: SecaoProps) {
   const idTitulo = `secao-${numero}-titulo`;
   return (

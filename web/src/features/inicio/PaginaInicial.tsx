@@ -3,9 +3,19 @@ import BarraSuperior from "./components/BarraSuperior";
 import CarrosselDestaques from "./components/CarrosselDestaques";
 import Navegacao from "./components/Navegacao";
 import Noticias from "./components/Noticias";
+import { IdiomaProvider, useIdioma } from "./i18n";
 
-/** Página pública, no padrão do site institucional, com acesso ao Espaço Fornecedor. */
+/** Página pública, no padrão do site institucional, com acesso ao Espaço Fornecedor (PT/EN). */
 export default function PaginaInicial() {
+  return (
+    <IdiomaProvider>
+      <Conteudo />
+    </IdiomaProvider>
+  );
+}
+
+function Conteudo() {
+  const { textos } = useIdioma();
   return (
     <div className="flex min-h-screen flex-col bg-white">
       <BarraSuperior />
@@ -19,7 +29,7 @@ export default function PaginaInicial() {
 
         <div className="bg-site-azul py-6 text-center">
           <p className="mx-auto w-fit border-b-[3px] border-site-amarelo px-2 pb-1 text-xl font-bold italic text-white md:text-3xl">
-            COCAPEC: cooperativa que impulsiona o café e o cooperado
+            {textos.faixa}
           </p>
         </div>
 

@@ -1,9 +1,7 @@
 import type { SeloJanela, StatusJanela } from "./types";
 
-/** Média histórica de chuva semanal na Alta Mogiana (início da estação chuvosa). */
 export const MEDIA_HISTORICA_SEMANAL_MM = 72;
 
-/** Moega 03 é pausada acima de 5 mm/h (Norma Climática de Segurança). */
 export const LIMITE_MOEGA_DESCOBERTA_MM_H = 5;
 
 export const STATUS_JANELA: Record<StatusJanela, { legenda: string; ponto: string; borda: string }> = {

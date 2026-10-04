@@ -17,6 +17,8 @@
   --color-site-verde: #4ea72e;
   --color-site-verde-escuro: #3f8f22;
   --color-site-amarelo: #f2b705;
+
+  --font-sans: var(--font-ubuntu), ui-sans-serif, system-ui, sans-serif;
 }
 
 /* Títulos no padrão do site: azul, itálico e sublinhado amarelo. */
@@ -26,7 +28,7 @@
   padding-bottom: 0.15rem;
   font-size: 1.75rem;
   line-height: 1.2;
-  font-weight: 900;
+  font-weight: 700;
   font-style: italic;
   letter-spacing: -0.01em;
   color: var(--color-site-azul);
@@ -35,7 +37,7 @@
 @utility titulo-secao {
   font-size: 1.25rem;
   line-height: 1.3;
-  font-weight: 800;
+  font-weight: 700;
   font-style: italic;
   color: var(--color-site-azul);
 }

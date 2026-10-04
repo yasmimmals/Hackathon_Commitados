@@ -78,7 +78,7 @@ export default function YardEntryForm({
               className="sr-only"
               onChange={(e) => {
                 onSelectNota(e.target.files?.[0] ?? null);
-                e.target.value = ""; // permite escolher o mesmo arquivo de novo
+                e.target.value = "";  
               }}
             />
           </label>
@@ -100,7 +100,7 @@ export default function YardEntryForm({
           {errors.notaFiscal && <p id="notaFiscal-erro" className="mt-1 text-xs text-red-600">{errors.notaFiscal}</p>}
         </div>
 
-        {/* Veículo e motorista */}
+        
         <div className="grid gap-4 md:grid-cols-3">
           <Campo id="plate" rotulo="Placa do Veículo" icone={Car} erro={errors.plate}>
             <input
@@ -141,7 +141,7 @@ export default function YardEntryForm({
           </Campo>
         </div>
 
-        {/* Acondicionamento e armazém */}
+        
         <div className="grid gap-4 md:grid-cols-2">
           <fieldset>
             <legend className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-gray-700">
@@ -197,7 +197,7 @@ export default function YardEntryForm({
           </Campo>
         </div>
 
-        {/* Declaração */}
+        
         <div>
           <label className="flex items-start gap-2 text-xs text-gray-600">
             <input
@@ -213,7 +213,7 @@ export default function YardEntryForm({
           {errors.acknowledged && <p id="acknowledged-erro" className="mt-1 text-xs text-red-600">{errors.acknowledged}</p>}
         </div>
 
-        {/* Rodapé */}
+      
         <footer className="flex flex-col-reverse gap-3 border-t border-gray-100 pt-4 sm:flex-row sm:items-center sm:justify-between">
           <button
             type="button"

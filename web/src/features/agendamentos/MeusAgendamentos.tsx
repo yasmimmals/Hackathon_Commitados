@@ -31,7 +31,6 @@ export default function MeusAgendamentos() {
   const [feedback, setFeedback] = useMensagemTemporaria(5000);
   const [erroAcao, setErroAcao] = useMensagemTemporaria(8000);
 
-  // Nova busca vinda do cabeçalho (?q=) substitui o filtro local.
   const [lastQuery, setLastQuery] = useState(query);
   if (query !== lastQuery) {
     setLastQuery(query);
@@ -76,7 +75,6 @@ export default function MeusAgendamentos() {
   const replace = (atualizado: ListedAppointment) =>
     setAppointments((list) => list.map((a) => (a.id === atualizado.id ? atualizado : a)));
 
-  // Ainda não há rota de atraso no backend: o aviso fica só nesta tela.
   const reportDelay = (appointment: ListedAppointment) => {
     replace({
       ...appointment,

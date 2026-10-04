@@ -7,7 +7,6 @@ type PainelProps = {
   children: ReactNode;
 };
 
-/** Cartão branco padrão das seções do boletim (cabeçalho + conteúdo). */
 export default function Painel({ titulo, descricao, acao, children }: PainelProps) {
   return (
     <section className="rounded-3xl bg-white p-5 shadow-sm">

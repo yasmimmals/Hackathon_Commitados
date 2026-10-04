@@ -1,7 +1,6 @@
-import type {
-  Agendamento, LocalFisico, MotivoNaoRecebimento, StatusAgendamento,
-} from "@/shared/services";
+import type { Agendamento, MotivoNaoRecebimento, StatusAgendamento } from "@/shared/services";
 import { ROTULO_ACONDICIONAMENTO } from "@/shared/utils/acondicionamento";
+import { ROTULO_LOCAL } from "@/shared/utils/locais";
 import type { Appointment, AppointmentAction, AppointmentStatus, ListedAppointment } from "../types";
 
 type Aba = ListedAppointment["tab"];
@@ -39,13 +38,6 @@ const TEXTO_STATUS: Record<StatusAgendamento, string> = {
   REAGENDADO: "Reagendado",
 };
 
-const ROTULO_LOCAL: Record<LocalFisico, string> = {
-  INSUMOS: "Armazém de Insumos",
-  ADUBO: "Pátio de Adubo",
-  MAQUINAS: "Armazém de Máquinas",
-  LOJA: "Loja",
-};
-
 const ROTULO_MOTIVO: Record<MotivoNaoRecebimento, string> = {
   SEM_VAGA: "Sem vaga no horário",
   CHUVA: "Chuva no dia da descarga",
@@ -56,9 +48,9 @@ const ROTULO_MOTIVO: Record<MotivoNaoRecebimento, string> = {
   OUTRO: "Outro motivo",
 };
 
-/** Status em que o fornecedor ainda pode cancelar (o backend exige 24h de antecedência). */
+
 const CANCELAVEIS = new Set<StatusAgendamento>(["PENDENTE", "APROVADO", "DESTINO_DEFINIDO"]);
-/** Aprovados que ainda não chegaram à portaria. */
+
 const ANTES_DA_CHEGADA = new Set<StatusAgendamento>(["APROVADO", "DESTINO_DEFINIDO"]);
 
 const hojeIso = () => {
@@ -71,7 +63,6 @@ const formatarDataIso = (iso: string) => iso.slice(0, 10).split("-").reverse().j
 const formatarHora = (isoDataHora: string) =>
   new Date(isoDataHora).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
 
-/** "28500.00" (kg) → "28,50" (t) */
 const formatarToneladas = (pesoKg: string) =>
   (Number(pesoKg) / 1000).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
@@ -118,7 +109,7 @@ function acoes(ag: Agendamento): AppointmentAction[] {
   return lista;
 }
 
-/** Converte o agendamento da API no card exibido na lista. */
+
 export function mapearAgendamento(ag: Agendamento): ListedAppointment {
   const tab = ABA_POR_STATUS[ag.status];
 
@@ -164,6 +155,6 @@ export function mapearAgendamento(ag: Agendamento): ListedAppointment {
   };
 }
 
-/** Mais recentes primeiro. */
+
 export const ordenarPorData = (a: Agendamento, b: Agendamento) =>
   `${b.data} ${b.horario}`.localeCompare(`${a.data} ${a.horario}`);

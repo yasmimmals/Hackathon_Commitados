@@ -4,6 +4,10 @@ import MeusAgendamentos from "@/features/agendamentos/MeusAgendamentos";
 import AgendarEntrega from "@/features/agendar-entrega/AgendarEntrega";
 import AgendarNaHora from "@/features/agendar-na-hora/AgendarNaHora";
 import Boletim from "@/features/boletim/Boletim";
+import AgendaDoDia from "@/features/armazem-recebimento/AgendaDoDia";
+import BoletimProducao from "@/features/boletim-producao/BoletimProducao";
+import FilaValidacao from "@/features/compras-validacao/FilaValidacao";
+import PainelGerencial from "@/features/painel-gerencial/PainelGerencial";
 import SuporteBalanca from "@/features/suporte-balanca/SuporteBalanca";
 import EmConstrucao from "@/shared/components/ui/EmConstrucao";
 import { TELAS_EM_CONSTRUCAO as TELAS } from "./telasEmConstrucao";
@@ -49,7 +53,7 @@ export const GRUPOS: Record<Perfil, GrupoRotas> = {
     rotulo: "Compras",
     base: "/compras",
     rotas: [
-      { path: "validacoes", element: <EmConstrucao {...TELAS.filaValidacao} />, menu: "Fila de Validação" },
+      { path: "validacoes", element: <FilaValidacao />, menu: "Fila de Validação" },
       { path: "validacoes/:id", element: <EmConstrucao {...TELAS.validarAgendamento} /> },
       { path: "historico", element: <EmConstrucao {...TELAS.historicoValidacoes} />, menu: "Histórico de Validações" },
     ],
@@ -58,11 +62,11 @@ export const GRUPOS: Record<Perfil, GrupoRotas> = {
     rotulo: "Responsável pelo Armazém",
     base: "/armazem",
     rotas: [
-      { path: "recebimento", element: <EmConstrucao {...TELAS.agendaDoDia} />, menu: "Recebimento" },
+      { path: "recebimento", element: <AgendaDoDia />, menu: "Recebimento" },
       { path: "recebimento/:id", element: <EmConstrucao {...TELAS.recebimentoCaminhao} /> },
       { path: "clima", element: <Boletim />, menu: "Boletim Agrometeorológico" },
-      { path: "boletim", element: <EmConstrucao {...TELAS.boletimProducao} />, menu: "Boletim de Produção" },
-      { path: "painel", element: <EmConstrucao {...TELAS.painelGerencial} />, menu: "Painel Gerencial" },
+      { path: "boletim", element: <BoletimProducao />, menu: "Boletim de Produção" },
+      { path: "painel", element: <PainelGerencial />, menu: "Painel Gerencial" },
     ],
   },
 };
