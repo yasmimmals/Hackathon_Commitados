@@ -76,3 +76,12 @@ TOKEN_VALIDADE_HORAS = int(os.getenv("TOKEN_VALIDADE_HORAS", "12"))
 # Cadastro de COMPRAS e ARMAZEM exige este código (o fornecedor se cadastra livremente)
 CODIGO_CADASTRO_INTERNO = os.getenv("CODIGO_CADASTRO_INTERNO", "COCAPEC-INTERNO")
 SENHA_MINIMA = 8
+
+# ---- Painel: "sobra ou falta chapa?" (estimativa com dados históricos) ----
+# Chapa-minutos que um caminhão exige, faixa tirada da seção 9 do dossiê:
+#   10 paletes: 2 chapas x 50 min (ciclo) = 100  | 20 big bags: 2 x 100 = 200
+#   200 sacas batidas: 5 x 40 = 200              | 28 t a granel batido: 5 x 50 = 250
+# O histórico não diz o acondicionamento: usamos a faixa inteira (cenário leve e pesado).
+CHAPA_MINUTOS_POR_CAMINHAO_LEVE = 120
+CHAPA_MINUTOS_POR_CAMINHAO_PESADO = 250
+FOLGA_PARA_SOBRA = 2     # chapas sobrando mesmo no cenário pesado para classificar como SOBRA
