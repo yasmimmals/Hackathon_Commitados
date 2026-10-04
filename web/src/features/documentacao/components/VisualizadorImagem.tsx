@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { ZoomIn, ZoomOut, Maximize2, Download, X, Eye } from "lucide-react";
+import { ZoomIn, ZoomOut, Maximize2, Download, X, Eye, RotateCcw } from "lucide-react";
 
 type Props = {
   src: string;
@@ -27,37 +27,35 @@ export default function VisualizadorImagem({
     setPosicao({ x: 0, y: 0 });
   }, []);
 
-  const ajustarLargura = useCallback(() => {
-    if (containerRef.current) {
-      setZoom(1.5);
-      setPosicao({ x: 0, y: 0 });
-    }
+  const aplicarZoomReal = useCallback(() => {
+    setZoom(1.8);
+    setPosicao({ x: 0, y: 0 });
   }, []);
 
-  const handleZoomIn = () => setZoom((z) => Math.min(z + 0.3, 5));
-  const handleZoomOut = () => setZoom((z) => Math.max(z - 0.3, 0.5));
+  const handleZoomIn = () => setZoom((z) => Math.min(Number((z + 0.3).toFixed(1)), 5));
+  const handleZoomOut = () => setZoom((z) => Math.max(Number((z - 0.3).toFixed(1)), 0.4));
 
-  // Fechar com tecla ESC
   useEffect(() => {
     if (!aberto) return;
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") setAberto(false);
+      if (e.key === "+" || e.key === "=") handleZoomIn();
+      if (e.key === "-" || e.key === "_") handleZoomOut();
+      if (e.key === "0") resetarZoom();
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [aberto]);
+  }, [aberto, resetarZoom]);
 
-  // Roda do mouse para zoom
   const handleWheel = (e: React.WheelEvent) => {
     e.preventDefault();
     if (e.deltaY < 0) {
-      setZoom((z) => Math.min(z + 0.2, 5));
+      setZoom((z) => Math.min(Number((z + 0.2).toFixed(1)), 5));
     } else {
-      setZoom((z) => Math.max(z - 0.2, 0.5));
+      setZoom((z) => Math.max(Number((z - 0.2).toFixed(1)), 0.4));
     }
   };
 
-  // Arraste do mouse
   const handleMouseDown = (e: React.MouseEvent) => {
     setArrastando(true);
     setInicioArrasto({ x: e.clientX - posicao.x, y: e.clientY - posicao.y });
@@ -73,7 +71,6 @@ export default function VisualizadorImagem({
 
   const handleMouseUp = () => setArrastando(false);
 
-  // Arraste por toque (mobile)
   const handleTouchStart = (e: React.TouchEvent) => {
     if (e.touches.length === 1) {
       setArrastando(true);
@@ -105,82 +102,100 @@ export default function VisualizadorImagem({
 
   return (
     <figure className="my-6">
-      {/* Miniatura clicável */}
+      {/* Container de Prévia no Documento */}
       <div
         onClick={() => {
           resetarZoom();
           setAberto(true);
         }}
-        className={`group relative cursor-zoom-in overflow-hidden rounded-xl border border-gray-200 bg-white p-2 shadow-sm transition-all hover:border-site-azul hover:shadow-md ${larguraMaximaPreview}`}
+        className={`group relative flex justify-center cursor-zoom-in overflow-hidden rounded-2xl border border-gray-200 bg-white p-3 shadow-sm transition-all hover:border-site-azul hover:shadow-md ${larguraMaximaPreview}`}
       >
         <img
           src={src}
           alt={alt}
           onError={() => setErroCarregamento(true)}
-          className="max-h-[500px] w-full rounded-lg object-contain"
+          className="max-h-[620px] w-auto max-w-full rounded-xl object-contain shadow-xs transition-transform duration-200 group-hover:scale-[1.01]"
         />
-        <div className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 transition-opacity group-hover:opacity-100">
-          <span className="inline-flex items-center gap-2 rounded-full bg-white/95 px-4 py-2 text-xs font-bold text-site-azul shadow-lg">
-            <Eye className="h-4 w-4" /> Clique para ampliar e interagir
+        <div className="absolute inset-0 flex items-center justify-center bg-black/25 opacity-0 transition-opacity group-hover:opacity-100 backdrop-blur-2xs">
+          <span className="inline-flex items-center gap-2 rounded-full bg-white/95 px-5 py-2.5 text-xs font-bold text-site-azul shadow-xl">
+            <Eye className="h-4 w-4" /> Clique para abrir em tela cheia com zoom
           </span>
         </div>
       </div>
 
       {legenda && (
-        <figcaption className="mt-2 text-center text-xs text-gray-600">
+        <figcaption className="mt-2 text-center text-xs text-gray-600 font-medium">
           {legenda}
         </figcaption>
       )}
 
-      {/* Modal de Zoom */}
+      {/* Modal em Tela Cheia com Zoom e Navegação Fluida */}
       {aberto && (
         <div
           role="dialog"
           aria-modal="true"
-          className="fixed inset-0 z-50 flex flex-col bg-black/90 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex flex-col bg-slate-950/90 backdrop-blur-sm select-none"
         >
-          {/* Barra de Ferramentas Superior */}
-          <header className="flex items-center justify-between border-b border-gray-800 bg-gray-950/80 px-4 py-3 text-white">
+          {/* Header da Barra de Ferramentas */}
+          <header className="flex items-center justify-between border-b border-gray-800 bg-gray-900/90 px-4 py-3 text-white">
             <div className="flex items-center gap-3">
               <h2 className="max-w-md truncate text-sm font-semibold">{legenda || alt}</h2>
-              <span className="rounded bg-gray-800 px-2 py-0.5 text-xs text-gray-300">
+              <span className="rounded-md bg-gray-800 px-2.5 py-0.5 text-xs font-mono font-bold text-sky-400">
                 {Math.round(zoom * 100)}%
               </span>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 sm:gap-2">
               <button
                 type="button"
                 onClick={handleZoomOut}
                 title="Reduzir zoom (-)"
-                className="rounded-lg p-2 hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-site-verde"
+                className="rounded-lg p-2 hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-site-azul"
               >
                 <ZoomOut className="h-4 w-4" />
+                <span className="sr-only">Reduzir</span>
               </button>
+
               <button
                 type="button"
                 onClick={handleZoomIn}
                 title="Aumentar zoom (+)"
-                className="rounded-lg p-2 hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-site-verde"
+                className="rounded-lg p-2 hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-site-azul"
               >
                 <ZoomIn className="h-4 w-4" />
+                <span className="sr-only">Aumentar</span>
               </button>
+
               <button
                 type="button"
-                onClick={ajustarLargura}
-                title="Ajustar à tela"
-                className="rounded-lg p-2 hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-site-verde"
+                onClick={resetarZoom}
+                title="Tamanho Normal (100%)"
+                className="rounded-lg p-2 hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-site-azul"
               >
-                <Maximize2 className="h-4 w-4" />
+                <RotateCcw className="h-4 w-4" />
+                <span className="sr-only">Resetar zoom</span>
               </button>
+
+              <button
+                type="button"
+                onClick={aplicarZoomReal}
+                title="Zoom de Alta Definição (180%)"
+                className="hidden sm:inline-flex items-center gap-1 rounded-lg bg-gray-800 px-2.5 py-1.5 text-xs font-semibold hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-site-azul"
+              >
+                <Maximize2 className="h-3.5 w-3.5" />
+                HD 180%
+              </button>
+
               <a
                 href={src}
                 download
-                title="Baixar imagem original"
+                title="Baixar imagem em resolução máxima"
                 className="rounded-lg p-2 hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-site-verde"
               >
                 <Download className="h-4 w-4" />
+                <span className="sr-only">Baixar</span>
               </a>
+
               <button
                 type="button"
                 onClick={() => setAberto(false)}
@@ -188,11 +203,12 @@ export default function VisualizadorImagem({
                 className="ml-2 rounded-lg bg-red-600/80 p-2 hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-white"
               >
                 <X className="h-4 w-4" />
+                <span className="sr-only">Fechar</span>
               </button>
             </div>
           </header>
 
-          {/* Área Interativa com Pan & Zoom */}
+          {/* Área de Visualização e Panning com fundo branco contrastante */}
           <div
             ref={containerRef}
             onWheel={handleWheel}
@@ -202,27 +218,28 @@ export default function VisualizadorImagem({
             onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
-            className="flex-1 cursor-grab overflow-hidden active:cursor-grabbing"
+            className="flex-1 cursor-grab overflow-hidden active:cursor-grabbing flex items-center justify-center p-4"
             style={{ touchAction: "none" }}
           >
             <div
-              className="flex h-full w-full items-center justify-center transition-transform duration-75 ease-out"
+              className="inline-block rounded-2xl bg-white p-3 md:p-6 shadow-2xl transition-transform duration-75 ease-out select-none border border-gray-200"
               style={{
                 transform: `translate(${posicao.x}px, ${posicao.y}px) scale(${zoom})`,
+                transformOrigin: "center center",
               }}
             >
               <img
                 src={src}
                 alt={alt}
                 draggable={false}
-                className="max-h-[85vh] max-w-[90vw] select-none rounded shadow-2xl"
+                className="max-h-[80vh] max-w-[88vw] object-contain select-none"
               />
             </div>
           </div>
 
-          {/* Rodapé com dicas */}
-          <footer className="border-t border-gray-800 bg-gray-950/80 px-4 py-2 text-center text-xs text-gray-400">
-            Use a roda do mouse para dar zoom, clique e arraste para navegar pelo diagrama ou pressione <strong>Esc</strong> para fechar.
+          {/* Rodapé com Dicas */}
+          <footer className="border-t border-gray-800 bg-gray-900/90 px-4 py-2 text-center text-xs text-gray-400">
+            Dica: use a <strong>roda do mouse</strong> ou os botões de <strong>+ e -</strong> para ampliar. Clique e arraste para explorar o diagrama em detalhes.
           </footer>
         </div>
       )}
