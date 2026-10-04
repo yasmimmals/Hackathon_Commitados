@@ -26,8 +26,8 @@ export default function StatusTabs({ tabs, active, onChange, search, onSearch }:
   };
 
   return (
-    <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-      <div role="tablist" aria-label="Filtrar agendamentos" onKeyDown={handleKeyDown} className="flex gap-1 overflow-x-auto pb-1">
+    <div className="mb-5 flex min-w-0 flex-col gap-3 md:flex-row md:items-center md:justify-between">
+      <div role="tablist" aria-label="Filtrar agendamentos" onKeyDown={handleKeyDown} className="flex min-w-0 gap-1 overflow-x-auto pb-1">
         {tabs.map((tab) => {
           const isActive = tab.key === active;
           return (

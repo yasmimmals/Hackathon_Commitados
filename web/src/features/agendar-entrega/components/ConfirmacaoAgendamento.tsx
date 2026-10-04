@@ -16,7 +16,7 @@ export default function ConfirmacaoAgendamento({ confirmada, onNovo }: Confirmac
   return (
     <section className="mx-auto max-w-lg rounded-xl border border-gray-200 bg-white p-6 text-center shadow-sm">
       <CheckCircle2 className="mx-auto h-12 w-12 text-marca" aria-hidden />
-      <h1 ref={titulo} tabIndex={-1} className="mt-3 text-xl font-extrabold text-gray-900 focus:outline-none">
+      <h1 ref={titulo} tabIndex={-1} className="titulo-secao mt-3 text-xl focus:outline-none">
         Agendamento enviado para validação
       </h1>
       <p className="mt-1 text-sm text-gray-600">

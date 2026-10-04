@@ -21,7 +21,7 @@ export default function LayoutPerfil() {
   return (
     <div className="flex min-h-screen flex-col bg-fundo">
       <Header />
-      <main className="mx-auto w-full max-w-[1440px] flex-1 px-4 py-6 sm:px-[22px]">
+      <main className="mx-auto w-full max-w-[1300px] flex-1 px-4 py-6">
         <Outlet />
       </main>
       <Footer />

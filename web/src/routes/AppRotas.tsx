@@ -1,6 +1,7 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/features/auth/AuthContext";
 import Login from "@/features/auth/Login";
+import PaginaInicial from "@/features/inicio/PaginaInicial";
 import type { Perfil } from "@/features/auth/types";
 import LayoutPerfil from "@/shared/components/layout/LayoutPerfil";
 import RotaProtegida from "./RotaProtegida";
@@ -20,7 +21,8 @@ export default function AppRotas() {
     <BrowserRouter>
       <AuthProvider>
         <Routes>
-          <Route path="/" element={<Login />} />
+          <Route path="/" element={<PaginaInicial />} />
+          <Route path="/login" element={<Login />} />
 
           {(Object.keys(GRUPOS) as Perfil[]).map((perfil) => {
             const { base, rotas } = GRUPOS[perfil];

@@ -1,20 +1,27 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { validarNotaFiscal } from "@/features/agendar-entrega/utils/agendamento";
 import MensagemStatus from "@/shared/components/ui/MensagemStatus";
 import { useMensagemTemporaria } from "@/shared/hooks/useMensagemTemporaria";
+import { agendarBalcao, enviarNotaFiscal, ErroApi, mensagemDeErro } from "@/shared/services";
+import { ACONDICIONAMENTO_API } from "@/shared/utils/acondicionamento";
 import { focarPrimeiroErro, limparErros } from "@/shared/utils/formulario";
 import PageHeader from "./components/PageHeader";
 import WarehouseAvailability from "./components/WarehouseAvailability";
 import YardEntryForm from "./components/YardEntryForm";
-import { ARMAZENS_MOCK, ENTRADA_VAZIA, POSICAO_INICIAL_FILA } from "./data/armazensMock";
+import { ARMAZENS_MOCK, ENTRADA_VAZIA } from "./data/armazensMock";
 import type { Packaging, WarehouseId, YardEntry, YardEntryErrors } from "./types";
-import { gerarChaveNfeAleatoria, validarEntrada } from "./utils/entradaPatio";
+import { janelaAtual, validarEntrada } from "./utils/entradaPatio";
 
 export default function AgendarNaHora() {
   const [warehouses, setWarehouses] = useState(ARMAZENS_MOCK);
   const [entry, setEntry] = useState(ENTRADA_VAZIA);
   const [errors, setErrors] = useState<YardEntryErrors>({});
   const [feedback, setFeedback] = useMensagemTemporaria();
-  const [queuePosition, setQueuePosition] = useState(POSICAO_INICIAL_FILA);
+  const [erroEnvio, setErroEnvio] = useMensagemTemporaria(10000);
+  const [lendoNota, setLendoNota] = useState(false);
+  const [enviando, setEnviando] = useState(false);
+  // Arquivo da leitura em andamento: respostas de um arquivo já trocado são ignoradas.
+  const arquivoEmLeitura = useRef<File | null>(null);
 
   const change = (patch: Partial<YardEntry>) => {
     setEntry((e) => ({ ...e, ...patch }));
@@ -37,48 +44,100 @@ export default function AgendarNaHora() {
     if (target) change({ packaging: key, warehouse: target.id });
   };
 
-  const simulateScan = () => {
-    change({ nfeKey: gerarChaveNfeAleatoria() });
-    setFeedback("Código de barras da NF-e lido com sucesso.");
+  // A NF é lida pelo backend assim que anexada: o encaixe usa o id dela.
+  const selectNota = (arquivo: File | null) => {
+    const erro = arquivo ? validarNotaFiscal(arquivo) : undefined;
+    change({ notaFiscal: null });
+    arquivoEmLeitura.current = erro ? null : arquivo;
+    setLendoNota(!erro && !!arquivo);
+    if (erro) setErrors((errs) => ({ ...errs, notaFiscal: erro }));
+    if (erro || !arquivo) return;
+
+    enviarNotaFiscal(arquivo).then(
+      (nota) => {
+        if (arquivoEmLeitura.current !== arquivo) return;
+        setLendoNota(false);
+        change({ notaFiscal: nota });
+        if (nota.alertas.length) setFeedback(`Nota lida com alertas: ${nota.alertas.join(" ")}`);
+      },
+      (falha) => {
+        if (arquivoEmLeitura.current !== arquivo) return;
+        setLendoNota(false);
+        setErrors((errs) => ({ ...errs, notaFiscal: mensagemDeErro(falha) }));
+      },
+    );
   };
 
-  const submit = () => {
+  const submit = async () => {
+    if (enviando) return;
     const found = validarEntrada(entry);
+    if (!found.notaFiscal && lendoNota) found.notaFiscal = "Aguarde a leitura da nota fiscal.";
     setErrors(found);
-    if (focarPrimeiroErro(found)) return;
+    setErroEnvio("");
+    if (focarPrimeiroErro(found) || !entry.notaFiscal) return;
 
     const w = warehouses.find((x) => x.id === entry.warehouse)!;
     if (w.slots === 0) {
-      setFeedback(`O armazém ${w.name} ficou sem vagas. Escolha outro armazém.`);
+      setErroEnvio(`O armazém ${w.name} ficou sem vagas. Escolha outro armazém.`);
+      return;
+    }
+    const horario = janelaAtual();
+    if (!horario) {
+      setErroEnvio("O recebimento de hoje já foi encerrado. Agende a entrega para outro dia.");
       return;
     }
 
-    setWarehouses((list) => list.map((x) => (x.id === w.id ? { ...x, slots: x.slots - 1 } : x)));
-    setFeedback(`Veículo ${entry.plate} na fila: ${queuePosition}º para ${w.name} (${w.dock}). O motorista será chamado no WhatsApp ${entry.whatsapp}.`);
-    setQueuePosition((p) => p + 1);
+    setEnviando(true);
+    try {
+      const agendamento = await agendarBalcao({
+        nota_fiscal_id: entry.notaFiscal.id,
+        horario,
+        acondicionamento: ACONDICIONAMENTO_API[entry.packaging],
+      });
+      setWarehouses((list) => list.map((x) => (x.id === w.id ? { ...x, slots: x.slots - 1 } : x)));
+      setFeedback(
+        `Veículo ${entry.plate} registrado no encaixe #AG-${agendamento.id} (janela das ${horario}h, ${w.name} – ${w.dock}). ` +
+          `Aguardando validação da Mesa de Compras; o motorista será chamado no WhatsApp ${entry.whatsapp}.`,
+      );
 
-    // Prepara o próximo encaixe já apontando para um armazém que ainda tenha vaga.
-    const nextWarehouse = w.slots - 1 > 0 ? w : warehouses.find((x) => x.id !== w.id && x.slots > 0);
-    setEntry({
-      ...ENTRADA_VAZIA,
-      warehouse: nextWarehouse?.id ?? w.id,
-      packaging: nextWarehouse?.accepts[0] ?? ENTRADA_VAZIA.packaging,
-    });
+      // Prepara o próximo encaixe já apontando para um armazém que ainda tenha vaga.
+      const nextWarehouse = w.slots - 1 > 0 ? w : warehouses.find((x) => x.id !== w.id && x.slots > 0);
+      arquivoEmLeitura.current = null;
+      setEntry({
+        ...ENTRADA_VAZIA,
+        warehouse: nextWarehouse?.id ?? w.id,
+        packaging: nextWarehouse?.accepts[0] ?? ENTRADA_VAZIA.packaging,
+      });
+    } catch (falha) {
+      const mensagem = mensagemDeErro(falha);
+      if (falha instanceof ErroApi && falha.codigo.startsWith("NOTA_")) {
+        setErrors({ notaFiscal: mensagem });
+        focarPrimeiroErro({ notaFiscal: mensagem });
+      } else {
+        // SEM_VAGA_BALCAO: o backend já registrou o não recebimento (número na mensagem).
+        setErroEnvio(mensagem);
+      }
+    } finally {
+      setEnviando(false);
+    }
   };
 
   return (
     <div>
       <PageHeader />
       <MensagemStatus mensagem={feedback} />
+      <MensagemStatus mensagem={erroEnvio} tom="erro" />
       <WarehouseAvailability warehouses={warehouses} selected={entry.warehouse} onSelect={selectWarehouse} />
       <YardEntryForm
         value={entry}
         errors={errors}
         warehouses={warehouses}
+        lendoNota={lendoNota}
+        enviando={enviando}
+        onSelectNota={selectNota}
         onChange={change}
         onSelectWarehouse={selectWarehouse}
         onSelectPackaging={selectPackaging}
-        onSimulateScan={simulateScan}
         onReceipt={() => setFeedback("\"Comprovante de não recebimento\" estará disponível em breve.")}
         onSubmit={submit}
       />

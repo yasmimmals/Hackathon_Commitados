@@ -2,14 +2,21 @@ import { CloudDrizzle, CloudLightning, CloudRain, CloudSun, Sun } from "lucide-r
 import type { IconeClima as TipoIcone } from "../types";
 
 const icones = {
-  sol: { Icone: Sun, cor: "text-amber-500" },
-  nublado: { Icone: CloudSun, cor: "text-gray-500" },
-  garoa: { Icone: CloudDrizzle, cor: "text-sky-500" },
-  chuva: { Icone: CloudRain, cor: "text-sky-600" },
-  tempestade: { Icone: CloudLightning, cor: "text-indigo-600" },
+  sol: { Icone: Sun, cor: "text-amber-500", corClara: "text-amber-300" },
+  nublado: { Icone: CloudSun, cor: "text-gray-500", corClara: "text-white" },
+  garoa: { Icone: CloudDrizzle, cor: "text-sky-500", corClara: "text-sky-100" },
+  chuva: { Icone: CloudRain, cor: "text-sky-600", corClara: "text-sky-100" },
+  tempestade: { Icone: CloudLightning, cor: "text-indigo-600", corClara: "text-amber-200" },
 } satisfies Record<TipoIcone, unknown>;
 
-export default function IconeClima({ tipo }: { tipo: TipoIcone }) {
-  const { Icone, cor } = icones[tipo];
-  return <Icone className={`h-6 w-6 ${cor}`} aria-hidden />;
+type IconeClimaProps = {
+  tipo: TipoIcone;
+  /** Para fundos escuros (cards azuis da previsão). */
+  claro?: boolean;
+  className?: string;
+};
+
+export default function IconeClima({ tipo, claro = false, className = "h-6 w-6" }: IconeClimaProps) {
+  const { Icone, cor, corClara } = icones[tipo];
+  return <Icone className={`${className} ${claro ? corClara : cor}`} aria-hidden />;
 }

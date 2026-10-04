@@ -19,7 +19,7 @@ export default function Secao({ numero, titulo, descricao, aside, children }: Se
             {numero}
           </span>
           <div>
-            <h2 id={idTitulo} className="text-base font-bold text-gray-900">{titulo}</h2>
+            <h2 id={idTitulo} className="titulo-secao text-lg">{titulo}</h2>
             {descricao && <p className="text-xs text-gray-500">{descricao}</p>}
           </div>
         </div>

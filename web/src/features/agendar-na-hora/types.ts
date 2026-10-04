@@ -1,3 +1,4 @@
+import type { NotaFiscal } from "@/shared/services";
 import type { ErrosFormulario } from "@/shared/utils/formulario";
 
 export type WarehouseId = "adubo" | "insumos" | "moega";
@@ -16,7 +17,7 @@ export interface Warehouse {
 }
 
 export interface YardEntry {
-  nfeKey: string;             // chave de acesso com 44 dígitos
+  notaFiscal: NotaFiscal | null; // NF (XML ou PDF) já lida pelo backend
   plate: string;
   driver: string;
   whatsapp: string;

@@ -4,7 +4,7 @@ export interface AppointmentAction {
   label: string;
   variant?: "ghost" | "outline" | "danger" | "primary";
   icon?: "alert" | "x" | "edit" | "calendar" | "eye" | "ticket" | "receipt";
-  kind?: "delay" | "cancel";  // ações tratadas pela lista (MeusAgendamentos)
+  kind?: "delay" | "cancel" | "reschedule";  // ações tratadas pela lista (MeusAgendamentos)
   onClick?: () => void;
 }
 
