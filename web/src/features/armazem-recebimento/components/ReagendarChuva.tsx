@@ -37,13 +37,10 @@ export default function ReagendarChuva({ agendamento: ag, enviando, executar, ao
           estiver esperando, e não conta no limite de caminhões do horário. A aprovação do Compras e o destino são mantidos.
         </span>
       </p>
-      <div className="grid gap-2 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
+      <div className="grid gap-3 sm:grid-cols-2">
         <label className="text-xs font-semibold text-gray-700">
           Nova data
           <input type="date" value={data} onChange={(e) => setData(e.target.value)} className={CLASSE_CAMPO} />
-          <span className="mt-1 block text-[11px] font-normal text-gray-500">
-            Em branco = próximo dia útil (sem sábado, domingo e feriado)
-          </span>
         </label>
         <label className="text-xs font-semibold text-gray-700">
           Horário
@@ -52,17 +49,17 @@ export default function ReagendarChuva({ agendamento: ag, enviando, executar, ao
               <option key={j.horario} value={j.horario}>{j.horario}h</option>
             ))}
           </select>
-          <span className="mt-1 block text-[11px] font-normal text-transparent" aria-hidden>.</span>
         </label>
-        <div className="flex gap-2 sm:pb-5">
-          <button type="button" onClick={aoCancelar} className={`${CLASSE_BOTAO} text-gray-700 hover:bg-gray-200 focus-visible:ring-gray-400`}>
-            Voltar
-          </button>
-          <button type="submit" disabled={enviando} className={`${CLASSE_BOTAO} bg-site-azul text-white hover:bg-site-azul-escuro focus-visible:ring-site-azul`}>
-            {enviando ? <LoaderCircle className="h-3.5 w-3.5 animate-spin" aria-hidden /> : <CloudRain className="h-3.5 w-3.5" aria-hidden />}
-            Confirmar reagendamento
-          </button>
-        </div>
+      </div>
+      <p className="text-[11px] text-gray-600">Deixe a data em branco para usar o próximo dia útil (sem sábado, domingo e feriado).</p>
+      <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+        <button type="button" onClick={aoCancelar} className={`${CLASSE_BOTAO} text-gray-700 hover:bg-gray-200 focus-visible:ring-gray-400`}>
+          Voltar
+        </button>
+        <button type="submit" disabled={enviando} className={`${CLASSE_BOTAO} bg-site-azul text-white hover:bg-site-azul-escuro focus-visible:ring-site-azul`}>
+          {enviando ? <LoaderCircle className="h-3.5 w-3.5 animate-spin" aria-hidden /> : <CloudRain className="h-3.5 w-3.5" aria-hidden />}
+          Confirmar reagendamento
+        </button>
       </div>
     </form>
   );

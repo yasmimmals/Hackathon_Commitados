@@ -86,6 +86,8 @@ export type Agendamento = {
   atraso_minutos?: number | null;
   atraso_motivo?: string | null;
   atraso_informado_em?: DataHoraISO | null;
+  observacao_nao_recebimento?: string | null;
+  nao_recebido_em?: DataHoraISO | null;
   criado_em: DataHoraISO;
   cancelado_em: DataHoraISO | null;
   descargas: Descarga[];

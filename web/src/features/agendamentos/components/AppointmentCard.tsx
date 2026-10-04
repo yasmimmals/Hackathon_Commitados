@@ -166,11 +166,11 @@ export default function AppointmentCard({
       )}
 
       {(footerInfo || actions.length > 0) && (
-        <footer className="mt-4 flex flex-col gap-3 border-t border-gray-100 pt-3 sm:flex-row sm:items-center sm:justify-between">
+        <footer className="mt-4 flex flex-col gap-3 border-t border-gray-100 pt-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
           {footerInfo ? (
-            <p className="flex items-center gap-2 text-xs text-gray-600">
+            <p className="flex min-w-0 flex-1 items-start gap-2 text-xs text-gray-600">
               <span
-                className={`h-2 w-2 rounded-full ${FOOTER_TONE[footerTone]}`}
+                className={`mt-1 h-2 w-2 shrink-0 rounded-full ${FOOTER_TONE[footerTone]}`}
                 aria-hidden
               />
               {footerInfo}
@@ -180,7 +180,7 @@ export default function AppointmentCard({
           )}
 
           {actions.length > 0 && (
-            <div className="flex flex-wrap gap-2">
+            <div className="flex shrink-0 gap-2 self-end sm:self-center">
               {actions.map((action) => {
                 const ActionIcon = action.icon
                   ? ACTION_ICONS[action.icon]
@@ -190,7 +190,7 @@ export default function AppointmentCard({
                     key={action.label}
                     type="button"
                     onClick={action.onClick ?? (() => onAction?.(action))}
-                    className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-1 ${ACTION_VARIANTS[action.variant ?? "ghost"]}`}
+                    className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-md px-3 py-1.5 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-1 ${ACTION_VARIANTS[action.variant ?? "ghost"]}`}
                   >
                     {ActionIcon && (
                       <ActionIcon className="h-3.5 w-3.5" aria-hidden />

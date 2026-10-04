@@ -14,7 +14,7 @@ from app.core.auth import exigir_perfil
 from app.core.database import get_db
 from app.models import LocalFisico, PerfilUsuario, Usuario
 from app.schemas.agendamento import (
-    AgendamentoOut, BalcaoCreate, DestinosIn, EntradaIn, Programacao, ReagendamentoChuvaIn,
+    AgendamentoOut, BalcaoCreate, DestinosIn, EntradaIn, NaoRecebimentoIn, Programacao, ReagendamentoChuvaIn,
     SaidaIn,
 )
 from app.services import agendamento_service as svc
@@ -75,6 +75,12 @@ def saida(ag_id: int, dados: SaidaIn, db: Session = Depends(get_db)):
 @router.post("/agendamentos/{ag_id}/nao-compareceu", response_model=AgendamentoOut, dependencies=_SO_ARMAZEM)
 def nao_compareceu(ag_id: int, db: Session = Depends(get_db)):
     return out(svc.marcar_nao_compareceu(db, ag_id))
+
+
+@router.post("/agendamentos/{ag_id}/nao-receber", response_model=AgendamentoOut, dependencies=_SO_ARMAZEM)
+def nao_receber(ag_id: int, dados: NaoRecebimentoIn, db: Session = Depends(get_db)):
+    """Recusa o caminhão: divergência na conferência ou outro motivo descrito pelo responsável."""
+    return out(svc.registrar_nao_recebimento(db, ag_id, dados))
 
 
 @router.post("/agendamentos/{ag_id}/reagendar-chuva", response_model=AgendamentoOut, dependencies=_SO_ARMAZEM)

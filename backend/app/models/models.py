@@ -220,6 +220,9 @@ class Agendamento(Base):
     atraso_motivo = Column(Text)
     atraso_informado_em = Column(DateTime(timezone=True))
 
+    observacao_nao_recebimento = Column(Text)
+    nao_recebido_em = Column(DateTime(timezone=True))
+
     criado_em = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     cancelado_em = Column(DateTime(timezone=True))   # para auditar a regra das 24h
 

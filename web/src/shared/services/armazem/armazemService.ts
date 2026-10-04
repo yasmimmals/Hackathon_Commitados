@@ -59,6 +59,14 @@ export async function marcarNaoCompareceu(id: number): Promise<Agendamento> {
   return data;
 }
 
+export async function naoReceber(
+  id: number,
+  dados: { motivo: "DIVERGENCIA_NF_PEDIDO" | "OUTRO"; descricao: string },
+): Promise<Agendamento> {
+  const { data } = await api.post<Agendamento>(`${BASE}/agendamentos/${id}/nao-receber`, dados);
+  return data;
+}
+
 export async function reagendarPorChuva(id: number, dados: ReagendamentoChuvaIn = {}): Promise<Agendamento> {
   const { data } = await api.post<Agendamento>(`${BASE}/agendamentos/${id}/reagendar-chuva`, dados);
   return data;

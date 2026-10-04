@@ -330,6 +330,18 @@ def cancelar(db: Session, ag_id: int, agora: Optional[datetime] = None) -> Agend
 
 # ------------------------------------------------------------------ compras
 
+def registrar_nao_recebimento(db: Session, ag_id: int, dados, agora: Optional[datetime] = None) -> Agendamento:
+    """Armazém recusa o caminhão (divergência na conferência ou outro motivo descrito)."""
+    ag = buscar(db, ag_id, travar=True)
+    _exigir_status(ag, {St.APROVADO, St.DESTINO_DEFINIDO, St.NA_FILA, St.EM_DESCARGA}, "registrar não recebimento")
+    ag.status = St.REJEITADO
+    ag.motivo_nao_recebimento = dados.motivo
+    ag.observacao_nao_recebimento = dados.descricao
+    ag.nao_recebido_em = _agora(agora)
+    db.commit()
+    return buscar(db, ag_id)
+
+
 def informar_atraso(db: Session, ag_id: int, dados, agora: Optional[datetime] = None) -> Agendamento:
     """Fornecedor avisa que o caminhão vai atrasar; o aviso aparece para o armazém."""
     ag = buscar(db, ag_id, travar=True)

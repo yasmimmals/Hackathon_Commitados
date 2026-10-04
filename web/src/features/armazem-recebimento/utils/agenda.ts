@@ -18,6 +18,9 @@ export const TEXTO_STATUS: Record<StatusAgendamento, string> = {
 export function autorizacao(ag: Agendamento): Autorizacao {
   if (ag.status === "PENDENTE") return { tom: "aguardando", rotulo: "Aguardando autorização de Compras" };
   if (ag.status === "REJEITADO") {
+    if (ag.nao_recebido_em) {
+      return { tom: "negada", rotulo: "Não recebido pelo armazém", detalhe: ag.observacao_nao_recebimento ?? undefined };
+    }
     return { tom: "negada", rotulo: "Não autorizado", detalhe: ag.observacao_compras ?? undefined };
   }
   if (ag.status === "CANCELADO") return { tom: "neutra", rotulo: "Cancelado pelo fornecedor" };

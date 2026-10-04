@@ -148,10 +148,12 @@ export function mapearAgendamento(ag: Agendamento): ListedAppointment {
     notice:
       ag.status === "REJEITADO"
         ? {
-            author: `Mesa de Compras${ag.analisado_por ? ` (${ag.analisado_por})` : ""}`,
+            author: ag.nao_recebido_em
+              ? "Equipe do armazém"
+              : `Mesa de Compras${ag.analisado_por ? ` (${ag.analisado_por})` : ""}`,
             reference: nf,
             message:
-              ag.observacao_compras ??
+              (ag.nao_recebido_em ? ag.observacao_nao_recebimento : ag.observacao_compras) ??
               (ag.motivo_nao_recebimento ? ROTULO_MOTIVO[ag.motivo_nao_recebimento] : "Agendamento recusado."),
           }
         : undefined,

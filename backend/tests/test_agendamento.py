@@ -414,3 +414,26 @@ def test_aviso_de_atraso_valida_minutos():
     from app.schemas.agendamento import AtrasoIn
     with pytest.raises(ValidationError):
         AtrasoIn(minutos=0)
+
+
+def test_armazem_nao_recebe_caminhao_na_fila_com_motivo(db, agendar, destinar):
+    from app.schemas.agendamento import NaoRecebimentoIn
+    ag = destinar(aprovar(db, agendar(A.PALETIZADO)), L.INSUMOS)
+    svc.registrar_chegada(db, ag.id)
+    ag = svc.registrar_nao_recebimento(
+        db, ag.id, NaoRecebimentoIn(motivo=M.OUTRO, descricao="  Palete quebrado, carga avariada "), agora=dt(7, 9, 0))
+    assert ag.status == S.REJEITADO and ag.motivo_nao_recebimento == M.OUTRO
+    assert ag.observacao_nao_recebimento == "Palete quebrado, carga avariada" and ag.nao_recebido_em == dt(7, 9, 0)
+
+
+def test_nao_recebimento_do_armazem_valida_motivo_e_status(db, agendar):
+    from pydantic import ValidationError
+    from app.schemas.agendamento import NaoRecebimentoIn
+    with pytest.raises(ValidationError):
+        NaoRecebimentoIn(motivo=M.SEM_VAGA, descricao="não cabe")
+    with pytest.raises(ValidationError):
+        NaoRecebimentoIn(motivo=M.OUTRO, descricao="   ")
+    ag = agendar(A.PALETIZADO)
+    with pytest.raises(RegraNegocioError) as e:
+        svc.registrar_nao_recebimento(db, ag.id, NaoRecebimentoIn(motivo=M.DIVERGENCIA_NF_PEDIDO, descricao="Itens não batem"))
+    assert codigo_do_erro(e) == "TRANSICAO_INVALIDA"

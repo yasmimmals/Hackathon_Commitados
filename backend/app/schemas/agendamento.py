@@ -150,6 +150,27 @@ class DestinosIn(BaseModel):
     destinos: list[DestinoIn] = Field(min_length=1)
 
 
+class NaoRecebimentoIn(BaseModel):
+    """Recusa feita pelo armazém: divergência encontrada na conferência ou outro motivo."""
+    motivo: MotivoNaoRecebimento = Field(description="DIVERGENCIA_NF_PEDIDO | OUTRO")
+    descricao: str = Field(min_length=5, max_length=300)
+
+    @field_validator("motivo")
+    @classmethod
+    def _motivo_do_armazem(cls, v: MotivoNaoRecebimento) -> MotivoNaoRecebimento:
+        if v not in (MotivoNaoRecebimento.DIVERGENCIA_NF_PEDIDO, MotivoNaoRecebimento.OUTRO):
+            raise ValueError("O armazém registra divergência entre nota e pedido ou outro motivo")
+        return v
+
+    @field_validator("descricao")
+    @classmethod
+    def _sem_espacos(cls, v: str) -> str:
+        v = v.strip()
+        if len(v) < 5:
+            raise ValueError("Descreva o motivo com pelo menos 5 caracteres")
+        return v
+
+
 class AtrasoIn(BaseModel):
     minutos: int = Field(ge=5, le=600)
     motivo: Optional[str] = Field(default=None, max_length=300)
@@ -215,6 +236,8 @@ class AgendamentoOut(BaseModel):
     atraso_minutos: Optional[int] = None
     atraso_motivo: Optional[str] = None
     atraso_informado_em: Optional[datetime] = None
+    observacao_nao_recebimento: Optional[str] = None
+    nao_recebido_em: Optional[datetime] = None
     criado_em: datetime
     cancelado_em: Optional[datetime]
     descargas: list[DescargaOut]
