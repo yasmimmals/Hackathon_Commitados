@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { TreePine } from "lucide-react";
 import LogoCocapec from "@/shared/components/ui/LogoCocapec";
+import { useIdioma } from "@/features/inicio/i18n";
 
 
 function SimboloCocapec({ className, tom }: { className: string; tom: "marca" | "claro" }) {
@@ -23,6 +24,7 @@ function SimboloCocapec({ className, tom }: { className: string; tom: "marca" | 
 }
 
 export default function LayoutAcesso({ children }: { children: ReactNode }) {
+  const { textos } = useIdioma();
   return (
     <div className="flex min-h-screen bg-[linear-gradient(135deg,#0a5aa4_0%,#2f86a8_45%,#4ea72e_100%)]">
       
@@ -35,8 +37,8 @@ export default function LayoutAcesso({ children }: { children: ReactNode }) {
           <span className="rounded-full bg-white p-5 shadow-2xl ring-8 ring-white/25">
             <SimboloCocapec tom="marca" className="h-40 w-40" />
           </span>
-          <p className="max-w-sm text-2xl font-bold italic drop-shadow">O melhor café está aqui</p>
-          <p className="max-w-xs text-sm text-white/85">Portal de agendamento e recebimento de cargas do Terminal Logístico Franca/SP</p>
+          <p className="max-w-sm text-2xl font-bold italic drop-shadow">{textos.layoutAcesso.slogan}</p>
+          <p className="max-w-xs text-sm text-white/85">{textos.layoutAcesso.subtitulo}</p>
         </div>
       </div>
 

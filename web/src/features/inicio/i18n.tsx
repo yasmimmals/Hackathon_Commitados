@@ -1,10 +1,12 @@
+"use client";
+
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 
 export type Idioma = "pt" | "en";
 
 const CHAVE_IDIOMA = "cocapec.idioma";
 
-/** Todos os textos da página inicial, em português e inglês (mesma estrutura nos dois). */
+/** Todos os textos estruturados da aplicação em PT e EN */
 export const TEXTOS = {
   pt: {
     lang: "pt-BR",
@@ -78,6 +80,31 @@ export const TEXTOS = {
           resumo: "Entenda os indicadores que o cooperado deve acompanhar ao longo da safra.",
         },
       },
+    },
+    login: {
+      titulo: "Espaço do Fornecedor",
+      descricao1: "Fornecedor, este serviço foi pensado para estar ao seu lado, agilizando o agendamento das entregas no Terminal Franca/SP e o acompanhamento da validação das suas notas fiscais.",
+      descricao2: "Se precisar de ajuda com o acesso, nossa equipe estará sempre pronta para auxiliar.",
+      slogan: "Juntos, crescemos mais!",
+      conectadoComo: "Conectado como",
+      continuar: "Continuar",
+      trocarConta: "Trocar conta",
+      email: "E-mail",
+      senha: "Senha",
+      mostrarSenha: "Mostrar senha",
+      ocultarSenha: "Ocultar senha",
+      sessaoExpirada: "Sua sessão expirou. Entre novamente.",
+      acessarJa: "Acessar já",
+      semAcesso: "Ainda não tem acesso?",
+      criarCadastro: "Criar cadastro",
+      demoTitulo: "Acessos de demonstração",
+      demoDescricao: "Senha de todos:",
+      demoClique: "Clique em um perfil para preencher:",
+      voltarInicio: "Voltar para a página inicial",
+    },
+    layoutAcesso: {
+      slogan: "O melhor café está aqui",
+      subtitulo: "Portal de agendamento e recebimento de cargas do Terminal Logístico Franca/SP",
     },
   },
   en: {
@@ -153,12 +180,42 @@ export const TEXTOS = {
         },
       },
     },
+    login: {
+      titulo: "Supplier Portal",
+      descricao1: "Supplier, this service was designed to stand by your side, streamlining shipment scheduling at the Franca/SP Terminal and tracking invoice validation.",
+      descricao2: "If you need assistance with access, our team is always ready to help.",
+      slogan: "Together, we grow more!",
+      conectadoComo: "Connected as",
+      continuar: "Continue",
+      trocarConta: "Switch account",
+      email: "Email",
+      senha: "Password",
+      mostrarSenha: "Show password",
+      ocultarSenha: "Hide password",
+      sessaoExpirada: "Your session expired. Please sign in again.",
+      acessarJa: "Sign in now",
+      semAcesso: "Don't have an account yet?",
+      criarCadastro: "Register now",
+      demoTitulo: "Demo accounts",
+      demoDescricao: "Password for all:",
+      demoClique: "Click a profile to autofill:",
+      voltarInicio: "Back to home page",
+    },
+    layoutAcesso: {
+      slogan: "The finest coffee is here",
+      subtitulo: "Franca/SP Logistics Terminal cargo scheduling and receiving portal",
+    },
   },
 } satisfies Record<Idioma, unknown>;
 
 export type Textos = (typeof TEXTOS)["pt"];
 
-type ContextoIdioma = { idioma: Idioma; textos: Textos; alternar: () => void };
+type ContextoIdioma = {
+  idioma: Idioma;
+  textos: Textos;
+  alternar: () => void;
+  definirIdioma: (novo: Idioma) => void;
+};
 
 const IdiomaContext = createContext<ContextoIdioma | null>(null);
 
@@ -170,29 +227,373 @@ function idiomaSalvo(): Idioma {
   }
 }
 
+// Dicionário de tradução automática global para todas as páginas e componentes
+const TERMOS_PT_EN: [string, string][] = [
+  // Textos longos
+  [
+    "Fornecedor, este serviço foi pensado para estar ao seu lado, agilizando o agendamento das entregas no Terminal Franca/SP e o acompanhamento da validação das suas notas fiscais.",
+    "Supplier, this service was designed to stand by your side, streamlining shipment scheduling at the Franca/SP Terminal and tracking invoice validation.",
+  ],
+  [
+    "Se precisar de ajuda com o acesso, nossa equipe estará sempre pronta para auxiliar.",
+    "If you need assistance with access, our team is always ready to help.",
+  ],
+  ["Juntos, crescemos mais!", "Together, we grow more!"],
+  ["O melhor café está aqui", "The finest coffee is here"],
+  [
+    "Portal de agendamento e recebimento de cargas do Terminal Logístico Franca/SP",
+    "Franca/SP Logistics Terminal cargo scheduling and receiving portal",
+  ],
+  ["Escolha seu perfil de acesso ao portal de agendamento.", "Choose your access profile for the scheduling portal."],
+  ["Sua sessão expirou. Entre novamente.", "Your session expired. Please sign in again."],
+  ["Ainda não tem acesso?", "Don't have an account yet?"],
+  ["Acessos de demonstração", "Demo accounts"],
+  ["Senha de todos:", "Password for all:"],
+  ["Clique em um perfil para preencher:", "Click a profile to autofill:"],
+  ["Voltar para a página inicial", "Back to home page"],
+  ["Pular para o conteúdo principal", "Skip to main content"],
+  ["Vale para todas as telas e fica salvo neste aparelho.", "Applies to all screens and is saved on this device."],
+  ["Um toque ajusta tudo. Toque de novo para desfazer.", "One tap adjusts everything. Tap again to undo."],
+  ["Gráficos com paleta segura (Okabe-Ito).", "Charts with accessible palette (Okabe-Ito)."],
+  ["Atkinson Hyperlegible: letras que não se confundem.", "Atkinson Hyperlegible: distinct letterforms."],
+  ["Mais espaço entre letras, palavras e linhas.", "More space between letters, words, and lines."],
+  ["Destaca só a faixa onde está o mouse.", "Highlights only the line under cursor."],
+  ["Contorno grosso no item selecionado pelo teclado.", "Thick outline on keyboard-focused elements."],
+  ["Alvos de toque com no mínimo 44 px.", "Touch targets with at least 44px."],
+  ["Desliga animações e transições.", "Turns off animations and transitions."],
+  ["Selecione qualquer trecho e ele é lido em voz alta.", "Select any text to have it read aloud."],
+  ["Este navegador não oferece leitura em voz alta.", "This browser does not support text-to-speech."],
+  ["Informe o código interno fornecido pela COCAPEC.", "Enter the internal code provided by COCAPEC."],
+  ["O CNPJ precisa ter 14 dígitos.", "CNPJ must contain 14 digits."],
+  ["Informe a razão social da empresa.", "Enter the company trade name."],
+  ["As senhas não conferem.", "Passwords do not match."],
+  ["Informe um e-mail válido.", "Enter a valid email address."],
+  ["Informe seu nome.", "Enter your full name."],
+  ["A senha precisa de pelo menos 8 caracteres.", "Password must be at least 8 characters."],
+  ["Nenhum agendamento encontrado", "No shipments found"],
+  ["Nenhum registro encontrado", "No records found"],
+
+  // Áreas e Navegação
+  ["Espaço do Fornecedor", "Supplier Portal"],
+  ["Espaço Fornecedor", "Supplier Area"],
+  ["Espaço Cooperado", "Member Area"],
+  ["Espaço Administrador", "Admin Area"],
+  ["Espaço Comprador", "Buyer Area"],
+  ["Espaço Armazém", "Warehouse Area"],
+  ["Meus Agendamentos", "My Shipments"],
+  ["Agendar Entrega", "Schedule Delivery"],
+  ["Agendar na Hora", "Instant Scheduling"],
+  ["Previsão de Chuva", "Rain Forecast"],
+  ["Fila de Validação", "Validation Queue"],
+  ["Histórico de Validações", "Validation History"],
+  ["Recebimento", "Receiving"],
+  ["Boletim Agrometeorológico", "Agrometeorological Bulletin"],
+  ["Boletim de Produção", "Production Bulletin"],
+  ["Painel Gerencial", "Management Dashboard"],
+  ["Visão Gerencial", "Managerial View"],
+  ["Documentação", "Documentation"],
+  ["Central de Acessibilidade", "Accessibility Center"],
+  ["Acessibilidade", "Accessibility"],
+  ["Página inicial", "Home page"],
+  ["Página Inicial", "Home page"],
+
+  // Login e Cadastro
+  ["Acessar já", "Sign in now"],
+  ["Criar cadastro", "Register"],
+  ["Criar conta", "Create account"],
+  ["Conectado como", "Connected as"],
+  ["Continuar", "Continue"],
+  ["Trocar conta", "Switch account"],
+  ["Ocultar senha", "Hide password"],
+  ["Mostrar senha", "Show password"],
+  ["Razão social", "Company Name"],
+  ["Razão Social", "Company Name"],
+  ["Nome completo", "Full Name"],
+  ["Confirmar senha", "Confirm password"],
+  ["Já tem uma conta?", "Already have an account?"],
+  ["Entrar com sua conta", "Sign in with your account"],
+  ["Código interno", "Internal code"],
+  ["Perfil de acesso", "Access profile"],
+  ["Fornecedor", "Supplier"],
+  ["Comprador", "Buyer"],
+  ["Resp. pelo armazém", "Warehouse Mgr."],
+  ["Agenda entregas da empresa", "Schedules company deliveries"],
+  ["Mesa de Compras: valida notas", "Purchasing Desk: validates invoices"],
+  ["Recebimento e boletim", "Receiving and bulletin"],
+
+  // Acessibilidade
+  ["Perfis prontos", "Presets"],
+  ["Visão", "Vision"],
+  ["Tema", "Theme"],
+  ["Claro", "Light"],
+  ["Escuro", "Dark"],
+  ["Alto contraste", "High contrast"],
+  ["Tamanho do texto", "Text size"],
+  ["Cores para daltonismo", "Colorblind colors"],
+  ["Cursor grande", "Large cursor"],
+  ["Leitura", "Reading"],
+  ["Fonte para dislexia", "Dyslexia font"],
+  ["Espaçamento de leitura", "Reading spacing"],
+  ["Máscara de leitura", "Reading guide"],
+  ["Destacar links", "Highlight links"],
+  ["Navegação e movimento", "Navigation & motion"],
+  ["Foco reforçado", "Enhanced focus"],
+  ["Botões maiores", "Larger buttons"],
+  ["Reduzir movimento", "Reduce motion"],
+  ["Ouvir", "Audio & Speech"],
+  ["Ler esta página", "Read this page"],
+  ["Parar", "Stop"],
+  ["Ler ao selecionar", "Read on select"],
+  ["Velocidade da voz", "Voice speed"],
+  ["Restaurar padrão", "Reset to default"],
+
+  // Status
+  ["Em análise", "Under review"],
+  ["EM ANÁLISE", "UNDER REVIEW"],
+  ["Em trânsito", "In transit"],
+  ["EM TRÂNSITO", "IN TRANSIT"],
+  ["Pendente", "Pending"],
+  ["PENDENTE", "PENDING"],
+  ["Aprovado", "Approved"],
+  ["APROVADO", "APPROVED"],
+  ["Reprovado", "Rejected"],
+  ["REPROVADO", "REJECTED"],
+  ["Rejeitado", "Rejected"],
+  ["REJEITADO", "REJECTED"],
+  ["Concluído", "Completed"],
+  ["CONCLUÍDO", "COMPLETED"],
+  ["Cancelado", "Cancelled"],
+  ["CANCELADO", "CANCELLED"],
+  ["Descarregado", "Unloaded"],
+  ["DESCARREGADO", "UNLOADED"],
+  ["Validado", "Validated"],
+  ["VALIDADO", "VALIDATED"],
+  ["Aguardando", "Awaiting"],
+  ["AGUARDANDO", "AWAITING"],
+
+  // Ações e botões
+  ["Novo Agendamento", "New Shipment"],
+  ["Salvar", "Save"],
+  ["Cancelar", "Cancel"],
+  ["Voltar", "Back"],
+  ["Filtrar", "Filter"],
+  ["Limpar filtros", "Clear filters"],
+  ["Limpar", "Clear"],
+  ["Confirmar", "Confirm"],
+  ["Confirmar agendamento", "Confirm shipment"],
+  ["Baixar comprovante", "Download receipt"],
+  ["Baixar PDF", "Download PDF"],
+  ["Imprimir", "Print"],
+  ["Exportar CSV", "Export CSV"],
+  ["Exportar", "Export"],
+  ["Visualizar", "View"],
+  ["Ver detalhes", "View details"],
+  ["Detalhes", "Details"],
+  ["Editar", "Edit"],
+  ["Excluir", "Delete"],
+  ["Remover", "Remove"],
+  ["Anexar NF", "Attach Invoice"],
+  ["Enviar", "Submit"],
+  ["Enviar Nota Fiscal", "Submit Invoice"],
+  ["Sim", "Yes"],
+  ["Não", "No"],
+  ["Fechar", "Close"],
+  ["Avançar", "Next"],
+  ["Anterior", "Previous"],
+  ["Próximo", "Next"],
+  ["Sair", "Sign out"],
+  ["Buscar", "Search"],
+  ["Pesquisar", "Search"],
+
+  // Campos e labels
+  ["Nota Fiscal", "Invoice"],
+  ["Número da NF", "Invoice Number"],
+  ["Número da Nota", "Invoice Number"],
+  ["Chave de Acesso", "Access Key"],
+  ["Série", "Series"],
+  ["Transportadora", "Carrier"],
+  ["Motorista", "Driver"],
+  ["Placa do veículo", "Vehicle Plate"],
+  ["Placa do Veículo", "Vehicle Plate"],
+  ["Placa", "Plate"],
+  ["Produto", "Product"],
+  ["Tipo de carga", "Cargo Type"],
+  ["Tipo de Carga", "Cargo Type"],
+  ["Peso (kg)", "Weight (kg)"],
+  ["Peso total", "Total weight"],
+  ["Peso Líquido", "Net Weight"],
+  ["Quantidade", "Quantity"],
+  ["Quantidade (sacas)", "Quantity (bags)"],
+  ["Data agendada", "Scheduled Date"],
+  ["Data Agendada", "Scheduled Date"],
+  ["Janela de horário", "Time Window"],
+  ["Janela", "Window"],
+  ["Horário", "Time"],
+  ["Data", "Date"],
+  ["Ações", "Actions"],
+  ["Observações", "Notes"],
+  ["Observação", "Note"],
+  ["Comprovante", "Receipt"],
+  ["Total", "Total"],
+  ["Valor Total", "Total Amount"],
+  ["Valor", "Value"],
+  ["Terminal", "Terminal"],
+  ["Armazém", "Warehouse"],
+  ["Docas", "Docks"],
+  ["Doca", "Dock"],
+  ["Capacidade", "Capacity"],
+  ["Ocupação", "Occupancy"],
+  ["Filtros", "Filters"],
+  ["Filtrar por", "Filter by"],
+  ["Todos", "All"],
+  ["Todas", "All"],
+  ["Carregando...", "Loading..."],
+  ["Carregando", "Loading"],
+  ["Sucesso!", "Success!"],
+  ["Sucesso", "Success"],
+  ["Erro", "Error"],
+  ["Usuário:", "User:"],
+  ["Administrador", "Administrator"],
+  ["E-mail", "Email"],
+  ["Senha", "Password"],
+];
+
+const textosOriginais = new WeakMap<Node, string>();
+
+function traduzirString(orig: string): string {
+  let resultado = orig;
+  for (const [pt, en] of TERMOS_PT_EN) {
+    if (resultado.includes(pt)) {
+      resultado = resultado.split(pt).join(en);
+    }
+  }
+  return resultado;
+}
+
+function processarNoTexto(node: Text, idioma: Idioma) {
+  const pai = node.parentElement;
+  if (!pai) return;
+  const tag = pai.tagName.toUpperCase();
+  if (tag === "SCRIPT" || tag === "STYLE" || tag === "NOSCRIPT" || tag === "CODE") return;
+
+  if (idioma === "en") {
+    let original = textosOriginais.get(node);
+    if (original === undefined) {
+      original = node.nodeValue ?? "";
+      textosOriginais.set(node, original);
+    }
+    const traduzido = traduzirString(original);
+    if (traduzido !== node.nodeValue) {
+      node.nodeValue = traduzido;
+    }
+  } else {
+    const original = textosOriginais.get(node);
+    if (original !== undefined) {
+      if (node.nodeValue !== original) {
+        node.nodeValue = original;
+      }
+      textosOriginais.delete(node);
+    }
+  }
+}
+
+function processarElemento(el: Element, idioma: Idioma) {
+  if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) {
+    if (idioma === "en") {
+      let orig = el.getAttribute("data-orig-placeholder");
+      if (orig === null && el.placeholder) {
+        orig = el.placeholder;
+        el.setAttribute("data-orig-placeholder", orig);
+      }
+      if (orig) {
+        const traduzido = traduzirString(orig);
+        if (el.placeholder !== traduzido) el.placeholder = traduzido;
+      }
+    } else {
+      const orig = el.getAttribute("data-orig-placeholder");
+      if (orig !== null) {
+        el.placeholder = orig;
+        el.removeAttribute("data-orig-placeholder");
+      }
+    }
+  }
+}
+
+function aplicarTraducaoNaArvore(raiz: Node, idioma: Idioma) {
+  if (raiz.nodeType === Node.TEXT_NODE) {
+    processarNoTexto(raiz as Text, idioma);
+    return;
+  }
+  if (raiz.nodeType === Node.ELEMENT_NODE) {
+    processarElemento(raiz as Element, idioma);
+    const walker = document.createTreeWalker(raiz, NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT);
+    let atual = walker.nextNode();
+    while (atual) {
+      if (atual.nodeType === Node.TEXT_NODE) {
+        processarNoTexto(atual as Text, idioma);
+      } else if (atual.nodeType === Node.ELEMENT_NODE) {
+        processarElemento(atual as Element, idioma);
+      }
+      atual = walker.nextNode();
+    }
+  }
+}
+
 export function IdiomaProvider({ children }: { children: ReactNode }) {
   const [idioma, setIdioma] = useState<Idioma>(idiomaSalvo);
 
-  // Leitores de tela e tradutores do navegador usam o lang do documento.
+  // Sincroniza lang e executa tradução do sistema em todo o DOM
   useEffect(() => {
     document.documentElement.lang = TEXTOS[idioma].lang;
-    return () => {
-      document.documentElement.lang = "pt-BR";
-    };
+
+    // Aplica na árvore atual do documento
+    aplicarTraducaoNaArvore(document.body, idioma);
+
+    if (idioma === "en") {
+      const observer = new MutationObserver((mutations) => {
+        for (const m of mutations) {
+          if (m.type === "childList") {
+            for (let i = 0; i < m.addedNodes.length; i++) {
+              aplicarTraducaoNaArvore(m.addedNodes[i], "en");
+            }
+          } else if (m.type === "characterData") {
+            processarNoTexto(m.target as Text, "en");
+          }
+        }
+      });
+      observer.observe(document.body, { childList: true, subtree: true, characterData: true });
+      return () => observer.disconnect();
+    } else {
+      aplicarTraducaoNaArvore(document.body, "pt");
+    }
   }, [idioma]);
 
-  const alternar = () =>
+  const definirIdioma = (novo: Idioma) => {
+    setIdioma(novo);
+    try {
+      localStorage.setItem(CHAVE_IDIOMA, novo);
+    } catch {
+      // Sem armazenamento
+    }
+  };
+
+  const alternar = () => {
     setIdioma((atual) => {
       const novo = atual === "pt" ? "en" : "pt";
       try {
         localStorage.setItem(CHAVE_IDIOMA, novo);
       } catch {
-        // Sem armazenamento: o idioma vale só enquanto a página estiver aberta.
+        // Sem armazenamento
       }
       return novo;
     });
+  };
 
-  return <IdiomaContext.Provider value={{ idioma, textos: TEXTOS[idioma], alternar }}>{children}</IdiomaContext.Provider>;
+  return (
+    <IdiomaContext.Provider value={{ idioma, textos: TEXTOS[idioma], alternar, definirIdioma }}>
+      {children}
+    </IdiomaContext.Provider>
+  );
 }
 
 export function useIdioma() {

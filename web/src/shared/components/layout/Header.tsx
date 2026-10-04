@@ -120,12 +120,6 @@ export default function Header() {
             <Link to={isAdministrador ? "/documentacao" : perfil.base} className={CLASSE_PILULA}>
               Espaço {isAdministrador ? "Administrador" : perfil.rotulo}
             </Link>
-            <span
-              aria-label="Idioma: português"
-              className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-white text-xs font-bold"
-            >
-              PT
-            </span>
             <button
               type="button"
               onClick={handleSair}

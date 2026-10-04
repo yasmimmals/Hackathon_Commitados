@@ -8,7 +8,7 @@ const CLASSE_ESPACO =
   "inline-flex items-center gap-2 whitespace-nowrap rounded-full bg-white px-4 py-2 text-[13px] font-semibold text-site-azul shadow-sm transition-colors hover:bg-sky-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-site-azul";
 
 export default function BarraSuperior() {
-  const { idioma, textos, alternar } = useIdioma();
+  const { textos } = useIdioma();
   const [busca, setBusca] = useState("");
 
   // O portal não tem busca própria: pesquisa no site institucional.
@@ -48,30 +48,6 @@ export default function BarraSuperior() {
           <Link to="/login" className={CLASSE_ESPACO}>
             {textos.espacoFornecedor} <Truck className="h-4 w-4 text-site-verde" aria-hidden />
           </Link>
-          <span className="ml-2 flex items-center gap-3 text-sm font-bold text-white">
-            {(["pt", "en"] as const).map((opcao) =>
-              opcao === idioma ? (
-                <span
-                  key={opcao}
-                  aria-label={textos.idiomaAtual}
-                  className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-white"
-                >
-                  {opcao.toUpperCase()}
-                </span>
-              ) : (
-                <button
-                  key={opcao}
-                  type="button"
-                  onClick={alternar}
-                  lang={opcao === "en" ? "en" : "pt-BR"}
-                  aria-label={textos.mudarIdioma}
-                  className="flex h-9 w-9 items-center justify-center rounded-full hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
-                >
-                  {opcao.toUpperCase()}
-                </button>
-              ),
-            )}
-          </span>
         </div>
       </div>
     </div>

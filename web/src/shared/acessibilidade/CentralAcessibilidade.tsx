@@ -2,12 +2,13 @@
 
 import { useEffect, useId, useRef, type ReactNode } from "react";
 import {
-  Contrast, Ear, Focus, Glasses, Hand, Keyboard, Moon, MousePointer2, Palette, RotateCcw,
+  Contrast, Ear, Focus, Glasses, Globe, Hand, Keyboard, Languages, Moon, MousePointer2, Palette, RotateCcw,
   ScanLine, Square, Sun, Type, Volume2, X,
 } from "lucide-react";
 import { useAcessibilidade } from "./ProvedorAcessibilidade";
 import { PERFIS, perfilAtivo, type Preferencias, type Tema } from "./preferencias";
 import { vozDisponivel } from "./voz";
+import { useIdioma } from "@/features/inicio/i18n";
 
 const ICONES = { Glasses, Palette, Type, Focus, Hand, Ear };
 
@@ -17,6 +18,7 @@ const ICONES = { Glasses, Palette, Type, Focus, Hand, Ear };
  */
 export default function CentralAcessibilidade({ aoFechar }: { aoFechar: () => void }) {
   const { prefs, atualizar, restaurar, anunciar, falar, pararFala } = useAcessibilidade();
+  const { idioma, definirIdioma } = useIdioma();
   const painel = useRef<HTMLDivElement>(null);
   const tituloId = useId();
 
@@ -65,6 +67,46 @@ export default function CentralAcessibilidade({ aoFechar }: { aoFechar: () => vo
         </header>
 
         <div className="flex-1 space-y-6 overflow-y-auto px-5 py-5">
+          <Secao titulo="Idioma / Language" dica="Altere o idioma de exibição do portal a qualquer momento.">
+            <div role="radiogroup" aria-label="Idioma do portal" className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                role="radio"
+                aria-checked={idioma === "pt"}
+                onClick={() => {
+                  definirIdioma("pt");
+                  anunciar("Idioma alterado para Português.");
+                }}
+                className={`flex min-h-[52px] items-center justify-center gap-2 rounded-xl border-2 px-3 py-2 text-sm font-semibold transition ${
+                  idioma === "pt"
+                    ? "border-site-azul bg-site-azul/10 text-site-azul"
+                    : "border-gray-200 text-gray-700 hover:border-gray-400"
+                }`}
+              >
+                <Languages className="h-5 w-5 shrink-0" aria-hidden />
+                <span>Português</span>
+              </button>
+
+              <button
+                type="button"
+                role="radio"
+                aria-checked={idioma === "en"}
+                onClick={() => {
+                  definirIdioma("en");
+                  anunciar("Language changed to English.");
+                }}
+                className={`flex min-h-[52px] items-center justify-center gap-2 rounded-xl border-2 px-3 py-2 text-sm font-semibold transition ${
+                  idioma === "en"
+                    ? "border-site-azul bg-site-azul/10 text-site-azul"
+                    : "border-gray-200 text-gray-700 hover:border-gray-400"
+                }`}
+              >
+                <Globe className="h-5 w-5 shrink-0" aria-hidden />
+                <span>English</span>
+              </button>
+            </div>
+          </Secao>
+
           <Secao titulo="Perfis prontos" dica="Um toque ajusta tudo. Toque de novo para desfazer.">
             <div className="grid grid-cols-2 gap-2">
               {PERFIS.map((perfil) => {
