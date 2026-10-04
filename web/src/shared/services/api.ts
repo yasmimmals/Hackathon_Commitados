@@ -7,7 +7,7 @@ import axios, { AxiosError } from "axios";
  * Para apontar para outra máquina, defina no .env.local:
  *   NEXT_PUBLIC_API_URL=http://192.168.0.10:8000/api/v1
  */
-export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api/v1";
+export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8000/api/v1";
 export const api = axios.create({
   baseURL: API_URL,
   timeout: 30_000,

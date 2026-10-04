@@ -8,7 +8,7 @@ import LayoutAcesso, { CLASSE_INPUT_ACESSO as CLASSE_INPUT } from "./components/
 import { SENHA_DEMO, USUARIOS_DEMO } from "./usuariosDemo";
 
 export default function Login() {
-  const { usuario, entrar, sessaoExpirada } = useAuth();
+  const { usuario, entrar, sair, sessaoExpirada } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [email, setEmail] = useState("");
@@ -16,8 +16,6 @@ export default function Login() {
   const [mostrarSenha, setMostrarSenha] = useState(false);
   const [erro, setErro] = useState("");
   const [enviando, setEnviando] = useState(false);
-
-  if (usuario) return <Navigate to={GRUPOS[usuario.perfil].base} replace />;
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -28,7 +26,8 @@ export default function Login() {
       const logado = await entrar(email, senha);
       const base = GRUPOS[logado.perfil].base;
       const de = (location.state as { de?: string } | null)?.de;
-      navigate(de && (logado.admin || de.startsWith(base)) ? de : base, { replace: true });
+      const destino = de && de !== "/" && de !== "/login" && (logado.admin || de.startsWith(base)) ? de : base;
+      navigate(destino, { replace: true });
     } catch (err) {
       setErro(mensagemDeErro(err));
     } finally {
@@ -53,6 +52,26 @@ export default function Login() {
         <p>Se precisar de ajuda com o acesso, nossa equipe estará sempre pronta para auxiliar.</p>
         <p className="font-bold">Juntos, crescemos mais!</p>
       </div>
+
+      {usuario && (
+        <div className="mt-6 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-sky-200 bg-sky-50 px-4 py-2.5 text-xs text-site-azul">
+          <span>
+            Conectado como <strong>{usuario.nome}</strong> ({usuario.email})
+          </span>
+          <div className="flex items-center gap-3">
+            <Link to={GRUPOS[usuario.perfil].base} className="font-bold underline hover:text-site-azul-escuro">
+              Continuar
+            </Link>
+            <button
+              type="button"
+              onClick={() => sair()}
+              className="font-medium text-gray-500 hover:text-red-600 underline"
+            >
+              Trocar conta
+            </button>
+          </div>
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="mt-8 space-y-6">
         <div>
@@ -120,24 +139,31 @@ export default function Login() {
         </Link>
       </p>
 
-      <details className="mt-8 rounded-xl border border-dashed border-gray-300 p-3 text-xs">
+      <details open className="mt-8 rounded-xl border border-dashed border-gray-300 p-3 text-xs">
         <summary className="cursor-pointer font-semibold text-site-azul">Acessos de demonstração</summary>
         <p className="mt-1 text-gray-500">
-          Senha de todos: <strong className="font-mono text-gray-700">{SENHA_DEMO}</strong>. Clique para preencher.
+          Senha de todos: <strong className="font-mono text-gray-700">{SENHA_DEMO}</strong>. Clique em um perfil para preencher:
         </p>
         <ul className="mt-2 space-y-1">
-          {USUARIOS_DEMO.map((u) => (
-            <li key={u.email}>
-              <button
-                type="button"
-                onClick={() => preencherDemo(u.email)}
-                className="flex w-full flex-wrap items-center justify-between gap-x-2 rounded-md px-2 py-1.5 text-left hover:bg-sky-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-site-azul"
-              >
-                <span className="font-semibold text-gray-800">{u.rotulo}</span>
-                <span className="break-all text-gray-500">{u.email}</span>
-              </button>
-            </li>
-          ))}
+          {USUARIOS_DEMO.map((u) => {
+            const selecionado = email === u.email;
+            return (
+              <li key={u.email}>
+                <button
+                  type="button"
+                  onClick={() => preencherDemo(u.email)}
+                  className={`flex w-full flex-wrap items-center justify-between gap-x-2 rounded-md px-2.5 py-2 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-site-azul ${
+                    selecionado
+                      ? "bg-sky-100 border border-site-azul/30 font-bold"
+                      : "hover:bg-sky-50"
+                  }`}
+                >
+                  <span className="font-semibold text-gray-800">{u.rotulo}</span>
+                  <span className="break-all text-gray-500">{u.email}</span>
+                </button>
+              </li>
+            );
+          })}
         </ul>
       </details>
 

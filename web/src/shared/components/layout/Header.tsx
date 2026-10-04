@@ -27,12 +27,13 @@ export default function Header() {
   if (!usuario) return null;
 
   const area: Perfil = usuario.admin
-    ? ((Object.keys(GRUPOS) as Perfil[]).find((p) => pathname.startsWith(GRUPOS[p].base)) ?? usuario.perfil)
+    ? ((Object.keys(GRUPOS) as Perfil[]).find((p) => pathname.startsWith(GRUPOS[p].base)) ?? (usuario.perfil === "administrador" ? "fornecedor" : usuario.perfil))
     : usuario.perfil;
   const perfil = GRUPOS[area];
   const fornecedor = area === "fornecedor";
-  const itens = menuDoPerfil(area);
-  const hrefAtivo = itemMenuAtivo(area, pathname)?.href;
+  const perfilMenu = usuario.admin ? "administrador" : area;
+  const itens = menuDoPerfil(perfilMenu);
+  const hrefAtivo = itemMenuAtivo(perfilMenu, pathname)?.href;
 
   const handleSearch = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -41,8 +42,10 @@ export default function Header() {
   };
 
   const handleSair = () => {
-    sair();
     navigate("/", { replace: true });
+    setTimeout(() => {
+      sair();
+    }, 50);
   };
 
   return (
@@ -106,8 +109,8 @@ export default function Header() {
             <LogoCocapec />
           </Link>
 
-          <nav aria-label="Navegação principal" className="hidden items-center gap-6 lg:flex">
-            <ul className="flex items-center gap-1">
+          <nav aria-label="Navegação principal" className="hidden items-center gap-3 lg:flex max-w-[850px] xl:max-w-none overflow-x-auto py-1">
+            <ul className="flex flex-wrap items-center gap-x-1 gap-y-0.5">
               {itens.map((item) => {
                 const ativo = item.href === hrefAtivo;
                 return (
