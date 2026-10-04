@@ -1,6 +1,6 @@
 import { api } from "../api";
 import type { DataISO } from "../types";
-import type { Agendamento, AgendamentoCreate, FiltrosAgendamento, SlotDisponibilidade } from "./types";
+import type { Agendamento, AgendamentoCreate, FiltrosAgendamento, Notificacao, SlotDisponibilidade } from "./types";
 
 /**
  * Rotas do fornecedor.
@@ -44,5 +44,11 @@ export async function buscarAgendamento(id: number): Promise<Agendamento> {
 /** POST /agendamentos/{id}/cancelar — exige antecedência mínima de 24h. */
 export async function cancelarAgendamento(id: number): Promise<Agendamento> {
   const { data } = await api.post<Agendamento>(`${BASE}/${id}/cancelar`);
+  return data;
+}
+
+/** GET /agendamentos/{id}/notificacoes — avisos enviados ao fornecedor sobre o agendamento. */
+export async function listarNotificacoes(id: number): Promise<Notificacao[]> {
+  const { data } = await api.get<Notificacao[]>(`${BASE}/${id}/notificacoes`);
   return data;
 }

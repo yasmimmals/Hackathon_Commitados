@@ -12,7 +12,7 @@ import uuid
 from datetime import date, datetime, timedelta
 from typing import Optional
 
-from sqlalchemy import func, select, text
+from sqlalchemy import func, or_, select, text
 from sqlalchemy.orm import Session, selectinload
 
 from app.core import config
@@ -257,7 +257,8 @@ def _dados_da_nota(nota: NotaFiscal) -> dict:
 
 # --------------------------------------------------------------- fornecedor
 
-def criar_agendamento(db: Session, dados, agora: Optional[datetime] = None) -> Agendamento:
+def criar_agendamento(db: Session, dados, agora: Optional[datetime] = None,
+                      criado_por_id: Optional[int] = None) -> Agendamento:
     agora = _agora(agora)
     nota = buscar_nota(db, dados.nota_fiscal_id)
     if (ativo := _agendamento_ativo_da_nota(db, nota.id)):
@@ -300,7 +301,7 @@ def criar_agendamento(db: Session, dados, agora: Optional[datetime] = None) -> A
     if dados.email_contato:                                        # NOVO
         nota.fornecedor.email = dados.email_contato                # NOVO
     ag = Agendamento(
-        **_dados_da_nota(nota), data=dados.data, horario=dados.horario,
+        **_dados_da_nota(nota), data=dados.data, horario=dados.horario, criado_por_id=criado_por_id,
         acondicionamento=dados.acondicionamento, prob_chuva=prob,
         ciente_risco_chuva=bool(dados.ciente_risco_chuva),
         origem=Origem.NORMAL, status=St.PENDENTE,
@@ -491,7 +492,8 @@ def marcar_nao_compareceu(db: Session, ag_id: int, agora: Optional[datetime] = N
     return buscar(db, ag_id)
 
 
-def agendar_balcao(db: Session, dados, agora: Optional[datetime] = None) -> Agendamento:
+def agendar_balcao(db: Session, dados, agora: Optional[datetime] = None,
+                   criado_por_id: Optional[int] = None) -> Agendamento:
     """Chegou sem agendar. Com a nota lida e havendo vaga: agenda na hora
     (chegada já registrada). Sem vaga: grava o não recebimento (SEM_VAGA)."""
     agora = _agora(agora)
@@ -509,7 +511,7 @@ def agendar_balcao(db: Session, dados, agora: Optional[datetime] = None) -> Agen
     if dados.email_contato:                                        # NOVO
         nota.fornecedor.email = dados.email_contato                # NOVO
     ag = Agendamento(
-        **_dados_da_nota(nota), data=hoje, horario=dados.horario,
+        **_dados_da_nota(nota), data=hoje, horario=dados.horario, criado_por_id=criado_por_id,
         acondicionamento=dados.acondicionamento,
         origem=Origem.BALCAO, ciente_risco_chuva=True, horario_chegada=agora,
         status=St.REJEITADO if motivo else St.PENDENTE,
@@ -589,7 +591,9 @@ def conferencia(db: Session, ag_id: int) -> dict:
 # ------------------------------------------------------------------ consultas
 
 def listar(db: Session, data: Optional[date] = None, status: Optional[St] = None,
-           fornecedor_id: Optional[int] = None) -> list[Agendamento]:
+           fornecedor_id: Optional[int] = None,
+           fornecedor_ids: Optional[list[int]] = None,
+           criado_por_id: Optional[int] = None) -> list[Agendamento]:
     stmt = select(Agendamento).options(
         selectinload(Agendamento.descargas).selectinload(Descarga.baia),
         selectinload(Agendamento.fornecedor))
@@ -599,6 +603,10 @@ def listar(db: Session, data: Optional[date] = None, status: Optional[St] = None
         stmt = stmt.where(Agendamento.status == status)
     if fornecedor_id:
         stmt = stmt.where(Agendamento.fornecedor_id == fornecedor_id)
+    if fornecedor_ids is not None:
+        da_empresa = Agendamento.fornecedor_id.in_(fornecedor_ids)
+        stmt = stmt.where(or_(da_empresa, Agendamento.criado_por_id == criado_por_id)
+                          if criado_por_id else da_empresa)
     return list(db.scalars(stmt.order_by(Agendamento.data, Agendamento.horario, Agendamento.id)))
 
 

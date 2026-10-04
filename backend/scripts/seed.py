@@ -10,7 +10,8 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.database import SessionLocal
-from app.models import Baia, Equipamento, LocalFisico, TipoItem
+from app.core.seguranca import gerar_hash_senha
+from app.models import Baia, Chapa, Equipamento, Fornecedor, LocalFisico, PerfilUsuario, TipoItem, Usuario
 
 TIPOS_ITEM = [
     ("Sacaria malas c/ 25", "0.1824"),
@@ -73,10 +74,58 @@ def popular(db: Session) -> dict:
     return criados
 
 
+# Acessos de demonstração (senha igual para todos). O fornecedor é a Sumitomo, emitente
+# das notas de exemplo em uploads/, para o fluxo de agendamento funcionar de ponta a ponta.
+SENHA_DEMO = "Cocapec@2026"
+EMPRESA_DEMO = ("07467822000126", "SUMITOMO CHEMICAL BRASIL INDUSTRIA QUIMICA S.A.")
+USUARIOS_DEMO = [
+    ("fornecedor@cocapec.com.br", "Sumitomo Chemical (Fornecedor)", PerfilUsuario.FORNECEDOR),
+    ("compras@cocapec.com.br", "Equipe de Compras", PerfilUsuario.COMPRAS),
+    ("armazem@cocapec.com.br", "Responsável Armazém Franca", PerfilUsuario.ARMAZEM),
+    ("admin@cocapec.com.br", "Administrador", PerfilUsuario.ADMIN),
+]
+
+
+def popular_usuarios(db: Session) -> int:
+    """Separado de `popular` para os testes não pagarem o custo do hash de senha."""
+    existentes = set(db.scalars(select(Usuario.email)))
+    criados = 0
+    for email, nome, perfil in USUARIOS_DEMO:
+        if email in existentes:
+            continue
+        usuario = Usuario(email=email, nome=nome, perfil=perfil, senha_hash=gerar_hash_senha(SENHA_DEMO))
+        if perfil == PerfilUsuario.FORNECEDOR:
+            cnpj, razao = EMPRESA_DEMO
+            empresa = db.scalars(select(Fornecedor).where(Fornecedor.cnpj == cnpj)
+                                 .order_by(Fornecedor.id)).first()
+            if empresa is None:
+                empresa = Fornecedor(cnpj=cnpj, nome=razao, email=email)
+                db.add(empresa)
+                db.flush()
+            usuario.fornecedor_id = empresa.id
+        db.add(usuario)
+        criados += 1
+    db.commit()
+    return criados
+
+
+def popular_chapas_demo(db: Session) -> int:
+    """Só quando o cadastro está vazio: a planilha real (scripts/carregar_chapas.py) não vai
+    para o repositório. Sem chapas cadastrados não dá para lançar a equipe do boletim."""
+    if db.scalar(select(Chapa.id).limit(1)) is not None:
+        return 0
+    for n in range(1, 31):
+        db.add(Chapa(matricula=f"CH-{n:03d}", nome=f"CHAPA_{n:02d}"))
+    db.commit()
+    return 30
+
+
 def run():
     db = SessionLocal()
     try:
         criados = popular(db)
+        criados["usuarios"] = popular_usuarios(db)
+        criados["chapas_demo"] = popular_chapas_demo(db)
         print("   " + ", ".join(f"{k}: {v} inseridos" for k, v in criados.items()))
     finally:
         db.close()

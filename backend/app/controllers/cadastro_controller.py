@@ -6,13 +6,16 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from app.core.auth import exigir_perfil
 from app.core.database import get_db
 from app.core.exceptions import NaoEncontradoError, RegraNegocioError
-from app.models import Baia, Chapa, Equipamento, LocalFisico, TipoItem
+from app.models import Baia, Chapa, Equipamento, LocalFisico, PerfilUsuario, TipoItem
 from app.schemas.agendamento import BaiaCreate, BaiaOut, EquipamentoOut
 from app.schemas.boletim import ChapaCreate, ChapaOut, TipoItemOut
 
 router = APIRouter(prefix="/cadastros", tags=["Cadastros"])
+
+_SO_ARMAZEM = [Depends(exigir_perfil(PerfilUsuario.ARMAZEM))]
 
 
 @router.get("/baias", response_model=list[BaiaOut])
@@ -26,7 +29,7 @@ def listar_baias(local: Optional[LocalFisico] = None, incluir_inativas: bool = F
     return db.scalars(stmt.order_by(Baia.local, Baia.codigo)).all()
 
 
-@router.post("/baias", response_model=BaiaOut, status_code=201)
+@router.post("/baias", response_model=BaiaOut, status_code=201, dependencies=_SO_ARMAZEM)
 def criar_baia(dados: BaiaCreate, db: Session = Depends(get_db)):
     baia = Baia(**dados.model_dump())
     db.add(baia)
@@ -40,7 +43,7 @@ def criar_baia(dados: BaiaCreate, db: Session = Depends(get_db)):
     return baia
 
 
-@router.patch("/baias/{baia_id}/ativa", response_model=BaiaOut)
+@router.patch("/baias/{baia_id}/ativa", response_model=BaiaOut, dependencies=_SO_ARMAZEM)
 def ativar_desativar_baia(baia_id: int, ativa: bool, db: Session = Depends(get_db)):
     baia = db.get(Baia, baia_id)
     if not baia:
@@ -64,7 +67,7 @@ def listar_chapas(incluir_inativos: bool = False, db: Session = Depends(get_db))
     return db.scalars(stmt.order_by(Chapa.nome)).all()
 
 
-@router.post("/chapas", response_model=ChapaOut, status_code=201)
+@router.post("/chapas", response_model=ChapaOut, status_code=201, dependencies=_SO_ARMAZEM)
 def criar_chapa(dados: ChapaCreate, db: Session = Depends(get_db)):
     chapa = Chapa(matricula=dados.matricula.strip(), nome=dados.nome)
     db.add(chapa)

@@ -12,6 +12,9 @@ import { ARMAZENS_MOCK, ENTRADA_VAZIA } from "./data/armazensMock";
 import type { Packaging, WarehouseId, YardEntry, YardEntryErrors } from "./types";
 import { janelaAtual, validarEntrada } from "./utils/entradaPatio";
 
+const escaparHtml = (texto: string) =>
+  texto.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
+
 export default function AgendarNaHora() {
   const [warehouses, setWarehouses] = useState(ARMAZENS_MOCK);
   const [entry, setEntry] = useState(ENTRADA_VAZIA);
@@ -20,6 +23,14 @@ export default function AgendarNaHora() {
   const [erroEnvio, setErroEnvio] = useMensagemTemporaria(10000);
   const [lendoNota, setLendoNota] = useState(false);
   const [enviando, setEnviando] = useState(false);
+  const [naoRecebimento, setNaoRecebimento] = useState<{
+    id: number;
+    motivo: string;
+    em: Date;
+    nota: YardEntry["notaFiscal"];
+    placa: string;
+    motorista: string;
+  } | null>(null);
   // Arquivo da leitura em andamento: respostas de um arquivo já trocado são ignoradas.
   const arquivoEmLeitura = useRef<File | null>(null);
 
@@ -114,12 +125,60 @@ export default function AgendarNaHora() {
         setErrors({ notaFiscal: mensagem });
         focarPrimeiroErro({ notaFiscal: mensagem });
       } else {
-        // SEM_VAGA_BALCAO: o backend já registrou o não recebimento (número na mensagem).
+        // SEM_VAGA_BALCAO: o backend já registrou o não recebimento; guarda para o comprovante.
+        if (falha instanceof ErroApi && falha.codigo === "SEM_VAGA_BALCAO") {
+          setNaoRecebimento({
+            id: Number(falha.detalhes.nao_recebimento_id),
+            motivo: mensagem,
+            em: new Date(),
+            nota: entry.notaFiscal,
+            placa: entry.plate,
+            motorista: entry.driver,
+          });
+        }
         setErroEnvio(mensagem);
       }
     } finally {
       setEnviando(false);
     }
+  };
+
+  /** Comprovante para o motorista do caminhão que não pôde ser recebido (abre a impressão). */
+  const emitirComprovante = () => {
+    if (!naoRecebimento) {
+      setErroEnvio("Não há recusa registrada agora: o comprovante é emitido quando o encaixe é recusado por falta de vaga.");
+      return;
+    }
+    const janela = window.open("", "_blank", "width=720,height=820");
+    if (!janela) {
+      setErroEnvio("O navegador bloqueou a janela do comprovante. Permita pop-ups para este site.");
+      return;
+    }
+    const n = naoRecebimento;
+    const linhas: [string, string][] = [
+      ["Registro", `#AG-${n.id}`],
+      ["Data e hora", n.em.toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })],
+      ["Empresa (emitente da NF)", n.nota?.fornecedor.nome ?? "—"],
+      ["Nota fiscal", n.nota ? `NF-e ${n.nota.numero ?? "s/ nº"} • chave ${n.nota.chave}` : "—"],
+      ["Placa", n.placa || "—"],
+      ["Motorista", n.motorista || "—"],
+      ["Motivo", n.motivo],
+    ];
+    janela.document.write(`<!doctype html><html lang="pt-BR"><head><meta charset="utf-8">
+      <title>Comprovante de não recebimento #AG-${n.id}</title>
+      <style>body{font-family:Arial,sans-serif;margin:32px;color:#111}h1{color:#0a5aa4;font-size:20px;border-bottom:3px solid #f2b705;padding-bottom:6px}
+      table{width:100%;border-collapse:collapse;margin-top:16px}th,td{text-align:left;padding:8px;border-bottom:1px solid #ddd;vertical-align:top}
+      th{width:34%;color:#555;font-weight:600}.ass{margin-top:64px;display:flex;gap:48px}.ass div{flex:1;border-top:1px solid #333;padding-top:6px;font-size:12px;text-align:center}
+      small{color:#666}</style></head><body>
+      <h1>COCAPEC • Comprovante de não recebimento</h1>
+      <small>Terminal Logístico Franca/SP — Portaria &amp; Balança 01</small>
+      <table>${linhas.map(([k, v]) => `<tr><th>${escaparHtml(k)}</th><td>${escaparHtml(v)}</td></tr>`).join("")}</table>
+      <p>O veículo compareceu sem agendamento e não pôde ser recebido por falta de vaga. O fornecedor deve agendar a entrega para outra data.</p>
+      <div class="ass"><div>Portaria COCAPEC</div><div>Motorista</div></div>
+      </body></html>`);
+    janela.document.close();
+    janela.focus();
+    janela.print();
   };
 
   return (
@@ -138,7 +197,7 @@ export default function AgendarNaHora() {
         onChange={change}
         onSelectWarehouse={selectWarehouse}
         onSelectPackaging={selectPackaging}
-        onReceipt={() => setFeedback("\"Comprovante de não recebimento\" estará disponível em breve.")}
+        onReceipt={emitirComprovante}
         onSubmit={submit}
       />
     </div>

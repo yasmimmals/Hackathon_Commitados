@@ -21,6 +21,7 @@ export type MotivoNaoRecebimento =
   | "SEM_VAGA"
   | "CHUVA"
   | "DIVERGENCIA_NF_PEDIDO"
+  | "SEM_PEDIDO"
   | "REJEITADO_COMPRAS"
   | "NAO_COMPARECEU"
   | "CANCELADO_FORNECEDOR"
@@ -35,6 +36,8 @@ export type AgendamentoCreate = {
   acondicionamento: Acondicionamento;
   /** Obrigatório para adubo com risco de chuva. */
   ciente_risco_chuva?: boolean;
+  /** Para onde vão os avisos (aprovação, reprovação, doca definida). */
+  email_contato?: string | null;
 };
 
 export type FiltrosAgendamento = {
@@ -103,4 +106,21 @@ export type SlotDisponibilidade = {
   /** Preenchidos quando a consulta é para uma nota de adubo. */
   prob_chuva: number | null;
   situacao_chuva: SituacaoChuva | null;
+};
+
+// ---------- Notificações ao fornecedor ----------
+
+export type TipoNotificacao = "APROVADO" | "REPROVADO" | "DESTINO_DEFINIDO" | "REAGENDADO_CHUVA";
+
+export type StatusNotificacao = "ENVIADA" | "SIMULADA" | "SEM_DESTINATARIO" | "FALHOU";
+
+export type Notificacao = {
+  id: number;
+  tipo: TipoNotificacao;
+  destinatario: string | null;
+  assunto: string;
+  corpo: string;
+  status: StatusNotificacao;
+  erro: string | null;
+  criado_em: DataHoraISO;
 };

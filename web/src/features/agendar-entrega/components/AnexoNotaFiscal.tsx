@@ -8,7 +8,6 @@ import Secao from "./Secao";
 type AnexoNotaFiscalProps = {
   numero: number;
   arquivo: File | null;
-  /** Nota já lida pelo backend (null enquanto lê ou se falhou). */
   nota: NotaFiscal | null;
   lendo: boolean;
   erro?: string;
@@ -19,7 +18,6 @@ export default function AnexoNotaFiscal({ numero, arquivo, nota, lendo, erro, on
   const [arrastando, setArrastando] = useState(false);
   const ehPdf = arquivo?.name.toLowerCase().endsWith(".pdf") ?? false;
 
-  // Link temporário para o fornecedor conferir o PDF antes de enviar.
   const urlPdf = useMemo(() => (arquivo && ehPdf ? URL.createObjectURL(arquivo) : null), [arquivo, ehPdf]);
   useEffect(() => () => {
     if (urlPdf) URL.revokeObjectURL(urlPdf);
@@ -104,7 +102,7 @@ export default function AnexoNotaFiscal({ numero, arquivo, nota, lendo, erro, on
             aria-describedby={erro ? "notaFiscal-erro" : undefined}
             onChange={(e) => {
               onSelecionar(e.target.files?.[0] ?? null);
-              e.target.value = ""; // permite escolher o mesmo arquivo de novo
+              e.target.value = ""; 
             }}
             className="sr-only"
           />

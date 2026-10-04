@@ -5,6 +5,7 @@ export type FornecedorCreate = {
   /** Pode vir com máscara; o backend guarda só os 14 dígitos. */
   cnpj: string;
   codigo?: string | null;
+  email?: string | null;
 };
 
 export type Fornecedor = {

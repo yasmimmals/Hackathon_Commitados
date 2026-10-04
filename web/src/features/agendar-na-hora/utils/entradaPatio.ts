@@ -1,20 +1,7 @@
-import type { Horario } from "@/shared/services";
 import { placaValida } from "@/shared/utils/placa";
 import type { YardEntry, YardEntryErrors } from "../types";
 
-/** Fim de cada janela de descarga (mesma grade do backend). */
-const FIM_DA_JANELA: [Horario, string][] = [
-  ["08:00", "10:00"],
-  ["10:00", "13:00"],
-  ["13:00", "15:00"],
-  ["15:00", "17:30"],
-];
-
-/** Janela em que o encaixe entra agora; `undefined` se o recebimento do dia já terminou. */
-export function janelaAtual(agora = new Date()): Horario | undefined {
-  const hhmm = agora.toTimeString().slice(0, 5);
-  return FIM_DA_JANELA.find(([, fim]) => hhmm < fim)?.[0];
-}
+export { janelaAtual } from "@/shared/utils/janelas";
 
 export function validarEntrada(entry: YardEntry): YardEntryErrors {
   const errors: YardEntryErrors = {};

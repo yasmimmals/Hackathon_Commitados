@@ -69,3 +69,10 @@ LIMITE_CHAPAS_POR_BOLETIM = 20         # o formulário de papel tem 20 linhas
 SMTP_HOST = os.getenv("SMTP_HOST") or None
 SMTP_PORT = int(os.getenv("SMTP_PORT", "1025"))
 SMTP_REMETENTE = os.getenv("SMTP_REMETENTE", "recebimento@cocapec.com.br")
+# ---- Login ----
+# Segredo que assina os tokens. Em produção, defina AUTH_SECRET no ambiente.
+AUTH_SECRET = os.getenv("AUTH_SECRET", "cocapec-dev-troque-este-segredo")
+TOKEN_VALIDADE_HORAS = int(os.getenv("TOKEN_VALIDADE_HORAS", "12"))
+# Cadastro de COMPRAS e ARMAZEM exige este código (o fornecedor se cadastra livremente)
+CODIGO_CADASTRO_INTERNO = os.getenv("CODIGO_CADASTRO_INTERNO", "COCAPEC-INTERNO")
+SENHA_MINIMA = 8

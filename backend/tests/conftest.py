@@ -94,3 +94,17 @@ def baia(db):
     def _baia(local: LocalFisico) -> int:
         return db.query(Baia).filter(Baia.local == local).order_by(Baia.id).first().id
     return _baia
+
+@pytest.fixture(autouse=True)
+def usuario_admin():
+    """As rotas exigem login. Nos testes de regra de negócio, todo request entra como ADMIN;
+    tests/test_auth.py desliga isto (fixture `com_login`) e usa tokens de verdade."""
+    from app.core.auth import usuario_atual
+    from app.models import PerfilUsuario, Usuario
+    from main import app
+
+    app.dependency_overrides[usuario_atual] = lambda: Usuario(
+        id=None, email="admin@teste", nome="Admin de teste", perfil=PerfilUsuario.ADMIN,
+        senha_hash="-", ativo=True)
+    yield
+    app.dependency_overrides.pop(usuario_atual, None)

@@ -14,3 +14,19 @@ class RegraNegocioError(Exception):
 
 class NaoEncontradoError(Exception):
     """Recurso inexistente -> HTTP 404."""
+
+class NaoAutenticadoError(Exception):
+    """Sem login, token inválido/expirado ou credenciais erradas -> HTTP 401."""
+
+    def __init__(self, mensagem: str, codigo: str = "NAO_AUTENTICADO"):
+        super().__init__(mensagem)
+        self.codigo = codigo
+
+
+class AcessoNegadoError(Exception):
+    """Logado, mas o perfil não pode fazer isto -> HTTP 403."""
+
+    def __init__(self, mensagem: str = "Seu perfil não tem acesso a este recurso",
+                 codigo: str = "ACESSO_NEGADO"):
+        super().__init__(mensagem)
+        self.codigo = codigo

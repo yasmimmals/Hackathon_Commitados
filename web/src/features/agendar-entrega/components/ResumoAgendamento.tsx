@@ -9,7 +9,6 @@ const PROXIMOS_PASSOS = [
   "Chegue até 30 min após o horário. Depois disso a vaga pode ser liberada.",
 ];
 
-/** Dados do agendamento em pares rótulo/valor (painel lateral e confirmação). */
 export function ListaResumo({ entrega }: { entrega: NovaEntrega }) {
   const acondicionamento = ACONDICIONAMENTOS.find((a) => a.key === entrega.acondicionamento)?.rotulo;
   const itens = [
@@ -38,7 +37,7 @@ export function ListaResumo({ entrega }: { entrega: NovaEntrega }) {
 type ResumoAgendamentoProps = {
   entrega: NovaEntrega;
   enviando: boolean;
-  /** Recusa do backend que não pertence a um campo específico. */
+ 
   erroEnvio?: string;
 };
 

@@ -8,12 +8,14 @@ from datetime import date
 from typing import Optional
 
 from fastapi import APIRouter, Depends
+from fastapi.responses import Response
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.models import LocalFisico, StatusBoletim
 from app.schemas.boletim import BoletimCreate, BoletimOut, EquipeIn, FecharIn, ProducaoIn
 from app.services import boletim_service as svc
+from app.services.boletim_excel import gerar_xlsx
 
 router = APIRouter(prefix="/boletins", tags=["Boletim diário (chapas)"])
 
@@ -53,3 +55,16 @@ def fechar(boletim_id: int, dados: FecharIn, db: Session = Depends(get_db)):
 @router.post("/{boletim_id}/reabrir", response_model=BoletimOut)
 def reabrir(boletim_id: int, db: Session = Depends(get_db)):
     return svc.para_saida(db, svc.reabrir(db, boletim_id))
+
+
+@router.get("/{boletim_id}/excel", response_class=Response,
+            responses={200: {"content": {"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {}}}})
+def excel(boletim_id: int, db: Session = Depends(get_db)):
+    """Boletim formatado em .xlsx (cabeçalho, seções, moeda e totais), igual à tela."""
+    b = svc.para_saida(db, svc.buscar(db, boletim_id))
+    nome = f"boletim-producao-{b['data'].isoformat()}.xlsx"
+    return Response(
+        content=gerar_xlsx(b),
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f'attachment; filename="{nome}"'},
+    )

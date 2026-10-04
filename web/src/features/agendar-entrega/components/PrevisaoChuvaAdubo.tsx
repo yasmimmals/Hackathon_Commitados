@@ -28,7 +28,7 @@ const AVISO_STATUS = {
   fechada: "bg-red-50 text-red-800 ring-red-200",
 } satisfies Record<DiaPrevisao["status"], string>;
 
-/** Adubo é sensível à umidade: o fornecedor consulta a previsão e declara ciência. */
+
 export default function PrevisaoChuvaAdubo({ numero, data, ciente, erro, onEscolherData, onCiente }: PrevisaoChuvaAduboProps) {
   const [estado, setEstado] = useState<Estado>({ tipo: "carregando" });
 

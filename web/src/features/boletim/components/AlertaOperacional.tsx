@@ -25,7 +25,7 @@ export default function AlertaOperacional({ hrefReagendar }: { hrefReagendar: st
       </div>
       <Link
         to={hrefReagendar}
-        className="inline-flex shrink-0 items-center justify-center gap-2 rounded-lg bg-amber-700 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-amber-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-700 focus-visible:ring-offset-2"
+        className="inline-flex shrink-0 items-center justify-center gap-2 rounded-lg bg-amber-700 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors print:hidden hover:bg-amber-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-700 focus-visible:ring-offset-2"
       >
         <CalendarClock className="h-4 w-4" aria-hidden /> Reagendar janela
       </Link>

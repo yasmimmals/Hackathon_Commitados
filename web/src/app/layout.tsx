@@ -1,6 +1,16 @@
 import type { ReactNode } from "react";
 import type { Metadata, Viewport } from "next";
+import { Ubuntu } from "next/font/google";
 import "./globals.css";
+
+
+const ubuntu = Ubuntu({
+  subsets: ["latin"],
+  weight: ["400", "500", "700"],
+  style: ["normal", "italic"],
+  variable: "--font-ubuntu",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: {
@@ -12,12 +22,12 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0d7d48",
+  themeColor: "#0a5aa4",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
   return (
-    <html lang="pt-BR" className="h-full antialiased">
+    <html lang="pt-BR" className={`${ubuntu.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col bg-fundo font-sans text-gray-900">
         {children}
       </body>

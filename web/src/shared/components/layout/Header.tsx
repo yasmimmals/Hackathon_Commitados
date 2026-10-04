@@ -2,6 +2,7 @@ import { useState, type FormEvent } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Building2, LogOut, Menu, Plus, Search, X } from "lucide-react";
 import { useAuth } from "@/features/auth/AuthContext";
+import type { Perfil } from "@/features/auth/types";
 import LogoCocapec from "@/shared/components/ui/LogoCocapec";
 import { GRUPOS, itemMenuAtivo, menuDoPerfil } from "@/routes/rotas";
 
@@ -11,14 +12,12 @@ const CLASSE_PILULA =
 const CLASSE_CTA =
   "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full bg-site-verde px-6 py-3 text-xs font-bold text-white shadow-sm transition-colors hover:bg-site-verde-escuro focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-site-verde focus-visible:ring-offset-2";
 
-/** Cabeçalho do sistema no padrão do site institucional (barra azul + barra branca). */
 export default function Header() {
   const { usuario, sair } = useAuth();
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const [menuAberto, setMenuAberto] = useState(false);
 
-  // Fecha o menu do celular ao navegar.
   const [ultimoPath, setUltimoPath] = useState(pathname);
   if (pathname !== ultimoPath) {
     setUltimoPath(pathname);
@@ -27,10 +26,13 @@ export default function Header() {
 
   if (!usuario) return null;
 
-  const perfil = GRUPOS[usuario.perfil];
-  const fornecedor = usuario.perfil === "fornecedor";
-  const itens = menuDoPerfil(usuario.perfil);
-  const hrefAtivo = itemMenuAtivo(usuario.perfil, pathname)?.href;
+  const area: Perfil = usuario.admin
+    ? ((Object.keys(GRUPOS) as Perfil[]).find((p) => pathname.startsWith(GRUPOS[p].base)) ?? usuario.perfil)
+    : usuario.perfil;
+  const perfil = GRUPOS[area];
+  const fornecedor = area === "fornecedor";
+  const itens = menuDoPerfil(area);
+  const hrefAtivo = itemMenuAtivo(area, pathname)?.href;
 
   const handleSearch = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -44,7 +46,7 @@ export default function Header() {
   };
 
   return (
-    <header>
+    <header className="print:hidden">
       <div className="border-t-2 border-gray-700 bg-site-azul text-white">
         <div className="mx-auto flex max-w-[1300px] flex-wrap items-center justify-between gap-3 px-4 py-2.5">
           <p className="flex min-w-0 items-center gap-2 text-[13px]">

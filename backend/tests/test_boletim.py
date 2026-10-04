@@ -263,3 +263,17 @@ def test_data_do_boletim_aceita_sabado(api):
     """Aos sábados a equipe faz organização interna: o boletim registra toda movimentação."""
     assert date(2025, 11, 22).weekday() == 5
     assert api.post("/api/v1/boletins", json={"data": "2025-11-22"}).status_code == 201
+
+def test_exporta_boletim_em_excel_formatado(api):
+    from io import BytesIO
+
+    import openpyxl
+
+    b = api.post("/api/v1/boletins", json={"data": "2026-09-01"}).json()
+    r = api.get(f"/api/v1/boletins/{b['id']}/excel")
+    assert r.status_code == 200
+    assert r.headers["content-type"].startswith("application/vnd.openxmlformats")
+    assert "boletim-producao-2026-09-01.xlsx" in r.headers["content-disposition"]
+    ws = openpyxl.load_workbook(BytesIO(r.content)).active
+    textos = [c.value for linha in ws.iter_rows() for c in linha if isinstance(c.value, str)]
+    assert "1. Produção do dia" in textos and "Total a pagar" in textos

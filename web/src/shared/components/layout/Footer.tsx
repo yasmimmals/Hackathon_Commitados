@@ -2,7 +2,7 @@ import { Clock, Mail, MapPin, Phone } from "lucide-react";
 
 export default function Footer() {
   return (
-    <footer className="mt-10 border-t-4 border-site-amarelo bg-site-azul text-sky-50">
+    <footer className="mt-10 print:hidden border-t-4 border-site-amarelo bg-site-azul text-sky-50">
       <div className="mx-auto grid max-w-[1300px] gap-8 px-4 py-8 md:grid-cols-3">
         <div>
           <p className="text-2xl font-black italic tracking-tight text-white">COCAPEC</p>

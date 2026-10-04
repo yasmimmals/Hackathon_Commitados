@@ -11,7 +11,6 @@ const icones = {
 
 type IconeClimaProps = {
   tipo: TipoIcone;
-  /** Para fundos escuros (cards azuis da previsão). */
   claro?: boolean;
   className?: string;
 };

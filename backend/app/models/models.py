@@ -92,6 +92,14 @@ class StatusBoletim(str, enum.Enum):
     FECHADO = "FECHADO"              # totais congelados
 
 
+class PerfilUsuario(str, enum.Enum):
+    """Quem acessa o sistema. ADMIN pode tudo (manutenção e testes)."""
+    FORNECEDOR = "FORNECEDOR"        # agenda entregas da própria empresa
+    COMPRAS = "COMPRAS"              # valida notas e aprova/reprova agendamentos
+    ARMAZEM = "ARMAZEM"              # recebimento, boletim e painel
+    ADMIN = "ADMIN"
+
+
 def _enum(e):
     return Enum(e, native_enum=False, length=30)
 
@@ -174,6 +182,9 @@ class Agendamento(Base):
     fornecedor_id = Column(Integer, ForeignKey("fornecedores.id"), nullable=False, index=True)
     origem_dado = Column(_enum(Origem), nullable=False, default=Origem.SISTEMA,
                          server_default=Origem.SISTEMA.value)
+    # Usuário que agendou. A NF pode ser de outra empresa (transportadora, revenda...):
+    # o fornecedor logado enxerga o que é da empresa dele E o que ele mesmo agendou.
+    criado_por_id = Column(Integer, ForeignKey("usuarios.id"), index=True)
 
     data = Column(Date, nullable=False, index=True)
     horario = Column(_enum(Horario), nullable=False)
@@ -361,3 +372,27 @@ class BoletimChapa(Base):
 
     boletim = relationship("BoletimDiario", back_populates="chapas_alocados")
     chapa = relationship("Chapa", back_populates="boletins")
+
+# ==========================================
+# 3. ACESSO (LOGIN)
+# ==========================================
+
+class Usuario(Base):
+    __tablename__ = "usuarios"
+
+    id = Column(Integer, primary_key=True)
+    email = Column(String(255), unique=True, index=True, nullable=False)   # sempre minúsculo
+    nome = Column(String, nullable=False)
+    senha_hash = Column(String, nullable=False)                           # PBKDF2-SHA256 com sal
+    perfil = Column(_enum(PerfilUsuario), nullable=False)
+    # Só para FORNECEDOR: a empresa cujos agendamentos o usuário enxerga
+    fornecedor_id = Column(Integer, ForeignKey("fornecedores.id"), index=True)
+    ativo = Column(Boolean, nullable=False, default=True, server_default=text("true"))
+    criado_em = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+    fornecedor = relationship("Fornecedor")
+
+    __table_args__ = (
+        CheckConstraint("perfil <> 'FORNECEDOR' OR fornecedor_id IS NOT NULL",
+                        name="ck_usuario_fornecedor_tem_empresa"),
+    )

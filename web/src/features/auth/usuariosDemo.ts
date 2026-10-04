@@ -1,13 +1,11 @@
-import type { Usuario } from "./types";
+import type { Perfil } from "./types";
 
-/** Acessos de demonstração enquanto não há backend (qualquer senha é aceita). */
-export const USUARIOS_DEMO: Usuario[] = [
-  {
-    email: "fornecedor@cocapec.com.br",
-    nome: "Fertilizantes Vale do Café",
-    perfil: "fornecedor",
-    empresa: "Fertilizantes Vale do Café Ltda (14.285.390/0001-44)",
-  },
-  { email: "compras@cocapec.com.br", nome: "Equipe de Compras", perfil: "compras" },
-  { email: "armazem@cocapec.com.br", nome: "Responsável Armazém Franca", perfil: "armazem" },
+/** Acessos de demonstração criados pelo seed do backend (scripts/seed.py). */
+export const SENHA_DEMO = "Cocapec@2026";
+
+export const USUARIOS_DEMO: { email: string; perfil: Perfil; rotulo: string }[] = [
+  { email: "fornecedor@cocapec.com.br", perfil: "fornecedor", rotulo: "Fornecedor (Sumitomo)" },
+  { email: "compras@cocapec.com.br", perfil: "compras", rotulo: "Compras" },
+  { email: "armazem@cocapec.com.br", perfil: "armazem", rotulo: "Responsável pelo Armazém" },
+  { email: "admin@cocapec.com.br", perfil: "armazem", rotulo: "Administrador (todas as áreas)" },
 ];

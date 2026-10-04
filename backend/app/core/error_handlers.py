@@ -2,7 +2,7 @@
 
     {"codigo": "VAGA_OCUPADA", "mensagem": "Horário lotado", "detalhes": {...}}
 
-409 = regra de negócio | 404 = não encontrado | 422 = dados inválidos
+401 = sem login | 403 = sem permissão | 409 = regra de negócio | 404 = não encontrado | 422 = dados inválidos
 """
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
@@ -10,7 +10,9 @@ from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from app.core.exceptions import NaoEncontradoError, RegraNegocioError
+from app.core.exceptions import (
+    AcessoNegadoError, NaoAutenticadoError, NaoEncontradoError, RegraNegocioError,
+)
 
 
 def _erro(status: int, codigo: str, mensagem: str, detalhes=None) -> JSONResponse:
@@ -22,6 +24,16 @@ def registrar_error_handlers(app: FastAPI) -> None:
     @app.exception_handler(RegraNegocioError)
     def regra_negocio(_: Request, exc: RegraNegocioError):
         return _erro(409, exc.codigo, str(exc), exc.extra)
+
+    @app.exception_handler(NaoAutenticadoError)
+    def nao_autenticado(_: Request, exc: NaoAutenticadoError):
+        resp = _erro(401, exc.codigo, str(exc))
+        resp.headers["WWW-Authenticate"] = "Bearer"
+        return resp
+
+    @app.exception_handler(AcessoNegadoError)
+    def acesso_negado(_: Request, exc: AcessoNegadoError):
+        return _erro(403, exc.codigo, str(exc))
 
     @app.exception_handler(NaoEncontradoError)
     def nao_encontrado(_: Request, exc: NaoEncontradoError):

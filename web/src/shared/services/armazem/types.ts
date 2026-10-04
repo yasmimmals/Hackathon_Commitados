@@ -5,6 +5,7 @@ export type BalcaoCreate = {
   nota_fiscal_id: number;
   horario: Horario;
   acondicionamento: Acondicionamento;
+  email_contato?: string | null;
 };
 
 export type DestinoIn = {

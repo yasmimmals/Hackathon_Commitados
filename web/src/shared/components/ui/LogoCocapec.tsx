@@ -1,16 +1,27 @@
-/** Marca COCAPEC desenhada em SVG/CSS (o projeto ainda não tem os arquivos de logo). */
+import { TreePine } from "lucide-react";
+
+/**
+ * Marca COCAPEC (o projeto ainda não tem os arquivos de logo): anel verde e azul,
+ * disco amarelo com dois pinheiros (ícone TreePine) e o nome com o slogan.
+ */
 export default function LogoCocapec() {
   return (
     <span className="flex items-center gap-2">
-      <svg viewBox="0 0 40 40" className="h-10 w-10 shrink-0" aria-hidden>
-        <circle cx="20" cy="20" r="18" fill="#f2b705" />
-        <circle cx="20" cy="20" r="13" fill="#4ea72e" />
-        <path d="M20 9c-5 5-5 15 0 22 5-7 5-17 0-22z" fill="#f2b705" />
-        <path d="M20 12v16" stroke="#3f8f22" strokeWidth="1.5" />
-      </svg>
+      <span className="relative flex h-11 w-11 shrink-0 items-center justify-center" aria-hidden>
+        <svg viewBox="0 0 44 44" className="absolute inset-0 h-full w-full">
+          {/* Anel: verde à esquerda/em cima, azul à direita/embaixo (circunferência ≈ 119,4) */}
+          <circle cx="22" cy="22" r="19" fill="none" stroke="#4ea72e" strokeWidth="4" strokeLinecap="round" strokeDasharray="56 63.4" transform="rotate(132 22 22)" />
+          <circle cx="22" cy="22" r="19" fill="none" stroke="#0a5aa4" strokeWidth="4" strokeLinecap="round" strokeDasharray="49 70.4" transform="rotate(325 22 22)" />
+          <circle cx="22" cy="22" r="14" fill="#f2b705" />
+        </svg>
+        <span className="relative flex items-end -space-x-2 pb-0.5">
+          <TreePine className="h-5 w-5 text-[#3f9b2f]" fill="currentColor" strokeWidth={1.5} />
+          <TreePine className="h-4.5 w-4.5 text-site-verde" fill="currentColor" strokeWidth={1.5} />
+        </span>
+      </span>
       <span className="leading-none">
-        <span className="block text-[28px] font-black tracking-tight text-site-azul">COCAPEC</span>
-        <span className="block text-right text-[10px] font-semibold italic text-site-verde">O melhor café está aqui</span>
+        <span className="block text-[30px] font-bold tracking-[-0.04em] text-site-azul">COCAPEC</span>
+        <span className="block text-right text-[10px] font-bold italic text-site-verde">O melhor café está aqui</span>
       </span>
     </span>
   );

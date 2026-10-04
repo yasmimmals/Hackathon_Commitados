@@ -5,6 +5,8 @@ from sqlalchemy import or_, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from app.core.auth import exigir_perfil
+from app.models import PerfilUsuario
 from app.core.database import get_db
 from app.core.exceptions import RegraNegocioError
 from app.models import Fornecedor
@@ -13,7 +15,8 @@ from app.schemas.agendamento import FornecedorCreate, FornecedorOut
 router = APIRouter(prefix="/fornecedores", tags=["Fornecedores"])
 
 
-@router.post("", response_model=FornecedorOut, status_code=201)
+@router.post("", response_model=FornecedorOut, status_code=201,
+             dependencies=[Depends(exigir_perfil(PerfilUsuario.COMPRAS, PerfilUsuario.ARMAZEM))])
 def criar(dados: FornecedorCreate, db: Session = Depends(get_db)):
     f = Fornecedor(**dados.model_dump())
     db.add(f)
