@@ -7,23 +7,8 @@ Desenvolvido pela equipe **Commitados** no **X Hackathon Uni-FACEF** (3 e 4 de o
 ![Next.js](https://img.shields.io/badge/Next.js-16-black) ![React](https://img.shields.io/badge/React-19-61DAFB) ![FastAPI](https://img.shields.io/badge/FastAPI-Python_3.11-009688) ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-336791) ![Docker](https://img.shields.io/badge/Docker-Compose-2496ED)
 
 <p align="center">
-  <img src="docs/assets/logo.jpg" alt="Painel gerencial com sobra e falta de chapas por mês" width="80%">
+  <img src="docs\assets\logo.png" alt="Painel gerencial com sobra e falta de chapas por mês" width="80%">
 </p>
-
----
-
-## O que descobrimos
-
-Cruzamos a folha de pagamento dos chapas (jan/2025–ago/2026) com 18.373 notas fiscais de recebimento do SAP. Em 373 dias úteis:
-
-| Indicador | Resultado |
-|---|---|
-| Dias com sobra de chapas, mesmo no cenário de carga mais pesada | **73% a 97%** |
-| Custo da sobra no período, ao piso de R$ 90,1731 por diária | **R$ 80 a 114 mil** |
-| Correlação entre tamanho da equipe e demanda | **-0,11** (praticamente nula) |
-| Período de risco de falta | **julho a outubro** (demanda ×2,8, equipe igual) |
-
-Em resumo: a equipe é fixa e a demanda é sazonal. Sobra quase o ano todo e aperta no pico da safra. A análise completa, com a lógica e os limites declarados, está no [relatório gerencial](docs/) e na tela `/documentacao`.
 
 ---
 
