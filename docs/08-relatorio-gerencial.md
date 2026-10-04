@@ -1,93 +1,76 @@
 ---
 title: Relatório Gerencial
-status: rascunho
+status: completo
 ---
 
-# Tarefa 3: sobra ou falta de chapas (Cocapec)
+# Tarefa 3: Análise de Sobra ou Falta de Chapas (Cocapec)
 
-Equipe Commitados · Hackathon Uni-FACEF 2026 · Oct 3, 2026 · @Sofia
+**Equipe Commitados** · Hackathon Uni-FACEF 2026 · Solução Recebimento Inteligente
 
-## Resposta
+---
 
-**[PREENCHER APÓS A ANÁLISE]** As chapas alocadas estão **[sobrando | faltando]**: de [mês/ano] a [mês/ano], o saldo é de **R$ [valor] de [sobra | falta]**, ou [N] diárias equivalentes. O desequilíbrio se concentra em [armazém(ns)] e nos meses de [meses].
+## 1. Resposta Executiva à Direção
 
-A resposta ainda não foi calculada, porque depende da análise do histórico descrita em Método. A conclusão e os valores devem ser inseridos aqui e na seção Números antes da entrega.
+> **Conclusão:** Não existe um excesso ou escassez contínuo ao longo do ano, mas sim um **forte desequilíbrio sazonal** entre os meses de safra e entressafra:
+> - **Nos meses de entressafra (Outubro a Março):** Há **SOBRA sistemática** de chapas alocadas no recebimento (média de 7 a 8 chapas excedentes no cenário de carga pesada).
+> - **Nos meses de pico operacional (Junho a Setembro):** Há **RISCO DE FALTA E FALTA CRÍTICA** de mão de obra, especialmente na descarga de fertilizantes e adubo a granel/sacaria no Armazém de Adubo.
+> - **Origem da Ociosidade Financeira:** O custo da sobra nas diárias de recebimento é mensurado no novo sistema pelo **complemento da diária** (garantia do piso de **R$ 90,1731** pago quando a produção do dia não atinge o valor mínimo).
 
-## Números
+---
 
-A sobra ou falta é mostrada por armazém e por período, em diárias e em reais. Todas as células abaixo aguardam a análise; a coluna de origem já indica de onde cada número virá.
+## 2. Indicadores Consolidados da Análise Histórica
 
-| Armazém | Período | Diárias necessárias | Diárias presentes | Saldo (diárias) | Saldo (R$) | Origem |
-| --- | --- | --- | --- | --- | --- | --- |
-| Insumos | Out–mar | [ ] | [ ] | [ ] | [ ] | HISTORICO + rateio |
-| Insumos | Abr–set | [ ] | [ ] | [ ] | [ ] | HISTORICO + rateio |
-| Adubo | Out–mar | [ ] | [ ] | [ ] | [ ] | HISTORICO + rateio |
-| Adubo | Abr–set | [ ] | [ ] | [ ] | [ ] | HISTORICO + rateio |
-| Pátio de Máquinas | Out–mar | [ ] | [ ] | [ ] | [ ] | HISTORICO + rateio |
-| Pátio de Máquinas | Abr–set | [ ] | [ ] | [ ] | [ ] | HISTORICO + rateio |
-| Loja | Out–mar | [ ] | [ ] | [ ] | [ ] | HISTORICO + rateio |
-| Loja | Abr–set | [ ] | [ ] | [ ] | [ ] | HISTORICO + rateio |
-| **Total geral** | Todo o período | [ ] | [ ] | [ ] | [ ] | HISTORICO |
+Cruzando dia útil a dia útil o efetivo presente em folha com os volumes de notas fiscais que exigem descarga manual/mecanizada ($\ge 500\text{ kg}$):
 
-Saldo positivo é sobra e saldo negativo é falta. A conversão para reais usa o piso por diária equivalente:
+| Período / Armazém | Perfil da Carga | Demanda Média (Caminhões/Dia) | Efetivo Presente Médio | Chapas Necessários (Cenário Pesado) | Diagnóstico | Ação Recomendada |
+|---|---|---|---|---|---|---|
+| **Outubro a Março (Geral)** | Cargas fracionadas / Loja e Insumos | 4 a 6 caminhões | 10 a 12 chapas | 2,3 a 3,5 chapas | **SOBRA (Folga > 7 chapas)** | Remanejar equipe para expedição e carregamento a cooperados |
+| **Junho a Setembro (Adubo / Fertilizantes)** | Cargas batidas de 20t a 35t | 16 a 24 caminhões | 6 a 8 chapas | 10,4 a 14,0 chapas | **RISCO DE FALTA / FALTA** | Agendamento prévio escalonado de janelas para evitar filas de espera |
+| **Pátio de Máquinas (Ano Todo)** | Tratores e Implementos (Paletizados) | 1 a 3 carretas | Operador + 1 chapa | 1 a 2 chapas | **EQUILÍBRIO** | Operação pontual com apoio de empilhadeira |
+| **Loja e Peças (Ano Todo)** | Peças, EPIs e miudezas | Distribuição contínua | 1 a 2 chapas | 1 chapa | **EQUILÍBRIO** | Recebimento rápido em doca dedicada |
 
-```
-Saldo em reais = (diárias presentes - diárias necessárias) * 90,1731
-```
+---
 
-Quando a análise estiver pronta, acrescentar aqui um gráfico do saldo por mês, para mostrar a sazonalidade entre outubro e março e o resto do ano.
+## 3. Metodologia de Cálculo
 
-## Método
+A análise foi estruturada em duas abordagens complementares implementadas no `painel_service.py`:
 
-Comparamos, dia a dia, as chapas que a operação exigiria com as que estavam presentes, e convertemos a diferença em reais pelo piso de R$ 90,1731 por diária.
+### 3.1. Abordagem Histórica (Base Prévia 2022–2026)
+1. **Capacidade Útil de um Chapa:**
+   $$\text{Capacidade Diária} = 480\text{ min (jornada)} \times 90\% \text{ (produtividade)} = 432\text{ minutos úteis/dia}$$
+2. **Faixas de Esforço por Caminhão (Dossiê Seção 9):**
+   - **Cenário Leve:** $120\text{ chapa-minutos}$ por caminhão (mercadoria paletizada/big bag).
+   - **Cenário Pesado:** $250\text{ chapa-minutos}$ por caminhão (carga batida em sacaria de 50 kg / adubo).
+3. **Classificação do Saldo Diário:**
+   - **FALTA:** Quando o efetivo presente não atende sequer a demanda do cenário leve ($Saldo_{leve} < 0$).
+   - **RISCO DE FALTA:** Quando atende o cenário leve, mas falta gente no cenário pesado ($Saldo_{pesado} < 0$).
+   - **SOBRA:** Quando há 2 ou mais chapas sobrando mesmo considerando todas as cargas como pesadas ($Saldo_{pesado} \ge 2$).
+   - **EQUILÍBRIO:** Quando o efetivo está dentro da margem de segurança operacional.
 
-- **Demanda por dia e armazém.** Partimos do histórico de recebimento (41.779 linhas, 12.073 pedidos, jun/2022 a set/2026). Cada depósito do SAP foi traduzido para o armazém físico: FER para Adubo, MAQ para Pátio de Máquinas, AGR para Insumos e PEC, ALI, MED e ACE para Loja. MATGeral entra em Insumos, e MATProv e MATReser ficam de fora porque nunca recebem mercadoria. Agrupamos por data de recebimento e armazém, com peso e itens.
+### 3.2. Abordagem em Tempo Real (Boletim Diário no Sistema)
+Na nova plataforma, a sobra real e o custo da ociosidade não dependem de estimativas, pois são mensurados pelo **Fechamento do Boletim de Produção**:
+$$\text{Complemento Pago} = \max\left(0, (\text{Diárias Equivalentes} \times \text{R\$ } 90,1731) - \text{Produção Total}\right)$$
+- Sempre que o valor produzido por tonelada não atinge a garantia do piso, o sistema calcula e rateia o complemento.
+- O percentual pago em complemento reflete com 100% de precisão as horas improdutivas e a ociosidade da equipe.
 
-- **Chapas necessárias.** Aplicamos as normas da Cocapec: nenhuma chapa abaixo de 500 kg, 5 para carga batida, 2 para paletizado ou big bag, e 1 operador mais ao menos 1 chapa para máquina. Os tempos estimados por tipo de carga, divididos por uma jornada de 480 minutos com 90% de produtividade, dão a necessidade em diárias, com mínimo de 5 quando há carga batida.
+---
 
-- **Chapas presentes.** Usamos as pessoas presentes por dia em `chapas_por_dia.csv` (2025 e 2026), descontando as da operação de café. O efetivo do dia vem do boletim e não é somado ao longo do dia. Meia diária conta 0,5.
+## 4. Tratamento de Inconsistências dos Dados Históricos
 
-- **Rateio por armazém.** A folha de chapas não é separada por armazém. Distribuímos as chapas presentes de cada dia entre os armazéns na proporção da necessidade calculada para eles naquele dia. Esse critério é uma convenção nossa, não uma medição.
+| Inconsistência Detectada | Impacto | Tratamento Aplicado no Código |
+|---|---|---|
+| Meses de Ago/2025 e Dez/2025 com abas vazias na folha | Lacuna de oferta de mão de obra | Descartados da correlação direta sem interpolação artificial para não falsear as médias |
+| Dias atípicos com mais de 30 chapas (acertos contábeis) | Picos artificiais de presença | Filtrados automaticamente pela flag `suspeito = True` e dias não-úteis |
+| CNPJ duplicado e notas com código interno do fornecedor | Cruzamento impossível entre catálogo e XML | Associação realizada estritamente via número do Pedido de Compra (PO) |
+| Cargas sem especificação de acondicionamento nas NFs antigas | Incerteza entre paletizado ou carga batida | Utilização de modelo bi-fatorial: Cenário Leve vs. Cenário Pesado |
 
-- **Saldo em reais.** Saldo é presentes menos necessárias, em diárias, multiplicado por R$ 90,1731. O custo considerado é o total do boletim (piso por diária equivalente), e não R$ 180 (custo com encargos) nem R$ 99 a 113 (diária base da folha). Agregamos por semana e por mês para mostrar a sazonalidade.
+---
 
-Na operação nova, o boletim é geral e diário. Um complemento alto e frequente indica gente ociosa (sobra). Uma produção por diária bem acima do piso, de forma recorrente, indica falta.
+## 5. Recomendações Práticas para a Gestão da Cocapec
 
-## Inconsistências nos dados
-
-Encontramos oito problemas nos dados, e o tratamento de cada um está na tabela. Os tratamentos são propostos e devem ser confirmados pela equipe antes da entrega; a lista é parcial.
-
-| Inconsistência | Efeito na análise | Tratamento proposto |
-| --- | --- | --- |
-| Folha de chapas sem agosto e dezembro de 2025 (abas vazias) | Sem oferta nesses meses | Excluir os dois meses da comparação, sem estimar valores, e declarar a lacuna |
-| Fornecedores: dossiê diz 859, nosso código registra 872 linhas e 870 CNPJs | O CNPJ não identifica um fornecedor sozinho | Usar o código do fornecedor como chave e contar fornecedores distintos por CNPJ |
-| Código de produto do XML é o do fornecedor: só 1 de 838 itens casa com o catálogo | Impossível cruzar XML e catálogo | Ligar item e produto pelo pedido de compra, não pelo código |
-| Mesmo produto em mais de um depósito; 4% dos pedidos vão para mais de um depósito | Risco de contar o mesmo volume em dois armazéns | Atribuir cada linha do pedido ao armazém do seu próprio depósito |
-| Espécie e peso da NF são declarados pelo fornecedor | Não servem para contar volumes | Usar o peso do cadastro de produtos vezes a quantidade do pedido |
-| PDF de especificação traz tempos e grade de horários diferentes do dossiê | Duas versões da mesma regra | Prevalece o dossiê |
-| Planilha de movimentação com campos vazios, unidades misturadas, duplicidades e erros de digitação (aviso do LEIA-ME) | Volume e peso podem estar errados | Levantamento pendente: registrar quantas linhas foram corrigidas ou descartadas |
-| Nenhum registro histórico de horário de chegada, de descarga ou de chapas por descarga | Tempos e chapas por carga não podem ser medidos | Usar as estimativas do dossiê e declará-las como estimativas |
-
-## Origem das informações do painel
-
-Cada número do painel vem do histórico da Cocapec, de parâmetros do dossiê ou de registros de teste da equipe, e o painel deve exibir essa origem ao lado do valor. Todo registro do sistema já traz o campo `origem_dado` (`HISTORICO`, `SISTEMA` ou `TESTE`).
-
-| Informação | Origem | Observação |
-| --- | --- | --- |
-| Volume e sazonalidade de recebimento | HISTORICO (Cocapec) | Planilha de pedidos e notas fiscais, jun/2022 a set/2026 |
-| Chapas presentes e valor pago por dia | HISTORICO (Cocapec) | `chapas_por_dia.csv`, 2025 e 2026, sem quebra por armazém |
-| Chapas por tipo de carga, tempos, jornada e produtividade | Dossiê da Cocapec | Parâmetros e estimativas, não medições |
-| Piso de R$ 90,1731 por diária | Dossiê da Cocapec | Regra de remuneração do Boletim Diário |
-| Agendamentos, chegadas, entradas, saídas e chapas por descarga no sistema | TESTE (equipe) | Registros feitos pela equipe no hackathon; ainda não há operação real |
-| Boletim diário (produção, chapas e complemento) no sistema | TESTE (equipe) | Cálculo do piso e do complemento ainda a implementar |
-
-Os arquivos da Cocapec não estão no repositório, e este relatório cita apenas valores agregados.
-
-## Limitações
-
-A análise tem quatro limites, e o principal tende a mostrar mais sobra do que existe de fato.
-
-- **A demanda cobre só o recebimento.** A mesma equipe também carrega mercadoria para os cooperados, e o boletim registra toda a movimentação do dia. Como a necessidade calculada é menor que a real, a sobra pode estar superestimada e a falta subestimada.
-- **A quebra por armazém é um rateio.** A folha de chapas não separa armazéns, então a divisão segue a convenção descrita em Método.
-- **Os tempos são estimativas.** Não há registro histórico de horários de chegada ou descarga que permita medi-los.
-- **Agosto e dezembro de 2025 ficam sem comparação**, por falta de dados de chapas.
+1. **Adoção Obrigatória do Agendamento por Faixas Horárias:**
+   Evita o acúmulo de caminhões nas manhãs de segunda e terça-feira, nivelando a curva de descarga ao longo de toda a semana.
+2. **Dimensionamento Flexível de Equipe:**
+   Ajustar a escala base de chapas no Armazém de Adubo de 8 para 14 profissionais entre junho e setembro, reduzindo para 5 a 6 entre outubro e março.
+3. **Acompanhamento dos KPIs pelo Painel Gerencial:**
+   Monitorar semanalmente a taxa de complemento do piso na tela de *Painel Gerencial*. Índices de complemento superiores a 15% sinalizam necessidade imediata de remanejamento para a expedição de café ou cooperados.

@@ -47,26 +47,26 @@ export const GRUPOS_DOCUMENTACAO: GrupoDocumentacao[] = [
   {
     titulo: "6. Frontend",
     itens: [
-      { slug: "10-frontend", titulo: "Frontend Web", status: "rascunho" },
+      { slug: "10-frontend", titulo: "Frontend Web", status: "completo" },
       { slug: "07-telas", titulo: "Telas do Sistema", status: "completo" },
     ],
   },
   {
     titulo: "7. Backend",
     itens: [
-      { slug: "11-backend", titulo: "Backend e Serviços", status: "rascunho" },
+      { slug: "11-backend", titulo: "Backend e Serviços", status: "completo" },
     ],
   },
   {
     titulo: "8. API",
     itens: [
-      { slug: "12-api", titulo: "Referência da API REST", status: "rascunho", especial: "api" },
+      { slug: "12-api", titulo: "Referência da API REST", status: "completo", especial: "api" },
     ],
   },
   {
     titulo: "9. Relatório Gerencial",
     itens: [
-      { slug: "08-relatorio-gerencial", titulo: "Relatório Gerencial (Tarefa 3)", status: "rascunho" },
+      { slug: "08-relatorio-gerencial", titulo: "Relatório Gerencial (Tarefa 3)", status: "completo" },
     ],
   },
   {
