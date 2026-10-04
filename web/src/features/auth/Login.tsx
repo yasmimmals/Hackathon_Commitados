@@ -139,7 +139,7 @@ export default function Login() {
         </Link>
       </p>
 
-      <details open className="mt-8 rounded-xl border border-dashed border-gray-300 p-3 text-xs">
+      <details className="mt-8 rounded-xl border border-dashed border-gray-300 p-3 text-xs">
         <summary className="cursor-pointer font-semibold text-site-azul">Acessos de demonstração</summary>
         <p className="mt-1 text-gray-500">
           Senha de todos: <strong className="font-mono text-gray-700">{SENHA_DEMO}</strong>. Clique em um perfil para preencher:
