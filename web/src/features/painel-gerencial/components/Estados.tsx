@@ -31,7 +31,6 @@ export function Kpi({ rotulo, valor, nota, destaque }: { rotulo: string; valor: 
   );
 }
 
-/** Explica de onde vem cada número: o júri e o gestor precisam saber o que é estimativa. */
 export function Premissas({ itens, titulo = "Como este número é calculado" }: { itens: string[]; titulo?: string }) {
   const [aberto, setAberto] = useState(false);
   return (

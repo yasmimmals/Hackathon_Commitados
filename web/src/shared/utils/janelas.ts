@@ -1,6 +1,5 @@
 import type { Horario } from "@/shared/services";
 
-/** Grade de janelas de descarga (mesma do backend: app/core/config.py, GRADE). */
 export const JANELAS: { horario: Horario; fim: string }[] = [
   { horario: "08:00", fim: "10:00" },
   { horario: "10:00", fim: "13:00" },
@@ -8,7 +7,6 @@ export const JANELAS: { horario: Horario; fim: string }[] = [
   { horario: "15:00", fim: "17:30" },
 ];
 
-/** Data local (não UTC) em AAAA-MM-DD, deslocada em `dias`. */
 export function dataLocalIso(dias = 0, base = new Date()) {
   const d = new Date(base);
   d.setDate(d.getDate() + dias);
@@ -17,12 +15,10 @@ export function dataLocalIso(dias = 0, base = new Date()) {
 
 const horaAgora = (agora: Date) => agora.toTimeString().slice(0, 5);
 
-/** Janela em que um encaixe entra agora; `undefined` se o recebimento do dia já terminou. */
 export function janelaAtual(agora = new Date()): Horario | undefined {
   return JANELAS.find(({ fim }) => horaAgora(agora) < fim)?.horario;
 }
 
-/** A janela já terminou? (o backend só aceita "não compareceu" depois disso). */
 export function janelaTerminou(data: string, horario: Horario, agora = new Date()) {
   const hoje = dataLocalIso(0, agora);
   if (data !== hoje) return data < hoje;

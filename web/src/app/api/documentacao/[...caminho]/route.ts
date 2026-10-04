@@ -22,12 +22,10 @@ export async function GET(
     return new NextResponse("Caminho não informado", { status: 400 });
   }
 
-  // Caminho absoluto para a pasta docs/ na raiz do repositório
   const docsRoot = path.resolve(process.cwd(), "../docs");
   const subcaminho = path.join(...caminho);
   const caminhoCompleto = path.resolve(docsRoot, subcaminho);
 
-  // Evita directory traversal fora da pasta docs
   if (!caminhoCompleto.startsWith(docsRoot)) {
     return new NextResponse("Acesso não permitido", { status: 403 });
   }

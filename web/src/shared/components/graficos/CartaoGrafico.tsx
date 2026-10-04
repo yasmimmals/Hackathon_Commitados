@@ -4,15 +4,6 @@ import { useAcessibilidade, sonificar } from "@/shared/acessibilidade";
 
 export type ColunaTabela<T> = { rotulo: string; valor: (linha: T) => string | number; alinhar?: "direita" };
 
-/**
- * Cartão de gráfico acessível. Além do gráfico em si, oferece:
- *  - Tabela: os mesmos dados em formato de tabela (leitores de tela e quem prefere números);
- *  - Ouvir resumo: a conclusão do gráfico em voz alta;
- *  - Ouvir gráfico: a série vira som (mais agudo = maior) e o ponto tocado se acende;
- *  - Teclado: com o gráfico focado, ← → percorrem os pontos e cada um é anunciado;
- *  - CSV: baixa os dados para abrir no Excel.
- * `children` recebe o índice do ponto em foco para desenhar o destaque.
- */
 export default function CartaoGrafico<T>({
   titulo, subtitulo, resumo, serieSonora, pontos, tabela, arquivo, legenda, altura = "h-[260px] sm:h-[320px]", controles, children,
 }: {
@@ -196,7 +187,6 @@ export default function CartaoGrafico<T>({
   );
 }
 
-/** Legenda simples e clicável não é obrigatória; esta é só visual (os dados estão na tabela). */
 export function Legenda({ itens }: { itens: { cor: string; rotulo: string; tracejado?: boolean; faixa?: boolean }[] }) {
   return (
     <ul className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-gray-700">

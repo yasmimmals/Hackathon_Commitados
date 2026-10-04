@@ -13,7 +13,6 @@ export function validarEntrada(entry: YardEntry): YardEntryErrors {
   return errors;
 }
 
-/** Formata como (16) 99876-5432. */
 export function mascararTelefone(valor: string) {
   const d = valor.replace(/\D/g, "").slice(0, 11);
   if (d.length <= 2) return d;

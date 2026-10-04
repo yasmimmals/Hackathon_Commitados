@@ -1,17 +1,11 @@
 @import "tailwindcss";
 
-/*
- * Cores da identidade COCAPEC. Viram utilitários do Tailwind:
- * bg-marca, text-marca, ring-marca, hover:bg-marca-escuro, bg-fundo...
- */
 @theme {
-  /* Verde COCAPEC (ações e botões), um tom abaixo do site para manter contraste com texto branco. */
   --color-marca: #3f8f22;
   --color-marca-escuro: #33761b;
   --color-marca-profundo: #285e15;
   --color-fundo: #ececec;
 
-  /* Cores do site institucional */
   --color-site-azul: #0a5aa4;
   --color-site-azul-escuro: #084a87;
   --color-site-verde: #4ea72e;
@@ -21,7 +15,6 @@
   --font-sans: var(--font-ubuntu), ui-sans-serif, system-ui, sans-serif;
 }
 
-/* Títulos no padrão do site: azul, itálico e sublinhado amarelo. */
 @utility titulo-pagina {
   width: fit-content;
   border-bottom: 3px solid var(--color-site-amarelo);
@@ -42,7 +35,6 @@
   color: var(--color-site-azul);
 }
 
-/* Impressão / "Salvar como PDF": página A4, fundo branco, cores preservadas e cards inteiros. */
 @media print {
   @page {
     size: A4;
@@ -63,25 +55,15 @@
   }
 }
 
-/* =====================================================================
- * ACESSIBILIDADE (Central de Acessibilidade, Alt + A)
- * As preferências viram atributos no <html> (data-tema, data-dislexia...).
- * Os temas trocam as VARIÁVEIS de cor do Tailwind: todas as telas mudam
- * juntas, sem editar componente por componente.
- * ===================================================================== */
-
-/* Tamanho do texto: tudo no Tailwind é em rem, então escala a interface inteira */
 html {
   font-size: calc(100% * var(--escala-texto, 1));
 }
 
-/* Foco visível para todos (WCAG 2.4.7); componentes com anel próprio continuam com o deles */
 :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
   outline: 3px solid var(--color-site-azul);
   outline-offset: 2px;
 }
 
-/* ---------- Tema escuro ---------- */
 html[data-tema="escuro"] {
   --color-white: #121c2e;
   --color-fundo: #0a1220;
@@ -172,7 +154,6 @@ html[data-tema="escuro"] {
   --color-gray-950: #ffffff;
 }
 
-/* ---------- Alto contraste (WCAG AAA): preto, branco e amarelo ---------- */
 html[data-tema="alto-contraste"] {
   --color-white: #000000;
   --color-fundo: #000000;
@@ -262,7 +243,6 @@ html[data-tema="alto-contraste"] {
   --color-gray-900: #ffffff;
   --color-gray-950: #ffffff;
 }
-/* sem sombras para separar, os cartões ganham contorno */
 html[data-tema="alto-contraste"] :where(.shadow-sm, .shadow, .shadow-md, .shadow-lg, .shadow-xl) {
   outline: 1px solid #ffffff;
 }
@@ -270,7 +250,6 @@ html[data-tema="alto-contraste"] img:not([src$=".svg"]) {
   filter: grayscale(1) contrast(1.2);
 }
 
-/* ---------- Fonte para dislexia (Atkinson Hyperlegible) ---------- */
 html[data-dislexia] {
   --font-sans: var(--font-atkinson), ui-sans-serif, system-ui, sans-serif;
 }
@@ -278,7 +257,6 @@ html[data-dislexia] :where(.titulo-pagina, .titulo-secao, i, em) {
   font-style: normal;
 }
 
-/* ---------- Espaçamento de leitura (WCAG 1.4.12) ---------- */
 html[data-espacamento] body {
   line-height: 1.7;
 }
@@ -287,7 +265,6 @@ html[data-espacamento] :where(p, li, td, th, dd, dt, label, span, a, button, h1,
   word-spacing: 0.14em;
 }
 
-/* ---------- Links destacados (não dependem só de cor) ---------- */
 html[data-links] :where(a, [role="link"]) {
   text-decoration: underline !important;
   text-decoration-thickness: 2px !important;
@@ -295,14 +272,12 @@ html[data-links] :where(a, [role="link"]) {
   background-color: color-mix(in srgb, var(--color-site-amarelo) 30%, transparent);
 }
 
-/* ---------- Foco reforçado ---------- */
 html[data-foco] :focus-visible {
   outline: 4px solid var(--color-site-amarelo) !important;
   outline-offset: 3px !important;
   box-shadow: 0 0 0 8px var(--color-site-azul) !important;
 }
 
-/* ---------- Alvos de toque grandes (WCAG 2.5.5) ---------- */
 html[data-alvos] :where(button, [role="button"], [role="tab"], [role="switch"], select, a,
   input:not([type="checkbox"]):not([type="radio"]):not([type="range"])) {
   min-height: 44px;
@@ -315,13 +290,11 @@ html[data-alvos] :where(input[type="checkbox"], input[type="radio"]) {
   height: 1.4rem;
 }
 
-/* ---------- Cursor grande ---------- */
 html[data-cursor],
 html[data-cursor] * {
   cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 24 24'><path d='M4 2l14 9-6.5 1.5L15 20l-3 1.5-3.5-7.5L4 18z' fill='black' stroke='white' stroke-width='1.5'/></svg>") 4 2, auto !important;
 }
 
-/* ---------- Reduzir movimento ---------- */
 html[data-sem-movimento] *,
 html[data-sem-movimento] *::before,
 html[data-sem-movimento] *::after {
@@ -330,3 +303,55 @@ html[data-sem-movimento] *::after {
   transition-duration: 0.001ms !important;
   scroll-behavior: auto !important;
 }
+
+html[data-paleta="daltonismo"][data-daltonismo="vermelho-verde"] {
+  --color-marca: #005f94;
+  --color-marca-escuro: #004c77;
+  --color-marca-profundo: #003d60;
+  --color-site-verde: #0072b2;
+  --color-site-verde-escuro: #005f94;
+
+  --color-emerald-50: #eef6fc; --color-emerald-100: #d6eaf7; --color-emerald-200: #add4ef;
+  --color-emerald-300: #7fbbe4; --color-emerald-400: #4a9dd4; --color-emerald-500: #1f84c4;
+  --color-emerald-600: #0072b2; --color-emerald-700: #005e93; --color-emerald-800: #004c77;
+  --color-emerald-900: #003d60; --color-emerald-950: #002740;
+  --color-green-50: #eef6fc; --color-green-100: #d6eaf7; --color-green-200: #add4ef;
+  --color-green-300: #7fbbe4; --color-green-400: #4a9dd4; --color-green-500: #1f84c4;
+  --color-green-600: #0072b2; --color-green-700: #005e93; --color-green-800: #004c77;
+  --color-green-900: #003d60; --color-green-950: #002740;
+
+  --color-red-50: #fff3eb; --color-red-100: #ffe2cc; --color-red-200: #ffc299;
+  --color-red-300: #ff9d5c; --color-red-400: #f57a2b; --color-red-500: #e66a0f;
+  --color-red-600: #c45500; --color-red-700: #a04500; --color-red-800: #803700;
+  --color-red-900: #632b00; --color-red-950: #401c00;
+}
+
+html[data-paleta="daltonismo"][data-daltonismo="azul-amarelo"] {
+  --color-site-amarelo: #cc79a7;
+
+  --color-amber-50: #fcf2f8; --color-amber-100: #f8e1ee; --color-amber-200: #f1c3dd;
+  --color-amber-300: #e6a0c7; --color-amber-400: #d886b4; --color-amber-500: #cc79a7;
+  --color-amber-600: #b05a8c; --color-amber-700: #924672; --color-amber-800: #75385b;
+  --color-amber-900: #5c2c48; --color-amber-950: #3a1b2d;
+  --color-yellow-50: #fcf2f8; --color-yellow-100: #f8e1ee; --color-yellow-200: #f1c3dd;
+  --color-yellow-300: #e6a0c7; --color-yellow-400: #d886b4; --color-yellow-500: #cc79a7;
+  --color-yellow-600: #b05a8c; --color-yellow-700: #924672; --color-yellow-800: #75385b;
+
+  --color-sky-50: #f8fafc; --color-sky-100: #f1f5f9; --color-sky-200: #e2e8f0;
+  --color-sky-300: #cbd5e1; --color-sky-400: #94a3b8; --color-sky-500: #64748b;
+  --color-sky-600: #475569; --color-sky-700: #334155; --color-sky-800: #1e293b;
+  --color-sky-900: #0f172a;
+}
+
+html[data-paleta="daltonismo"] [aria-invalid="true"] {
+  border-style: dashed !important;
+  border-width: 2px !important;
+}
+html[data-paleta="daltonismo"] :where(p, li, td) a {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+html[data-simular="protanopia"] { filter: url(#simular-protanopia); }
+html[data-simular="deuteranopia"] { filter: url(#simular-deuteranopia); }
+html[data-simular="tritanopia"] { filter: url(#simular-tritanopia); }

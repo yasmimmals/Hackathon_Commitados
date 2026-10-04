@@ -4,7 +4,6 @@ import remarkGfm from "remark-gfm";
 import { AlertCircle, Clock, FileText } from "lucide-react";
 import type { DocumentoItem } from "../docsMetadata";
 import VisualizadorImagem from "./VisualizadorImagem";
-import GaleriaUml from "./GaleriaUml";
 import ReferenciaApi from "./ReferenciaApi";
 
 type Props = {
@@ -33,29 +32,29 @@ function extrairFrontmatter(conteudo: string): {
 }
 
 export default function VisualizadorDocumento({ documento }: Props) {
-  const [conteudo, setConteudo] = useState<string | null>(null);
-  const [carregando, setCarregando] = useState(true);
-  const [erro, setErro] = useState(false);
+  const [resultado, setResultado] = useState<{ slug: string; conteudo: string | null } | null>(null);
 
   useEffect(() => {
-    setCarregando(true);
-    setErro(false);
-
+    let ativo = true;
     fetch(`/api/documentacao/${documento.slug}.md`)
       .then((res) => {
         if (!res.ok) throw new Error("Documento não encontrado");
         return res.text();
       })
       .then((texto) => {
-        setConteudo(texto);
-        setCarregando(false);
+        if (ativo) setResultado({ slug: documento.slug, conteudo: texto });
       })
       .catch(() => {
-        setConteudo(null);
-        setErro(true);
-        setCarregando(false);
+        if (ativo) setResultado({ slug: documento.slug, conteudo: null });
       });
+    return () => {
+      ativo = false;
+    };
   }, [documento.slug]);
+
+  const carregando = resultado?.slug !== documento.slug;
+  const conteudo = carregando ? null : resultado.conteudo;
+  const erro = !carregando && conteudo === null;
 
   if (carregando) {
     return (
@@ -86,7 +85,6 @@ export default function VisualizadorDocumento({ documento }: Props) {
 
   return (
     <article className="max-w-none space-y-6">
-      {/* Cabeçalho do Documento */}
       <header className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-200 pb-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-site-azul">
@@ -94,19 +92,14 @@ export default function VisualizadorDocumento({ documento }: Props) {
           </h1>
         </div>
 
-        {isRascunho ? (
+        {isRascunho && (
           <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-3 py-1 text-xs font-bold text-amber-800 border border-amber-300">
             <AlertCircle className="h-3.5 w-3.5" />
             Rascunho
           </span>
-        ) : (
-          <span className="inline-flex items-center rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-800 border border-emerald-300">
-            Completo
-          </span>
         )}
       </header>
 
-      {/* Conteúdo Renderizado do Markdown */}
       <div className="prose prose-slate max-w-none text-gray-800 leading-relaxed">
         <ReactMarkdown
           remarkPlugins={[remarkGfm]}
@@ -178,7 +171,6 @@ export default function VisualizadorDocumento({ documento }: Props) {
         </ReactMarkdown>
       </div>
 
-      {/* Componentes Especiais Integrados */}
       {documento.especial === "bpmn" && (
         <section className="mt-8 pt-6 border-t border-gray-200">
           <h3 className="text-xl font-bold text-site-azul mb-2">Diagrama de Processos (BPMN)</h3>

@@ -25,7 +25,6 @@ const precoUnitario = (v: string) =>
 
 const vazia = (tipoId: number): LinhaProducaoIn => ({ tipo_item_id: tipoId, descarga: 0, remocao: 0, transferencia: 0 });
 
-/** Uma linha por tipo de item (preços do cadastro), igual ao formulário de papel do boletim. */
 export default function TabelaProducao({ tipos, rascunho, bloqueado, alterado, salvando, onChange, onSalvar }: TabelaProducaoProps) {
   const total = tipos.reduce((t, tipo) => {
     const l = rascunho[tipo.id];

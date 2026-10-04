@@ -1,6 +1,5 @@
 import type { MetadataRoute } from "next";
 
-/** Manifesto do PWA: nome, cores e ícones para instalar o portal no celular ou no computador. */
 export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "COCAPEC • Agendamento de Cargas",

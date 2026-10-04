@@ -3,18 +3,9 @@ import BarraSuperior from "./components/BarraSuperior";
 import CarrosselDestaques from "./components/CarrosselDestaques";
 import Navegacao from "./components/Navegacao";
 import Noticias from "./components/Noticias";
-import { IdiomaProvider, useIdioma } from "./i18n";
+import { useIdioma } from "./i18n";
 
-/** Página pública, no padrão do site institucional, com acesso ao Espaço Fornecedor (PT/EN). */
 export default function PaginaInicial() {
-  return (
-    <IdiomaProvider>
-      <Conteudo />
-    </IdiomaProvider>
-  );
-}
-
-function Conteudo() {
   const { textos } = useIdioma();
   return (
     <div className="flex min-h-screen flex-col bg-white">

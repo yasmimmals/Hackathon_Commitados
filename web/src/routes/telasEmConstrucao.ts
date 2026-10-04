@@ -1,7 +1,3 @@
-/**
- * Telas ainda não implementadas: título e ações previstas exibidas
- * pelo componente <EmConstrucao />. Remova a entrada ao implementar a tela.
- */
 export const TELAS_EM_CONSTRUCAO = {
   reagendarEntrega: {
     titulo: "Reagendar Entrega",

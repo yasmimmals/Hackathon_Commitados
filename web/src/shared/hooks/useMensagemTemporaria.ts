@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 
-/** Mensagem de retorno ao usuário que some sozinha após `duracaoMs`. */
 export function useMensagemTemporaria(duracaoMs = 6000) {
   const [mensagem, setMensagem] = useState("");
 

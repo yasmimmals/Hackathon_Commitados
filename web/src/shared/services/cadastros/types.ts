@@ -27,8 +27,6 @@ export type Equipamento = {
   observacao: string | null;
 };
 
-// ---------- Chapas e tipos de item (boletim) ----------
-
 export type Chapa = {
   id: number;
   matricula: string;
@@ -41,7 +39,6 @@ export type ChapaCreate = { matricula: string; nome: string };
 export type TipoItem = {
   id: number;
   descricao: string;
-  /** Preço por unidade movimentada (Decimal em string). */
   preco_unitario: string;
   ativo: boolean;
 };

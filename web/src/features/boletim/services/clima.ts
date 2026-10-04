@@ -42,7 +42,6 @@ const DIAS_SEMANA = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta"
 const MESES = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
 const PONTOS_CARDEAIS = ["N", "NE", "L", "SE", "S", "SO", "O", "NO"];
 
-
 function descreverCodigo(codigo: number): string {
   if (codigo === 0) return "Céu limpo";
   if (codigo === 1) return "Predomínio de sol";
@@ -73,7 +72,6 @@ function arredondar(valor: number, casas = 0) {
   return Math.round(valor * fator) / fator;
 }
 
-/** Maior probabilidade de chuva entre as horas [de, ate) do dia informado. */
 function probabilidadeNoPeriodo(dados: RespostaOpenMeteo, dia: string, de: number, ate: number) {
   let maior = 0;
   dados.hourly.time.forEach((t, i) => {
@@ -85,7 +83,6 @@ function probabilidadeNoPeriodo(dados: RespostaOpenMeteo, dia: string, de: numbe
   return maior;
 }
 
-/** Regras operacionais COCAPEC: converte a previsão em janela de descarga. */
 function classificarDia(
   dados: RespostaOpenMeteo,
   dia: string,
@@ -112,13 +109,11 @@ function classificarDia(
   return { janela: "Dia todo liberado (todas moegas)", status: "aberta", selo: "aberta" };
 }
 
-/** Condições atuais e previsão de 7 dias da unidade, via Open-Meteo (com cache por unidade). */
 export function buscarClima(unidade: Unidade = "matriz"): Promise<Clima> {
   const atual = cache.get(unidade);
   if (atual && Date.now() - atual.em <= VALIDADE_CACHE_MS) return atual.clima;
   const clima = consultarOpenMeteo(unidade);
   cache.set(unidade, { em: Date.now(), clima });
-  // Falha não fica em cache: a próxima chamada tenta de novo.
   clima.catch(() => {
     if (cache.get(unidade)?.clima === clima) cache.delete(unidade);
   });

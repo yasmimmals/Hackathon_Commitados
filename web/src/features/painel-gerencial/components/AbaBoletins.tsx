@@ -7,8 +7,6 @@ import { dataLocalIso } from "@/shared/utils/janelas";
 import GraficoSaldo from "./GraficoSaldo";
 import { indicadorDoBoletim, resumirPorGrupo } from "../utils/indicadores";
 
-/* Aba "Boletins": a tela original do painel, calculada a partir dos boletins de produção. */
-
 const sinal = (v: number) => (v > 0 ? `+${moeda(v)}` : v < 0 ? `−${moeda(-v)}` : moeda(0));
 
 type Carga = { chave: string; boletins?: Boletim[]; erro?: string };

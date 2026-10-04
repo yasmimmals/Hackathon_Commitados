@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { WifiOff } from "lucide-react";
 
-/** Faixa fixa enquanto o aparelho estiver sem internet. */
 export default function AvisoConexao() {
   const [offline, setOffline] = useState(false);
 

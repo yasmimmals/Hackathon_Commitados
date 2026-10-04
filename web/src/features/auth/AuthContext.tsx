@@ -7,7 +7,6 @@ import type { Perfil, Usuario } from "./types";
 
 type Auth = {
   usuario: Usuario | null;
-  /** true quando o backend recusou o token salvo (a tela de login avisa). */
   sessaoExpirada: boolean;
   entrar: (email: string, senha: string) => Promise<Usuario>;
   cadastrar: (dados: CadastroIn) => Promise<Usuario>;
@@ -43,7 +42,6 @@ function lerSessao(): SessaoSalva | null {
   try {
     const bruto = localStorage.getItem(CHAVE_SESSAO);
     const sessao = bruto ? (JSON.parse(bruto) as SessaoSalva) : null;
-    // Sessões do login antigo (sem token) ou vencidas são descartadas.
     if (!sessao?.token || sessao.expiraEm * 1000 <= Date.now()) return null;
     return sessao;
   } catch {
@@ -56,7 +54,6 @@ function salvarSessao(sessao: SessaoSalva | null) {
     if (sessao) localStorage.setItem(CHAVE_SESSAO, JSON.stringify(sessao));
     else localStorage.removeItem(CHAVE_SESSAO);
   } catch {
-    // Armazenamento indisponível (aba anônima, bloqueio): a sessão vale só nesta aba.
   }
 }
 
@@ -65,7 +62,7 @@ const AuthContext = createContext<Auth | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [sessao, setSessao] = useState<SessaoSalva | null>(() => {
     const salva = lerSessao();
-    definirToken(salva?.token ?? null); // antes do primeiro request das telas
+    definirToken(salva?.token ?? null);
     return salva;
   });
   const [sessaoExpirada, setSessaoExpirada] = useState(false);
@@ -92,7 +89,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const cadastrar = useCallback(async (dados: CadastroIn) => aplicar(await cadastrarApi(dados)), [aplicar]);
 
-  // Token recusado pelo backend (vencido, usuário desativado): volta ao login com aviso.
   useEffect(
     () =>
       aoExpirarSessao(() => {
@@ -102,7 +98,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [sair],
   );
 
-  // Ao abrir o app com sessão salva, confere o token e atualiza os dados do usuário.
   const token = sessao?.token;
   useEffect(() => {
     if (!token) return;
@@ -116,7 +111,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           salvarSessao(nova);
           return nova;
         }),
-      () => undefined, // 401 já é tratado por aoExpirarSessao; sem conexão, mantém a sessão
+      () => undefined,
     );
     return () => {
       ativo = false;

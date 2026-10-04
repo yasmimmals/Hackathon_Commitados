@@ -11,16 +11,11 @@ import { vozDisponivel } from "./voz";
 
 const ICONES = { Glasses, Palette, Type, Focus, Hand, Ear };
 
-/**
- * Central de Acessibilidade (Alt + A). Painel lateral no computador, tela cheia no celular.
- * Toda mudança vale na hora, em todas as telas, e fica salva neste navegador.
- */
 export default function CentralAcessibilidade({ aoFechar }: { aoFechar: () => void }) {
   const { prefs, atualizar, restaurar, anunciar, falar, pararFala } = useAcessibilidade();
   const painel = useRef<HTMLDivElement>(null);
   const tituloId = useId();
 
-  // foco entra no painel, Esc fecha, Tab não escapa (diálogo modal)
   useEffect(() => {
     const el = painel.current;
     el?.querySelector<HTMLElement>("button, input")?.focus();
@@ -117,8 +112,25 @@ export default function CentralAcessibilidade({ aoFechar }: { aoFechar: () => vo
                 className="mt-2 h-11 w-full accent-site-azul" />
             </label>
 
-            <Interruptor icone={Palette} rotulo="Cores para daltonismo" descricao="Gráficos com paleta segura (Okabe-Ito)."
+            <Interruptor icone={Palette} rotulo="Cores para daltonismo"
+              descricao="Troca as cores do site e dos gráficos por pares que se distinguem (paleta Okabe-Ito)."
               ligado={prefs.paleta === "daltonismo"} aoMudar={(v) => mudar({ paleta: v ? "daltonismo" : "padrao" }, v ? "Paleta para daltonismo ativada." : "Paleta padrão.")} />
+            {prefs.paleta === "daltonismo" && (
+              <Opcoes rotulo="Quais cores você confunde?" valor={prefs.tipoDaltonismo}
+                opcoes={[
+                  ["vermelho-verde", "Vermelho e verde", "Protanopia ou deuteranopia: verde vira azul, vermelho vira laranja."],
+                  ["azul-amarelo", "Azul e amarelo", "Tritanopia: amarelo vira rosa, azul-claro vira cinza."],
+                ]}
+                aoMudar={(v) => mudar({ tipoDaltonismo: v }, `Cores ajustadas para quem confunde ${v === "vermelho-verde" ? "vermelho e verde" : "azul e amarelo"}.`)} />
+            )}
+            <Opcoes rotulo="Simular visão (para testes)" valor={prefs.simularVisao} colunas={2}
+              opcoes={[
+                ["nenhuma", "Visão normal"],
+                ["protanopia", "Protanopia"],
+                ["deuteranopia", "Deuteranopia"],
+                ["tritanopia", "Tritanopia"],
+              ]}
+              aoMudar={(v) => mudar({ simularVisao: v }, v === "nenhuma" ? "Simulação desligada." : `Simulando ${v}.`)} />
             <Interruptor icone={MousePointer2} rotulo="Cursor grande" ligado={prefs.cursorGrande}
               aoMudar={(v) => atualizar({ cursorGrande: v })} />
           </Secao>
@@ -192,6 +204,32 @@ function Secao({ titulo, dica, children }: { titulo: string; dica?: string; chil
       </div>
       {children}
     </section>
+  );
+}
+
+function Opcoes<T extends string>({ rotulo, valor, opcoes, aoMudar, colunas = 1 }: {
+  rotulo: string; valor: T; opcoes: [T, string, string?][]; aoMudar: (v: T) => void; colunas?: 1 | 2;
+}) {
+  return (
+    <fieldset className="px-2">
+      <legend className="mb-2 text-sm font-semibold">{rotulo}</legend>
+      <div role="radiogroup" className={`grid gap-2 ${colunas === 2 ? "grid-cols-2" : "grid-cols-1"}`}>
+        {opcoes.map(([v, nome, descricao]) => {
+          const ativo = valor === v;
+          return (
+            <button key={v} type="button" role="radio" aria-checked={ativo} onClick={() => aoMudar(v)}
+              className={`flex min-h-[44px] items-start gap-2 rounded-xl border-2 px-3 py-2 text-left text-xs ${
+                ativo ? "border-site-azul bg-site-azul/10" : "border-gray-200 hover:border-gray-400"}`}>
+              <span aria-hidden className={`mt-0.5 h-3.5 w-3.5 shrink-0 rounded-full border-2 border-site-azul ${ativo ? "bg-site-azul" : ""}`} />
+              <span>
+                <span className="block font-semibold">{nome}</span>
+                {descricao && <span className="block text-[11px] text-gray-600">{descricao}</span>}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+    </fieldset>
   );
 }
 

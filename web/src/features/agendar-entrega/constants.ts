@@ -1,7 +1,6 @@
 import { Ban, Boxes, FlaskConical, Mountain, Package, PackageOpen, Sprout, type LucideIcon } from "lucide-react";
 import type { Acondicionamento, Categoria, Horario, NovaEntrega } from "./types";
 
-/** Janelas de descarga programada. */
 export const HORARIOS: Horario[] = ["08:00", "10:00", "13:00", "15:00"];
 
 export const CATEGORIAS: { key: Categoria; rotulo: string; descricao: string; icone: LucideIcon }[] = [
@@ -17,12 +16,10 @@ export const ACONDICIONAMENTOS: { key: Acondicionamento; rotulo: string; icone: 
   { key: "batido",     rotulo: "Granel (Batido)", icone: Ban },
 ];
 
-/** Carga líquida máxima aceita por veículo, em toneladas. */
 export const PESO_MAXIMO_T = 50;
 
 export const TAMANHO_MAXIMO_NF_MB = 10;
 
-/** Agendamento programado: a partir de amanhã (no mesmo dia, use "Agendar na Hora"). */
 export const ANTECEDENCIA_MINIMA_DIAS = 1;
 export const ANTECEDENCIA_MAXIMA_DIAS = 30;
 

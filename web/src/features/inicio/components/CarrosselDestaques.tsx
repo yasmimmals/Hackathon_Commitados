@@ -9,7 +9,6 @@ function SlideDiaDeCampo() {
   const t = useIdioma().textos.diaDeCampo;
   return (
     <div className="relative flex h-full overflow-hidden bg-[linear-gradient(135deg,#2f6b2a_0%,#5f8f3a_45%,#8aa95a_100%)]">
-      {/* Linhas de cafezal ao fundo */}
       <div
         aria-hidden
         className="absolute inset-0 opacity-30 [background:repeating-linear-gradient(160deg,transparent_0_18px,rgba(20,60,20,0.6)_18px_26px)]"

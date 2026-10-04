@@ -3,10 +3,6 @@ import { consultarDisponibilidade, mensagemDeErro, type SlotDisponibilidade } fr
 
 type Resultado = { chave: string; slots?: SlotDisponibilidade[]; erro?: string };
 
-/**
- * Vagas por horário na data escolhida. Com a nota de adubo já lida,
- * cada horário vem também com a previsão de chuva.
- */
 export function useDisponibilidade(data: string, notaFiscalId?: number) {
   const chave = data ? `${data}|${notaFiscalId ?? ""}` : "";
   const [resultado, setResultado] = useState<Resultado>({ chave: "" });
@@ -23,7 +19,6 @@ export function useDisponibilidade(data: string, notaFiscalId?: number) {
     };
   }, [chave, data, notaFiscalId]);
 
-  // Resultado de outra data ainda não substituído = carregando.
   const atual = resultado.chave === chave ? resultado : undefined;
   return { slots: atual?.slots ?? [], carregando: !!chave && !atual, erro: atual?.erro };
 }

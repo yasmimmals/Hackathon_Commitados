@@ -1,7 +1,6 @@
 import type { ReactNode } from "react";
 import type { LucideIcon } from "lucide-react";
 
-/** Classe base dos inputs de formulário. Combine com `tomCampo(erro)`. */
 export const CLASSE_CAMPO =
   "w-full rounded-lg border bg-gray-50 px-3 py-2 text-sm text-gray-800 placeholder:text-gray-400 focus:bg-white focus:outline-none focus:ring-2";
 
@@ -18,7 +17,6 @@ type CampoProps = {
   children: ReactNode;
 };
 
-/** Rótulo + controle + mensagem de erro (com id `${id}-erro` para aria-describedby). */
 export default function Campo({ id, rotulo, icone: Icone, erro, children }: CampoProps) {
   return (
     <div>

@@ -1,9 +1,5 @@
 import { useAcessibilidade } from "@/shared/acessibilidade";
 
-/**
- * Cores dos gráficos conforme o tema e a paleta escolhidos na Central de Acessibilidade.
- * Daltonismo usa Okabe-Ito, a paleta distinguível em todos os tipos de daltonismo.
- */
 export type CoresGrafico = {
   series: string[];
   situacao: Record<"SOBRA" | "FALTA" | "RISCO_DE_FALTA" | "ADEQUADO" | "EQUILIBRIO" | "NEUTRO", string>;

@@ -31,7 +31,6 @@ export default function AgendarNaHora() {
     placa: string;
     motorista: string;
   } | null>(null);
-  // Arquivo da leitura em andamento: respostas de um arquivo já trocado são ignoradas.
   const arquivoEmLeitura = useRef<File | null>(null);
 
   const change = (patch: Partial<YardEntry>) => {
@@ -39,14 +38,12 @@ export default function AgendarNaHora() {
     setErrors((errs) => limparErros(errs, patch));
   };
 
-  // Ao trocar de armazém, mantém o acondicionamento se ele for aceito; senão usa o primeiro aceito.
   const selectWarehouse = (id: WarehouseId) => {
     const w = warehouses.find((x) => x.id === id);
     if (!w || w.slots === 0) return;
     change({ warehouse: id, packaging: w.accepts.includes(entry.packaging) ? entry.packaging : w.accepts[0] });
   };
 
-  // Ao trocar o acondicionamento, migra para um armazém com vaga que o aceite, se necessário.
   const selectPackaging = (key: Packaging) => {
     const current = warehouses.find((x) => x.id === entry.warehouse);
     const target = current?.accepts.includes(key)
@@ -55,7 +52,6 @@ export default function AgendarNaHora() {
     if (target) change({ packaging: key, warehouse: target.id });
   };
 
-  // A NF é lida pelo backend assim que anexada: o encaixe usa o id dela.
   const selectNota = (arquivo: File | null) => {
     const erro = arquivo ? validarNotaFiscal(arquivo) : undefined;
     change({ notaFiscal: null });
@@ -111,7 +107,6 @@ export default function AgendarNaHora() {
           `Aguardando validação da Mesa de Compras; o motorista será chamado no WhatsApp ${entry.whatsapp}.`,
       );
 
-      // Prepara o próximo encaixe já apontando para um armazém que ainda tenha vaga.
       const nextWarehouse = w.slots - 1 > 0 ? w : warehouses.find((x) => x.id !== w.id && x.slots > 0);
       arquivoEmLeitura.current = null;
       setEntry({
@@ -125,7 +120,6 @@ export default function AgendarNaHora() {
         setErrors({ notaFiscal: mensagem });
         focarPrimeiroErro({ notaFiscal: mensagem });
       } else {
-        // SEM_VAGA_BALCAO: o backend já registrou o não recebimento; guarda para o comprovante.
         if (falha instanceof ErroApi && falha.codigo === "SEM_VAGA_BALCAO") {
           setNaoRecebimento({
             id: Number(falha.detalhes.nao_recebimento_id),
@@ -143,7 +137,6 @@ export default function AgendarNaHora() {
     }
   };
 
-  /** Comprovante para o motorista do caminhão que não pôde ser recebido (abre a impressão). */
   const emitirComprovante = () => {
     if (!naoRecebimento) {
       setErroEnvio("Não há recusa registrada agora: o comprovante é emitido quando o encaixe é recusado por falta de vaga.");

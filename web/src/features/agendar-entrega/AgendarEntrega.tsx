@@ -16,7 +16,6 @@ import { useDisponibilidade } from "./hooks/useDisponibilidade";
 import type { Acondicionamento, Categoria, EntregaConfirmada, ErrosEntrega, Horario, NovaEntrega } from "./types";
 import { pesoDaNota, validarEntrega, validarNotaFiscal, vagasNoHorario } from "./utils/agendamento";
 
-/** Recusas do backend que apontam para um campo do formulário. */
 const CAMPO_DA_RECUSA: Partial<Record<string, keyof NovaEntrega>> = {
   DIA_NAO_UTIL: "data",
   CHUVA_BLOQUEADA: "data",
@@ -35,7 +34,6 @@ export default function AgendarEntrega() {
   const [lendoNota, setLendoNota] = useState(false);
   const [enviando, setEnviando] = useState(false);
   const [erroEnvio, setErroEnvio] = useState("");
-  // Arquivo da leitura em andamento: respostas de um arquivo já trocado são ignoradas.
   const arquivoEmLeitura = useRef<File | null>(null);
 
   const disponibilidade = useDisponibilidade(entrega.data, nota?.id);
@@ -48,13 +46,11 @@ export default function AgendarEntrega() {
     setErroEnvio("");
   };
 
-  // A ciência de chuva vale para a data escolhida; o horário é escolhido de novo com as vagas da nova data.
   const escolherData = (data: string) => change({ data, horario: "", cienteChuva: false });
 
   const escolherCategoria = (categoria: Categoria) =>
     change({ categoria, cienteChuva: categoria === "adubo" && entrega.cienteChuva });
 
-  // A NF é lida pelo backend assim que anexada: o agendamento usa o id dela.
   const selecionarNotaFiscal = (arquivo: File | null) => {
     const erro = arquivo ? validarNotaFiscal(arquivo) : undefined;
     change({ notaFiscal: erro ? null : arquivo });
@@ -69,7 +65,6 @@ export default function AgendarEntrega() {
         if (arquivoEmLeitura.current !== arquivo) return;
         setNota(lida);
         setLendoNota(false);
-        // Peso e tipo de carga vêm da NF: preenche o que o fornecedor ainda não informou.
         const pesoKg = lida.peso_liquido_kg ?? lida.peso_bruto_kg;
         setEntrega((e) => ({
           ...e,
@@ -93,11 +88,10 @@ export default function AgendarEntrega() {
       setErroEnvio(mensagem);
       return;
     }
-    // A nota é de adubo mesmo que outra categoria tenha sido marcada: mostra a seção de chuva.
     if (campo === "cienteChuva") setEntrega((e) => ({ ...e, categoria: "adubo" }));
     const novos: ErrosEntrega = { [campo]: mensagem };
     setErros(novos);
-    requestAnimationFrame(() => focarPrimeiroErro(novos)); // o campo pode ter acabado de aparecer
+    requestAnimationFrame(() => focarPrimeiroErro(novos));
   };
 
   const submit = async (e: FormEvent<HTMLFormElement>) => {

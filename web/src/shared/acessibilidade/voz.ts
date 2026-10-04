@@ -1,9 +1,3 @@
-/**
- * Voz e som: leitura em voz alta (Web Speech API) e SONIFICAÇÃO de gráficos
- * (Web Audio API): cada valor vira um tom, mais agudo quanto maior. Uma pessoa cega
- * "escuta" a curva: sobe no pico, desce no vale. Tudo no navegador, sem servidor.
- */
-
 export function vozDisponivel() {
   return typeof window !== "undefined" && "speechSynthesis" in window;
 }
@@ -31,7 +25,6 @@ export function pararFala() {
 
 let contexto: AudioContext | null = null;
 
-/** Toca a série como melodia: 220 Hz (menor valor) a 880 Hz (maior valor). */
 export function sonificar(valores: number[], { duracaoNota = 0.22, aoTerminar }: { duracaoNota?: number; aoTerminar?: () => void } = {}) {
   const validos = valores.filter((v) => Number.isFinite(v));
   if (typeof window === "undefined" || !validos.length) return () => {};
@@ -66,7 +59,6 @@ export function sonificar(valores: number[], { duracaoNota = 0.22, aoTerminar }:
       try {
         o.stop();
       } catch {
-        /* já parou */
       }
     });
   };

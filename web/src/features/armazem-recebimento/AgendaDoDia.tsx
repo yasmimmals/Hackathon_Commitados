@@ -15,7 +15,6 @@ import { autorizacao, candidatosAVaga, vagasLiberadas } from "./utils/agenda";
 type Dados = { agenda: Agendamento[]; slots: SlotDisponibilidade[]; baias: Baia[] };
 type Carga = { tipo: "carregando" } | { tipo: "erro"; mensagem: string } | { tipo: "ok"; dados: Dados };
 
-/** Recusas por falta de vaga ficam no painel de vagas, não na agenda. */
 const naAgenda = (a: Agendamento) => !(a.status === "REJEITADO" && a.motivo_nao_recebimento === "SEM_VAGA");
 
 export default function AgendaDoDia() {
@@ -28,7 +27,6 @@ export default function AgendaDoDia() {
     let ativo = true;
     Promise.all([
       listarAgendamentos({ data }),
-      // Fim de semana/feriado: sem grade de vagas, mas a agenda ainda é exibida.
       consultarDisponibilidade(data).catch(() => [] as SlotDisponibilidade[]),
       listarBaias(),
     ]).then(
@@ -58,7 +56,6 @@ export default function AgendaDoDia() {
     () =>
       (dados?.agenda ?? [])
         .filter(naAgenda)
-        // Sem destino aparece em qualquer filtro: o armazém ainda precisa defini-lo.
         .filter((a) => !local || a.descargas.length === 0 || a.descargas.some((d) => d.local === local)),
     [dados, local],
   );

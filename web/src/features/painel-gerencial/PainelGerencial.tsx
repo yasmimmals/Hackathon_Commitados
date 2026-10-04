@@ -1,19 +1,18 @@
 import { useRef, useState, type KeyboardEvent } from "react";
-import { BarChart3, CalendarRange, ClipboardList, Scale, TrendingUp, Wallet } from "lucide-react";
+import { BarChart3, CalendarRange, ClipboardList, Scale, Timer, TrendingUp, Wallet } from "lucide-react";
 import AbaBoletins from "./components/AbaBoletins";
 import AbaCusto from "./components/AbaCusto";
 import AbaHistorico from "./components/AbaHistorico";
 import AbaPlano from "./components/AbaPlano";
 import AbaPrevisao from "./components/AbaPrevisao";
-
-/* Painel gerencial: o que fazer (previsão e plano), quanto custa (custo do chapeiro),
-   o que aconteceu (histórico) e o dia a dia (boletins). Todos os cálculos vêm do backend. */
+import AbaTempos from "./components/AbaTempos";
 
 const ABAS = [
   { id: "previsao", rotulo: "Próximas semanas", Icone: TrendingUp, Componente: AbaPrevisao },
   { id: "plano", rotulo: "Plano de escala", Icone: CalendarRange, Componente: AbaPlano },
   { id: "custo", rotulo: "Custo do chapeiro", Icone: Wallet, Componente: AbaCusto },
   { id: "historico", rotulo: "Sobra ou falta", Icone: Scale, Componente: AbaHistorico },
+  { id: "tempos", rotulo: "Tempo do caminhão", Icone: Timer, Componente: AbaTempos },
   { id: "boletins", rotulo: "Boletins", Icone: ClipboardList, Componente: AbaBoletins },
 ] as const;
 
@@ -25,7 +24,6 @@ export default function PainelGerencial() {
   const indice = ABAS.findIndex((a) => a.id === aba);
   const { Componente: Ativa } = ABAS[indice];
 
-  // Padrão WAI-ARIA de abas: setas trocam de aba, Home/End vão para a primeira/última
   const teclado = (e: KeyboardEvent) => {
     const passos: Record<string, number> = { ArrowRight: 1, ArrowLeft: -1, Home: -indice, End: ABAS.length - 1 - indice };
     if (!(e.key in passos)) return;

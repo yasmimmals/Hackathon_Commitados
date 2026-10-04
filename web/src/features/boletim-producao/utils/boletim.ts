@@ -1,21 +1,14 @@
 import type { Boletim, Chapa, ChapaNoBoletim } from "@/shared/services";
 
-/** Limite do formulário de papel (o backend recusa acima disso: LIMITE_CHAPAS). */
 export const MAX_CHAPAS = 20;
 
-/** O chapa recebe o maior entre o rateio da produção e o piso, proporcional à diária. */
 export function pagamentoChapa(c: ChapaNoBoletim, b: Boletim): number {
   const porDiaria = Math.max(Number(b.calculo.valor_por_diaria ?? 0), Number(b.calculo.piso_diaria));
   return porDiaria * (c.meia_diaria ? 0.5 : 1);
 }
 
-/** `aviso`: não impede o fechamento (o backend também só avisa). */
 export type Verificacao = { regra: string; ok: boolean; detalhe?: string; aviso?: boolean };
 
-/**
- * Conferência antes de fechar. O backend já impede repetição, excesso e matrícula fora do
- * cadastro; aqui a tela mostra o estado e os avisos do backend (que não bloqueiam).
- */
 export function verificarBoletim(b: Boletim, chapas: Chapa[]): Verificacao[] {
   const temporarios = new Set(chapas.filter((c) => c.ativo).map((c) => c.matricula));
   const foraDoCadastro = b.equipe.filter((c) => !temporarios.has(c.matricula)).map((c) => c.matricula);

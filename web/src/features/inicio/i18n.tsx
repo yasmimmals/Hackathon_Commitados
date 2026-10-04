@@ -1,10 +1,5 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import type { ReactNode } from "react";
 
-export type Idioma = "pt" | "en";
-
-const CHAVE_IDIOMA = "cocapec.idioma";
-
-/** Todos os textos da página inicial, em português e inglês (mesma estrutura nos dois). */
 export const TEXTOS = {
   pt: {
     lang: "pt-BR",
@@ -79,124 +74,40 @@ export const TEXTOS = {
         },
       },
     },
-  },
-  en: {
-    lang: "en",
-    buscaRotulo: "Search the site",
-    buscaBotao: "Search",
-    espacoCooperado: "Member Area",
-    espacoFornecedor: "Supplier Area",
-    idiomaAtual: "Current language: English",
-    mudarIdioma: "Ver o site em português",
-    paginaInicial: "COCAPEC — home page",
-    navegacao: "Main",
-    menu: {
-      cocapec: "COCAPEC",
-      governanca: "Governance and Transparency",
-      unidades: "Business Units",
-      servicos: "Services",
-      cafes: "Our Coffees",
-      agenda: "Events",
+    login: {
+      titulo: "Espaço do Fornecedor",
+      descricao1: "Fornecedor, este serviço foi pensado para estar ao seu lado, agilizando o agendamento das entregas no Terminal Franca/SP e o acompanhamento da validação das suas notas fiscais.",
+      descricao2: "Se precisar de ajuda com o acesso, nossa equipe estará sempre pronta para auxiliar.",
+      slogan: "Juntos, crescemos mais!",
+      conectadoComo: "Conectado como",
+      continuar: "Continuar",
+      trocarConta: "Trocar conta",
+      email: "E-mail",
+      senha: "Senha",
+      mostrarSenha: "Mostrar senha",
+      ocultarSenha: "Ocultar senha",
+      sessaoExpirada: "Sua sessão expirou. Entre novamente.",
+      acessarJa: "Acessar já",
+      semAcesso: "Ainda não tem acesso?",
+      criarCadastro: "Criar cadastro",
+      demoTitulo: "Acessos de demonstração",
+      demoDescricao: "Senha de todos:",
+      demoClique: "Clique em um perfil para preencher:",
+      voltarInicio: "Voltar para a página inicial",
     },
-    contato: "Contact",
-    abrirMenu: "Open menu",
-    fecharMenu: "Close menu",
-    carrossel: {
-      rotulo: "Highlights",
-      tipo: "carousel",
-      tipoSlide: "slide",
-      posicao: (atual: number, total: number, titulo: string) => `${atual} of ${total}: ${titulo}`,
-      anterior: "Previous highlight",
-      proximo: "Next highlight",
-      irPara: (n: number) => `Go to highlight ${n}`,
-    },
-    diaDeCampo: {
-      titulo: "COCAPEC Field Day — 2026 Tour",
-      selo: "we are coop",
-      linha1: "field",
-      linha2: "Day",
-      texto: "Technology and solutions that boost the efficiency and results of your production.",
-      circuito: "tour",
-      confira: "Check the date and venue of the event in your region",
-    },
-    portal: {
-      titulo: "Supplier Portal",
-      selo: "New • Supplier Portal",
-      chamada: "Schedule your cargo unloading at the Franca/SP Terminal",
-      texto: "Send the invoice, choose a time slot and track the approval by the Purchasing Desk.",
-      botao: "Go to Supplier Area",
-    },
-    banners: {
-      lojaOnline: "online store",
-      forte1: "Standing strong",
-      forte2: "with the producer",
-      concessionaria: "official",
-      oficial: "dealer",
-    },
-    faixa: "COCAPEC: the cooperative that drives coffee and its members forward",
-    noticias: {
-      titulo: "News",
-      subtitulo: "Read the latest news about the coffee market.",
-      mais: "More news",
-      itens: {
-        mercado: {
-          titulo: "Coffee market: follow the weekly close",
-          resumo: "A summary of arabica prices and the factors that moved the market.",
-        },
-        armazenagem: {
-          titulo: "Storage facilities in Franca/SP",
-          resumo: "Get to know the logistics terminal that receives inputs and fertilizers from suppliers.",
-        },
-        bolsa: {
-          titulo: "New York exchange: what to watch in the prices",
-          resumo: "Understand the indicators members should follow throughout the harvest.",
-        },
-      },
+    layoutAcesso: {
+      slogan: "O melhor café está aqui",
+      subtitulo: "Portal de agendamento e recebimento de cargas do Terminal Logístico Franca/SP",
     },
   },
-} satisfies Record<Idioma, unknown>;
+};
 
 export type Textos = (typeof TEXTOS)["pt"];
 
-type ContextoIdioma = { idioma: Idioma; textos: Textos; alternar: () => void };
-
-const IdiomaContext = createContext<ContextoIdioma | null>(null);
-
-function idiomaSalvo(): Idioma {
-  try {
-    return localStorage.getItem(CHAVE_IDIOMA) === "en" ? "en" : "pt";
-  } catch {
-    return "pt";
-  }
-}
-
 export function IdiomaProvider({ children }: { children: ReactNode }) {
-  const [idioma, setIdioma] = useState<Idioma>(idiomaSalvo);
-
-  // Leitores de tela e tradutores do navegador usam o lang do documento.
-  useEffect(() => {
-    document.documentElement.lang = TEXTOS[idioma].lang;
-    return () => {
-      document.documentElement.lang = "pt-BR";
-    };
-  }, [idioma]);
-
-  const alternar = () =>
-    setIdioma((atual) => {
-      const novo = atual === "pt" ? "en" : "pt";
-      try {
-        localStorage.setItem(CHAVE_IDIOMA, novo);
-      } catch {
-        // Sem armazenamento: o idioma vale só enquanto a página estiver aberta.
-      }
-      return novo;
-    });
-
-  return <IdiomaContext.Provider value={{ idioma, textos: TEXTOS[idioma], alternar }}>{children}</IdiomaContext.Provider>;
+  return children;
 }
 
 export function useIdioma() {
-  const contexto = useContext(IdiomaContext);
-  if (!contexto) throw new Error("useIdioma deve ser usado dentro de <IdiomaProvider>");
-  return contexto;
+  return { textos: TEXTOS.pt };
 }

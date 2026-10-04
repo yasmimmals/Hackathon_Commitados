@@ -1,14 +1,3 @@
-/* Service worker do PWA COCAPEC.
- *
- * O app é uma SPA (React Router dentro de uma única página do Next): toda rota usa o
- * mesmo HTML ("casca"). Estratégias:
- *  - navegação: rede primeiro; sem rede, devolve a última casca salva (o React Router
- *    desenha a tela certa pela URL) ou uma página "sem conexão";
- *  - /_next/static e /icons: cache primeiro (arquivos versionados, nunca mudam);
- *  - outras requisições do próprio site: rede primeiro, com cópia em cache;
- *  - API do backend e Open-Meteo (outras origens): sempre pela rede, nunca em cache
- *    (dados com login e previsão precisam estar atualizados).
- */
 const VERSAO = "cocapec-v1";
 const CACHE_CASCA = `${VERSAO}-casca`;
 const CACHE_ESTATICOS = `${VERSAO}-estaticos`;

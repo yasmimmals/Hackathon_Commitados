@@ -3,7 +3,6 @@ const TOM = {
   erro: "border-red-200 bg-red-50 text-red-800",
 };
 
-/** Faixa de retorno anunciada por leitores de tela; fica invisível quando vazia. */
 export default function MensagemStatus({ mensagem, tom = "sucesso" }: { mensagem: string; tom?: keyof typeof TOM }) {
   return (
     <p

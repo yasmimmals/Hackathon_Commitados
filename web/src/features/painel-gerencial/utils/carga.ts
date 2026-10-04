@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { mensagemDeErro } from "@/shared/services";
 
-/** Carrega dados do backend e refaz a chamada quando `chave` muda. */
 export function useCarga<T>(buscar: () => Promise<T>, chave: string) {
   const [estado, setEstado] = useState<{ chave: string; dados?: T; erro?: string }>({ chave: "" });
   useEffect(() => {
@@ -16,7 +15,6 @@ export function useCarga<T>(buscar: () => Promise<T>, chave: string) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chave]);
   const atual = estado.chave === chave ? estado : undefined;
-  // enquanto recalcula, mantém o resultado anterior na tela (sem "piscar" ao mexer num controle)
   return { dados: atual?.dados ?? estado.dados, erro: atual?.erro, carregando: !atual };
 }
 

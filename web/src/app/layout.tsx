@@ -4,6 +4,7 @@ import { Atkinson_Hyperlegible, Ubuntu } from "next/font/google";
 import AvisoConexao from "@/shared/components/pwa/AvisoConexao";
 import RegistroPwa from "@/shared/components/pwa/RegistroPwa";
 import { ProvedorAcessibilidade, SCRIPT_ANTES_DE_PINTAR } from "@/shared/acessibilidade";
+import { IdiomaProvider } from "@/features/inicio/i18n";
 import "./globals.css";
 
 
@@ -15,7 +16,6 @@ const ubuntu = Ubuntu({
   display: "swap",
 });
 
-// Fonte de alta legibilidade (Braille Institute), ativada pela opção "Fonte para dislexia"
 const atkinson = Atkinson_Hyperlegible({
   subsets: ["latin"],
   weight: ["400", "700"],
@@ -43,15 +43,16 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
   return (
     <html lang="pt-BR" className={`${ubuntu.variable} ${atkinson.variable} h-full antialiased`} suppressHydrationWarning>
       <head>
-        {/* aplica tema e tamanho de texto salvos ANTES de pintar: sem "flash" para quem usa alto contraste */}
         <script dangerouslySetInnerHTML={{ __html: SCRIPT_ANTES_DE_PINTAR }} />
       </head>
       <body className="flex min-h-full flex-col bg-fundo font-sans text-gray-900">
-        <ProvedorAcessibilidade>
-          {children}
-          <AvisoConexao />
-          <RegistroPwa />
-        </ProvedorAcessibilidade>
+        <IdiomaProvider>
+          <ProvedorAcessibilidade>
+            {children}
+            <AvisoConexao />
+            <RegistroPwa />
+          </ProvedorAcessibilidade>
+        </IdiomaProvider>
       </body>
     </html>
   );

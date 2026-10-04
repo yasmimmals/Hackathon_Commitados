@@ -1,6 +1,5 @@
 import type { Acondicionamento } from "@/shared/services";
 
-/** Acondicionamento como as telas usam (valor dos radios). */
 export type AcondicionamentoTela = "paletizado" | "bigbag" | "batido";
 
 export const ACONDICIONAMENTO_API: Record<AcondicionamentoTela, Acondicionamento> = {

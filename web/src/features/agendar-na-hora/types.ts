@@ -7,23 +7,23 @@ export type Packaging = "paletizado" | "bigbag" | "batido";
 
 export interface Warehouse {
   id: WarehouseId;
-  name: string;               // ex.: "Adubo e Fertilizantes"
-  detail: string;             // ex.: "Doca 03 • Paletizado / Big Bag"
-  dock: string;               // ex.: "Doca 03" (usado no select do formulário)
+  name: string;
+  detail: string;
+  dock: string;
   icon: "tractor" | "flask" | "wheat";
-  slots: number;              // vagas livres agora (0 = indisponível)
-  unavailableText?: string;   // ex.: "Indisponível Hoje"
-  accepts: Packaging[];       // acondicionamentos aceitos
+  slots: number;
+  unavailableText?: string;
+  accepts: Packaging[];
 }
 
 export interface YardEntry {
-  notaFiscal: NotaFiscal | null; // NF (XML ou PDF) já lida pelo backend
+  notaFiscal: NotaFiscal | null;
   plate: string;
   driver: string;
   whatsapp: string;
   packaging: Packaging;
   warehouse: WarehouseId;
-  acknowledged: boolean;      // ciente da prioridade dos agendamentos programados
+  acknowledged: boolean;
 }
 
 export type YardEntryErrors = ErrosFormulario<YardEntry>;
