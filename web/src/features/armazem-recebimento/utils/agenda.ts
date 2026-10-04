@@ -52,16 +52,17 @@ export type VagaLiberada = {
   liberadaPor: Agendamento[];
 };
 
+/** Janelas com capacidade livre: desocupadas (não comparecimento/cancelamento) ou nunca preenchidas. */
 export function vagasLiberadas(agenda: Agendamento[], slots: SlotDisponibilidade[]): VagaLiberada[] {
   return slots
+    .filter((slot) => slot.aceita_unitizado || slot.aceita_batido)
     .map((slot) => ({
       horario: slot.horario,
       slot,
       liberadaPor: agenda.filter(
         (a) => a.horario === slot.horario && (a.status === "NAO_COMPARECEU" || a.status === "CANCELADO"),
       ),
-    }))
-    .filter((v) => v.liberadaPor.length > 0 && (v.slot.aceita_unitizado || v.slot.aceita_batido));
+    }));
 }
 
 export const cabeNaVaga = (ag: Agendamento, slot: SlotDisponibilidade) =>

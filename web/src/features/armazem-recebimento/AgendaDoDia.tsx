@@ -100,8 +100,10 @@ export default function AgendaDoDia() {
             <input
               type="date"
               value={data}
+              min={dataLocalIso()}
               onChange={(e) => {
-                if (!e.target.value) return;
+                // O `min` não impede digitar uma data passada: dias anteriores a hoje são ignorados.
+                if (!e.target.value || e.target.value < dataLocalIso()) return;
                 setData(e.target.value);
                 setCarga({ tipo: "carregando" });
               }}
@@ -198,6 +200,7 @@ export default function AgendaDoDia() {
             <VagasLiberadas
               data={data}
               ehHoje={data === dataLocalIso()}
+              slots={dados.slots}
               vagas={vagasLiberadas(dados.agenda, dados.slots)}
               candidatos={candidatosAVaga(dados.agenda)}
               onConcluido={concluir}

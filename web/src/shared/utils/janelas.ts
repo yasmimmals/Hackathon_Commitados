@@ -13,6 +13,12 @@ export function dataLocalIso(dias = 0, base = new Date()) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
+/** Segunda a sexta; feriados são validados pelo backend (config.FERIADOS). */
+export function ehDiaUtil(iso: string) {
+  const diaSemana = new Date(`${iso}T12:00:00`).getDay();
+  return diaSemana !== 0 && diaSemana !== 6;
+}
+
 const horaAgora = (agora: Date) => agora.toTimeString().slice(0, 5);
 
 export function janelaAtual(agora = new Date()): Horario | undefined {

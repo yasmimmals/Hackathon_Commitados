@@ -2,14 +2,15 @@ import { useState } from "react";
 import { LoaderCircle, UserPlus } from "lucide-react";
 import {
   agendarBalcao, enviarNotaFiscal, mensagemDeErro,
-  type Acondicionamento, type Agendamento, type NotaFiscal,
+  type Acondicionamento, type Agendamento, type NotaFiscal, type SlotDisponibilidade,
 } from "@/shared/services";
 import { ROTULO_ACONDICIONAMENTO } from "@/shared/utils/acondicionamento";
-import { janelaTerminou } from "@/shared/utils/janelas";
+import { ehDiaUtil, JANELAS, janelaTerminou } from "@/shared/utils/janelas";
 import { cabeNaVaga, type VagaLiberada } from "../utils/agenda";
 
 type VagasLiberadasProps = {
   data: string;
+  slots: SlotDisponibilidade[];
   vagas: VagaLiberada[];
   candidatos: Agendamento[];
   ehHoje: boolean;
@@ -52,7 +53,7 @@ function Vaga({ vaga, candidatos, onConcluido }: { vaga: VagaLiberada; candidato
     setErro("");
     try {
       const ag = await agendarBalcao({ nota_fiscal_id: notaId, horario: vaga.horario, acondicionamento });
-      onConcluido(`Vaga das ${vaga.horario}h ocupada por ${ag.fornecedor.nome} (#AG-${ag.id}). Aguardando autorização de Compras.`);
+      onConcluido(`Vaga das ${vaga.horario} ocupada por ${ag.fornecedor.nome} (#AG-${ag.id}). Aguardando autorização de Compras.`);
     } catch (falha) {
       setErro(mensagemDeErro(falha));
     } finally {
@@ -61,17 +62,23 @@ function Vaga({ vaga, candidatos, onConcluido }: { vaga: VagaLiberada; candidato
   };
 
   const nome = `vaga-${vaga.horario}`;
+  const naoPreenchida = vaga.liberadaPor.length === 0;
+  const livres = vaga.slot.vagas_restantes;
   return (
-    <li className="rounded-2xl border border-emerald-200 bg-white p-4">
+    <li className={`rounded-2xl border bg-white p-4 ${naoPreenchida ? "border-dashed border-gray-300" : "border-emerald-200"}`}>
       <p className="font-bold text-site-azul">
-        Vaga liberada às {vaga.horario}h
+        {naoPreenchida ? "Vaga não preenchida" : "Vaga liberada"} às {vaga.horario}
         <span className="ml-2 text-xs font-semibold text-emerald-700">
-          {vaga.slot.vagas_restantes} {vaga.slot.vagas_restantes === 1 ? "vaga" : "vagas"}
+          {livres} {livres === 1 ? "vaga livre" : "vagas livres"}
           {vaga.slot.aceita_batido ? " • aceita batido" : ""}
         </span>
       </p>
       <p className="text-xs text-gray-600">
-        Liberada por: {vaga.liberadaPor.map((a) => `#AG-${a.id} ${a.fornecedor.nome} (${a.status === "CANCELADO" ? "cancelou" : "não compareceu"})`).join("; ")}
+        {naoPreenchida
+          ? vaga.slot.ocupados === 0
+            ? "Ninguém agendado neste horário."
+            : `${vaga.slot.ocupados} de ${vaga.slot.ocupados + livres} vaga(s) já ocupada(s) neste horário.`
+          : `Liberada por: ${vaga.liberadaPor.map((a) => `#AG-${a.id} ${a.fornecedor.nome} (${a.status === "CANCELADO" ? "cancelou" : "não compareceu"})`).join("; ")}`}
       </p>
 
       <fieldset className="mt-3">
@@ -150,22 +157,69 @@ function Vaga({ vaga, candidatos, onConcluido }: { vaga: VagaLiberada; candidato
   );
 }
 
-export default function VagasLiberadas({ data, vagas, candidatos, ehHoje, onConcluido }: VagasLiberadasProps) {
-  const abertas = vagas.filter((v) => !janelaTerminou(data, v.horario));
+type SituacaoJanela = { rotulo: string; detalhe: string; tom: "livre" | "lotada" | "encerrada" };
+
+function situacaoDaJanela(data: string, horario: SlotDisponibilidade["horario"], slot?: SlotDisponibilidade): SituacaoJanela {
+  if (janelaTerminou(data, horario)) return { rotulo: "Encerrada", detalhe: "janela já terminou", tom: "encerrada" };
+  if (!slot) return { rotulo: "—", detalhe: "sem grade", tom: "encerrada" };
+  const total = slot.ocupados + slot.vagas_restantes;
+  if (slot.vagas_restantes > 0) {
+    return { rotulo: `${slot.vagas_restantes} livre${slot.vagas_restantes === 1 ? "" : "s"}`, detalhe: `${slot.ocupados} de ${total} ocupada(s)`, tom: "livre" };
+  }
+  return { rotulo: "Lotada", detalhe: slot.tem_batido ? "carga batida (horário inteiro)" : `${slot.ocupados} de ${slot.ocupados} ocupada(s)`, tom: "lotada" };
+}
+
+const TOM_JANELA = {
+  livre: "border-emerald-200 bg-emerald-50 text-emerald-800",
+  lotada: "border-red-200 bg-red-50 text-red-700",
+  encerrada: "border-gray-200 bg-gray-50 text-gray-500",
+} satisfies Record<SituacaoJanela["tom"], string>;
+
+export default function VagasLiberadas({ data, slots, vagas, candidatos, ehHoje, onConcluido }: VagasLiberadasProps) {
+  const diaUtil = ehDiaUtil(data) && slots.length > 0;
+  const abertas = diaUtil ? vagas.filter((v) => !janelaTerminou(data, v.horario)) : [];
+  const totalLivre = abertas.reduce((soma, v) => soma + v.slot.vagas_restantes, 0);
 
   return (
     <section aria-labelledby="vagas-titulo" className="rounded-3xl bg-white p-5 shadow-sm">
-      <h2 id="vagas-titulo" className="titulo-secao border-b-[3px] border-site-amarelo pb-2 text-lg">Vagas liberadas</h2>
-      {!ehHoje ? (
-        <p className="mt-3 text-sm text-gray-600">Vagas liberadas só podem ser reocupadas no próprio dia. Selecione a data de hoje.</p>
-      ) : abertas.length === 0 ? (
-        <p className="mt-3 text-sm text-gray-600">Nenhuma vaga liberada nas janelas que ainda estão abertas hoje.</p>
+      <div className="flex items-baseline justify-between gap-2 border-b-[3px] border-site-amarelo pb-2">
+        <h2 id="vagas-titulo" className="titulo-secao text-lg">Vagas liberadas</h2>
+        {diaUtil && (
+          <span className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${totalLivre ? "bg-emerald-100 text-emerald-800" : "bg-gray-100 text-gray-600"}`}>
+            {totalLivre} {totalLivre === 1 ? "vaga disponível" : "vagas disponíveis"}
+          </span>
+        )}
+      </div>
+
+      {!diaUtil ? (
+        <p className="mt-3 text-sm text-gray-600">Não há recebimento nesta data (fim de semana ou feriado).</p>
       ) : (
-        <ul className="mt-3 space-y-3">
-          {abertas.map((v) => (
-            <Vaga key={v.horario} vaga={v} candidatos={candidatos} onConcluido={onConcluido} />
-          ))}
-        </ul>
+        <>
+          <ul aria-label="Vagas por janela" className="mt-3 grid grid-cols-2 gap-2">
+            {JANELAS.map(({ horario, fim }) => {
+              const s = situacaoDaJanela(data, horario, slots.find((x) => x.horario === horario));
+              return (
+                <li key={horario} className={`rounded-xl border px-3 py-2 ${TOM_JANELA[s.tom]}`}>
+                  <p className="text-xs font-semibold text-gray-700">{horario} – {fim}</p>
+                  <p className="text-sm font-bold">{s.rotulo}</p>
+                  <p className="text-[11px] opacity-80">{s.detalhe}</p>
+                </li>
+              );
+            })}
+          </ul>
+
+          {!ehHoje ? (
+            <p className="mt-3 text-sm text-gray-600">As vagas só podem ser ocupadas no próprio dia. Selecione a data de hoje para fazer um encaixe.</p>
+          ) : abertas.length === 0 ? (
+            <p className="mt-3 text-sm text-gray-600">Nenhuma vaga disponível nas janelas que ainda estão abertas hoje.</p>
+          ) : (
+            <ul className="mt-4 space-y-3">
+              {abertas.map((v) => (
+                <Vaga key={`${v.horario}-${v.slot.ocupados}`} vaga={v} candidatos={candidatos} onConcluido={onConcluido} />
+              ))}
+            </ul>
+          )}
+        </>
       )}
     </section>
   );

@@ -2,6 +2,7 @@ import {
   ANTECEDENCIA_MAXIMA_DIAS, ANTECEDENCIA_MINIMA_DIAS, CATEGORIAS, PESO_MAXIMO_T, TAMANHO_MAXIMO_NF_MB,
 } from "../constants";
 import type { SlotDisponibilidade } from "@/shared/services";
+import { ehDiaUtil } from "@/shared/utils/janelas";
 import type { ErrosEntrega, Horario, NovaEntrega } from "../types";
 
 const EXTENSOES_NF = [".pdf", ".xml"];
@@ -44,10 +45,6 @@ export function validarNotaFiscal(arquivo: File): string | undefined {
   return undefined;
 }
 
-export const ehDiaUtil = (iso: string) => {
-  const diaSemana = new Date(`${iso}T12:00:00`).getDay();
-  return diaSemana !== 0 && diaSemana !== 6;
-};
 
 
 export function vagasNoHorario(
