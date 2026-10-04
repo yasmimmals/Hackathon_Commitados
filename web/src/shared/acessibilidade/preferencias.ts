@@ -6,11 +6,17 @@
 
 export type Tema = "padrao" | "escuro" | "alto-contraste";
 export type Paleta = "padrao" | "daltonismo";
+/** Qual par de cores se confunde: define quais cores do site são trocadas (ver globals.css). */
+export type TipoDaltonismo = "vermelho-verde" | "azul-amarelo";
+/** Filtro que mostra a tela como uma pessoa daltônica a vê. Serve para a equipe testar. */
+export type SimulacaoVisao = "nenhuma" | "protanopia" | "deuteranopia" | "tritanopia";
 
 export type Preferencias = {
   tema: Tema;
   escalaTexto: number;        // 100 a 160 (%)
   paleta: Paleta;
+  tipoDaltonismo: TipoDaltonismo;
+  simularVisao: SimulacaoVisao;
   fonteDislexia: boolean;
   espacamento: boolean;
   guiaLeitura: boolean;
@@ -27,6 +33,8 @@ export const PADRAO: Preferencias = {
   tema: "padrao",
   escalaTexto: 100,
   paleta: "padrao",
+  tipoDaltonismo: "vermelho-verde",
+  simularVisao: "nenhuma",
   fonteDislexia: false,
   espacamento: false,
   guiaLeitura: false,
@@ -105,6 +113,9 @@ export function aplicarNoDocumento(p: Preferencias) {
   const liga = (attr: string, on: boolean) => (on ? h.setAttribute(attr, "") : h.removeAttribute(attr));
   h.dataset.tema = p.tema;
   h.dataset.paleta = p.paleta;
+  h.dataset.daltonismo = p.tipoDaltonismo;
+  if (p.simularVisao === "nenhuma") delete h.dataset.simular;
+  else h.dataset.simular = p.simularVisao;
   h.style.setProperty("--escala-texto", String(p.escalaTexto / 100));
   liga("data-dislexia", p.fonteDislexia);
   liga("data-espacamento", p.espacamento);
@@ -124,7 +135,8 @@ export const SCRIPT_ANTES_DE_PINTAR = `(function(){try{
 var s=localStorage.getItem(${JSON.stringify(CHAVE_STORAGE)});var p=s?JSON.parse(s):{};
 var m=function(q){return window.matchMedia&&window.matchMedia(q).matches};
 if(!s){p.reduzirMovimento=m('(prefers-reduced-motion: reduce)');if(m('(prefers-contrast: more)'))p.tema='alto-contraste';}
-var h=document.documentElement;h.dataset.tema=p.tema||'padrao';h.dataset.paleta=p.paleta||'padrao';
+var h=document.documentElement;h.dataset.tema=p.tema||'padrao';h.dataset.paleta=p.paleta||'padrao';h.dataset.daltonismo=p.tipoDaltonismo||'vermelho-verde';
+if(p.simularVisao&&p.simularVisao!=='nenhuma')h.dataset.simular=p.simularVisao;
 h.style.setProperty('--escala-texto',String((p.escalaTexto||100)/100));
 var f={fonteDislexia:'data-dislexia',espacamento:'data-espacamento',destacarLinks:'data-links',focoReforcado:'data-foco',alvosGrandes:'data-alvos',cursorGrande:'data-cursor',reduzirMovimento:'data-sem-movimento'};
 for(var k in f){if(p[k])h.setAttribute(f[k],'');}

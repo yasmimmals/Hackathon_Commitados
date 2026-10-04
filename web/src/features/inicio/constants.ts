@@ -4,7 +4,7 @@ import type { Textos } from "./i18n";
 /** Site institucional: destino dos itens que não fazem parte do portal de agendamento. */
 export const SITE_COCAPEC = "https://www.cocapec.com.br";
 
-/** Itens do menu; os rótulos vêm de TEXTOS[idioma].menu. */
+/** Itens do menu; os rótulos vêm de TEXTOS.pt.menu. */
 export const MENU: { id: keyof Textos["menu"]; submenu: boolean }[] = [
   { id: "cocapec", submenu: true },
   { id: "governanca", submenu: true },
@@ -15,9 +15,9 @@ export const MENU: { id: keyof Textos["menu"]; submenu: boolean }[] = [
 ];
 
 export type Noticia = {
-  /** Chave dos textos em TEXTOS[idioma].noticias.itens. */
+  /** Chave dos textos em TEXTOS.pt.noticias.itens. */
   id: keyof Textos["noticias"]["itens"];
-  /** AAAA-MM-DD, formatada conforme o idioma. */
+  /** AAAA-MM-DD, formatada em pt-BR. */
   data: string;
   icone: LucideIcon;
   /** Fundo da capa (sem imagens no projeto ainda). */

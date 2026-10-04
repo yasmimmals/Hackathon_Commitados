@@ -330,3 +330,67 @@ html[data-sem-movimento] *::after {
   transition-duration: 0.001ms !important;
   scroll-behavior: auto !important;
 }
+
+/* ---------- Daltonismo: troca de cores no site inteiro ----------
+ * O Tailwind v4 lê as cores de variáveis CSS (--color-red-600...). Redefinir as
+ * variáveis aqui muda botões, selos e alertas de TODAS as telas, sem tocar nos
+ * componentes. Base: paleta Okabe-Ito (azul #0072B2, laranja #D55E00, rosa #CC79A7).
+ */
+
+/* Vermelho e verde (protanopia, deuteranopia): verde vira azul, vermelho vira laranja. */
+html[data-paleta="daltonismo"][data-daltonismo="vermelho-verde"] {
+  --color-marca: #005f94;
+  --color-marca-escuro: #004c77;
+  --color-marca-profundo: #003d60;
+  --color-site-verde: #0072b2;
+  --color-site-verde-escuro: #005f94;
+
+  --color-emerald-50: #eef6fc; --color-emerald-100: #d6eaf7; --color-emerald-200: #add4ef;
+  --color-emerald-300: #7fbbe4; --color-emerald-400: #4a9dd4; --color-emerald-500: #1f84c4;
+  --color-emerald-600: #0072b2; --color-emerald-700: #005e93; --color-emerald-800: #004c77;
+  --color-emerald-900: #003d60; --color-emerald-950: #002740;
+  --color-green-50: #eef6fc; --color-green-100: #d6eaf7; --color-green-200: #add4ef;
+  --color-green-300: #7fbbe4; --color-green-400: #4a9dd4; --color-green-500: #1f84c4;
+  --color-green-600: #0072b2; --color-green-700: #005e93; --color-green-800: #004c77;
+  --color-green-900: #003d60; --color-green-950: #002740;
+
+  --color-red-50: #fff3eb; --color-red-100: #ffe2cc; --color-red-200: #ffc299;
+  --color-red-300: #ff9d5c; --color-red-400: #f57a2b; --color-red-500: #e66a0f;
+  --color-red-600: #c45500; --color-red-700: #a04500; --color-red-800: #803700;
+  --color-red-900: #632b00; --color-red-950: #401c00;
+}
+
+/* Azul e amarelo (tritanopia): amarelo vira rosa, azul-claro (avisos) vira cinza-azulado. */
+html[data-paleta="daltonismo"][data-daltonismo="azul-amarelo"] {
+  --color-site-amarelo: #cc79a7;
+
+  --color-amber-50: #fcf2f8; --color-amber-100: #f8e1ee; --color-amber-200: #f1c3dd;
+  --color-amber-300: #e6a0c7; --color-amber-400: #d886b4; --color-amber-500: #cc79a7;
+  --color-amber-600: #b05a8c; --color-amber-700: #924672; --color-amber-800: #75385b;
+  --color-amber-900: #5c2c48; --color-amber-950: #3a1b2d;
+  --color-yellow-50: #fcf2f8; --color-yellow-100: #f8e1ee; --color-yellow-200: #f1c3dd;
+  --color-yellow-300: #e6a0c7; --color-yellow-400: #d886b4; --color-yellow-500: #cc79a7;
+  --color-yellow-600: #b05a8c; --color-yellow-700: #924672; --color-yellow-800: #75385b;
+
+  --color-sky-50: #f8fafc; --color-sky-100: #f1f5f9; --color-sky-200: #e2e8f0;
+  --color-sky-300: #cbd5e1; --color-sky-400: #94a3b8; --color-sky-500: #64748b;
+  --color-sky-600: #475569; --color-sky-700: #334155; --color-sky-800: #1e293b;
+  --color-sky-900: #0f172a;
+}
+
+/* Não depender só da cor: campo com erro ganha borda tracejada e grossa,
+   e links dentro de texto ficam sublinhados. */
+html[data-paleta="daltonismo"] [aria-invalid="true"] {
+  border-style: dashed !important;
+  border-width: 2px !important;
+}
+html[data-paleta="daltonismo"] :where(p, li, td) a {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* Simulador (para testes): mostra a tela como uma pessoa daltônica a vê.
+   Os filtros SVG ficam em ProvedorAcessibilidade. */
+html[data-simular="protanopia"] { filter: url(#simular-protanopia); }
+html[data-simular="deuteranopia"] { filter: url(#simular-deuteranopia); }
+html[data-simular="tritanopia"] { filter: url(#simular-tritanopia); }

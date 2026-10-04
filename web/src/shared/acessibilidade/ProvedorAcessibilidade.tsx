@@ -117,8 +117,32 @@ export default function ProvedorAcessibilidade({ children }: { children: ReactNo
 
       {prefs.guiaLeitura && <MascaraLeitura />}
 
+      <FiltrosDaltonismo />
+
       <div aria-live="polite" aria-atomic="true" className="sr-only">{aviso}</div>
     </Ctx.Provider>
+  );
+}
+
+/**
+ * Matrizes de simulação de daltonismo (aproximação de Machado et al., severidade total),
+ * usadas pelo "Simular visão" da Central via `html[data-simular] { filter: url(#...) }`.
+ */
+const MATRIZES_SIMULACAO = {
+  protanopia: "0.567 0.433 0 0 0  0.558 0.442 0 0 0  0 0.242 0.758 0 0  0 0 0 1 0",
+  deuteranopia: "0.625 0.375 0 0 0  0.7 0.3 0 0 0  0 0.3 0.7 0 0  0 0 0 1 0",
+  tritanopia: "0.95 0.05 0 0 0  0 0.433 0.567 0 0  0 0.475 0.525 0 0  0 0 0 1 0",
+};
+
+function FiltrosDaltonismo() {
+  return (
+    <svg aria-hidden width="0" height="0" className="absolute" focusable="false">
+      {Object.entries(MATRIZES_SIMULACAO).map(([tipo, matriz]) => (
+        <filter key={tipo} id={`simular-${tipo}`} colorInterpolationFilters="linearRGB">
+          <feColorMatrix type="matrix" values={matriz} />
+        </filter>
+      ))}
+    </svg>
   );
 }
 

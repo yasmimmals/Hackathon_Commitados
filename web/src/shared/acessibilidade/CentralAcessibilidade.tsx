@@ -2,13 +2,12 @@
 
 import { useEffect, useId, useRef, type ReactNode } from "react";
 import {
-  Contrast, Ear, Focus, Glasses, Globe, Hand, Keyboard, Languages, Moon, MousePointer2, Palette, RotateCcw,
+  Contrast, Ear, Focus, Glasses, Hand, Keyboard, Moon, MousePointer2, Palette, RotateCcw,
   ScanLine, Square, Sun, Type, Volume2, X,
 } from "lucide-react";
 import { useAcessibilidade } from "./ProvedorAcessibilidade";
 import { PERFIS, perfilAtivo, type Preferencias, type Tema } from "./preferencias";
 import { vozDisponivel } from "./voz";
-import { useIdioma } from "@/features/inicio/i18n";
 
 const ICONES = { Glasses, Palette, Type, Focus, Hand, Ear };
 
@@ -18,7 +17,6 @@ const ICONES = { Glasses, Palette, Type, Focus, Hand, Ear };
  */
 export default function CentralAcessibilidade({ aoFechar }: { aoFechar: () => void }) {
   const { prefs, atualizar, restaurar, anunciar, falar, pararFala } = useAcessibilidade();
-  const { idioma, definirIdioma } = useIdioma();
   const painel = useRef<HTMLDivElement>(null);
   const tituloId = useId();
 
@@ -67,46 +65,6 @@ export default function CentralAcessibilidade({ aoFechar }: { aoFechar: () => vo
         </header>
 
         <div className="flex-1 space-y-6 overflow-y-auto px-5 py-5">
-          <Secao titulo="Idioma / Language" dica="Altere o idioma de exibição do portal a qualquer momento.">
-            <div role="radiogroup" aria-label="Idioma do portal" className="grid grid-cols-2 gap-2">
-              <button
-                type="button"
-                role="radio"
-                aria-checked={idioma === "pt"}
-                onClick={() => {
-                  definirIdioma("pt");
-                  anunciar("Idioma alterado para Português.");
-                }}
-                className={`flex min-h-[52px] items-center justify-center gap-2 rounded-xl border-2 px-3 py-2 text-sm font-semibold transition ${
-                  idioma === "pt"
-                    ? "border-site-azul bg-site-azul/10 text-site-azul"
-                    : "border-gray-200 text-gray-700 hover:border-gray-400"
-                }`}
-              >
-                <Languages className="h-5 w-5 shrink-0" aria-hidden />
-                <span>Português</span>
-              </button>
-
-              <button
-                type="button"
-                role="radio"
-                aria-checked={idioma === "en"}
-                onClick={() => {
-                  definirIdioma("en");
-                  anunciar("Language changed to English.");
-                }}
-                className={`flex min-h-[52px] items-center justify-center gap-2 rounded-xl border-2 px-3 py-2 text-sm font-semibold transition ${
-                  idioma === "en"
-                    ? "border-site-azul bg-site-azul/10 text-site-azul"
-                    : "border-gray-200 text-gray-700 hover:border-gray-400"
-                }`}
-              >
-                <Globe className="h-5 w-5 shrink-0" aria-hidden />
-                <span>English</span>
-              </button>
-            </div>
-          </Secao>
-
           <Secao titulo="Perfis prontos" dica="Um toque ajusta tudo. Toque de novo para desfazer.">
             <div className="grid grid-cols-2 gap-2">
               {PERFIS.map((perfil) => {
@@ -159,8 +117,25 @@ export default function CentralAcessibilidade({ aoFechar }: { aoFechar: () => vo
                 className="mt-2 h-11 w-full accent-site-azul" />
             </label>
 
-            <Interruptor icone={Palette} rotulo="Cores para daltonismo" descricao="Gráficos com paleta segura (Okabe-Ito)."
+            <Interruptor icone={Palette} rotulo="Cores para daltonismo"
+              descricao="Troca as cores do site e dos gráficos por pares que se distinguem (paleta Okabe-Ito)."
               ligado={prefs.paleta === "daltonismo"} aoMudar={(v) => mudar({ paleta: v ? "daltonismo" : "padrao" }, v ? "Paleta para daltonismo ativada." : "Paleta padrão.")} />
+            {prefs.paleta === "daltonismo" && (
+              <Opcoes rotulo="Quais cores você confunde?" valor={prefs.tipoDaltonismo}
+                opcoes={[
+                  ["vermelho-verde", "Vermelho e verde", "Protanopia ou deuteranopia: verde vira azul, vermelho vira laranja."],
+                  ["azul-amarelo", "Azul e amarelo", "Tritanopia: amarelo vira rosa, azul-claro vira cinza."],
+                ]}
+                aoMudar={(v) => mudar({ tipoDaltonismo: v }, `Cores ajustadas para quem confunde ${v === "vermelho-verde" ? "vermelho e verde" : "azul e amarelo"}.`)} />
+            )}
+            <Opcoes rotulo="Simular visão (para testes)" valor={prefs.simularVisao} colunas={2}
+              opcoes={[
+                ["nenhuma", "Visão normal"],
+                ["protanopia", "Protanopia"],
+                ["deuteranopia", "Deuteranopia"],
+                ["tritanopia", "Tritanopia"],
+              ]}
+              aoMudar={(v) => mudar({ simularVisao: v }, v === "nenhuma" ? "Simulação desligada." : `Simulando ${v}.`)} />
             <Interruptor icone={MousePointer2} rotulo="Cursor grande" ligado={prefs.cursorGrande}
               aoMudar={(v) => atualizar({ cursorGrande: v })} />
           </Secao>
@@ -234,6 +209,33 @@ function Secao({ titulo, dica, children }: { titulo: string; dica?: string; chil
       </div>
       {children}
     </section>
+  );
+}
+
+function Opcoes<T extends string>({ rotulo, valor, opcoes, aoMudar, colunas = 1 }: {
+  rotulo: string; valor: T; opcoes: [T, string, string?][]; aoMudar: (v: T) => void; colunas?: 1 | 2;
+}) {
+  return (
+    <fieldset className="px-2">
+      <legend className="mb-2 text-sm font-semibold">{rotulo}</legend>
+      <div role="radiogroup" className={`grid gap-2 ${colunas === 2 ? "grid-cols-2" : "grid-cols-1"}`}>
+        {opcoes.map(([v, nome, descricao]) => {
+          const ativo = valor === v;
+          return (
+            <button key={v} type="button" role="radio" aria-checked={ativo} onClick={() => aoMudar(v)}
+              className={`flex min-h-[44px] items-start gap-2 rounded-xl border-2 px-3 py-2 text-left text-xs ${
+                ativo ? "border-site-azul bg-site-azul/10" : "border-gray-200 hover:border-gray-400"}`}>
+              {/* o marcador redondo indica a seleção sem depender só da cor da borda */}
+              <span aria-hidden className={`mt-0.5 h-3.5 w-3.5 shrink-0 rounded-full border-2 border-site-azul ${ativo ? "bg-site-azul" : ""}`} />
+              <span>
+                <span className="block font-semibold">{nome}</span>
+                {descricao && <span className="block text-[11px] text-gray-600">{descricao}</span>}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+    </fieldset>
   );
 }
 
