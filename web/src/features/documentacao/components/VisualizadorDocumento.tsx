@@ -183,19 +183,27 @@ export default function VisualizadorDocumento({ documento }: Props) {
         <section className="mt-8 pt-6 border-t border-gray-200">
           <h3 className="text-xl font-bold text-site-azul mb-2">Diagrama de Processos (BPMN)</h3>
           <p className="text-sm text-gray-600 mb-4">
-            Visualização ampliada do fluxo de recebimento de mercadorias e do boletim diário. Clique na imagem para abrir o visualizador com zoom e arrasto.
+            Visualização ampliada do fluxo de recebimento de mercadorias e do boletim diário. Clique na imagem para abrir o visualizador em alta definição.
           </p>
           <VisualizadorImagem
             src="/api/documentacao/assets/bpmn.png"
             alt="Processos de Recebimento de Mercadorias e Boletim Diário — BPMN"
-            legenda="docs/assets/bpmn.png — Diagrama BPMN da Equipe Commitados"
+            legenda="docs/assets/bpmn.png — Diagrama BPMN da Solução"
           />
         </section>
       )}
 
       {documento.especial === "uml" && (
         <section className="mt-8 pt-6 border-t border-gray-200">
-          <GaleriaUml />
+          <h3 className="text-xl font-bold text-site-azul mb-2">Diagrama de Casos de Uso (UML)</h3>
+          <p className="text-sm text-gray-600 mb-4">
+            Modelagem funcional de casos de uso por ator. Clique na imagem para abrir o visualizador em alta definição.
+          </p>
+          <VisualizadorImagem
+            src="/api/documentacao/assets/uml-casos-de-uso.png"
+            alt="Casos de uso por ator — Recebimento Inteligente Cocapec"
+            legenda="docs/assets/uml-casos-de-uso.png — Diagrama de Casos de Uso"
+          />
         </section>
       )}
 
@@ -203,7 +211,7 @@ export default function VisualizadorDocumento({ documento }: Props) {
         <section className="mt-8 pt-6 border-t border-gray-200">
           <h3 className="text-xl font-bold text-site-azul mb-2">Diagrama Entidade-Relacionamento (DER)</h3>
           <p className="text-sm text-gray-600 mb-4">
-            Estrutura relacional do banco de dados PostgreSQL com 16 tabelas distribuídas entre agendamento, boletim e dados históricos.
+            Estrutura relacional do banco de dados PostgreSQL com 16 tabelas distribuídas entre agendamento, boletim e dados históricos. Clique na imagem para abrir o visualizador em alta definição.
           </p>
           <VisualizadorImagem
             src="/api/documentacao/assets/der.png"

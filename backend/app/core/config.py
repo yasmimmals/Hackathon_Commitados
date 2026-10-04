@@ -85,3 +85,11 @@ SENHA_MINIMA = 8
 CHAPA_MINUTOS_POR_CAMINHAO_LEVE = 120
 CHAPA_MINUTOS_POR_CAMINHAO_PESADO = 250
 FOLGA_PARA_SOBRA = 2     # chapas sobrando mesmo no cenário pesado para classificar como SOBRA
+
+
+# ---- Previsão e plano de escala ----
+CHAPA_MINUTOS_POR_CAMINHAO_PLANEJAMENTO = 185   # meio da faixa 120-250: base da recomendação
+EQUIPE_MINIMA = 5                  # uma carga batida exige 5 chapas juntos
+RESERVA_OUTRAS_ATIVIDADES = 2      # carregamento de cooperados e organização (não estão nos dados);
+                                   # o gestor ajusta no simulador
+DIAS_PARA_DIARIA_ATUAL = 60        # janela da folha para o valor recente da diária

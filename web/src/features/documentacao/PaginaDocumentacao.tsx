@@ -9,7 +9,6 @@ export default function PaginaDocumentacao() {
   const { slug } = useParams<{ slug?: string }>();
   const [menuMobileAberto, setMenuMobileAberto] = useState(false);
 
-  // Slug padrão
   const slugAtual = slug || "00-visao-geral";
   const documento = TODOS_DOCUMENTOS.find((d) => d.slug === slugAtual);
 
@@ -19,7 +18,6 @@ export default function PaginaDocumentacao() {
 
   return (
     <div className="flex flex-col lg:flex-row min-h-[calc(100vh-140px)] rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
-      {/* Botão para abrir gaveta mobile */}
       <div className="flex items-center justify-between border-b border-gray-200 bg-gray-50 px-4 py-3 lg:hidden">
         <div className="flex items-center gap-2">
           <BookOpen className="h-4 w-4 text-site-azul" />
@@ -37,17 +35,15 @@ export default function PaginaDocumentacao() {
         </button>
       </div>
 
-      {/* Menu Lateral */}
       <MenuLateralDocumentacao
         slugAtivo={slugAtual}
         abertoMobile={menuMobileAberto}
         onFecharMobile={() => setMenuMobileAberto(false)}
       />
 
-      {/* Área Principal de Leitura */}
-      <main className="flex-1 p-6 sm:p-10 overflow-y-auto">
+      <section className="flex-1 p-4 sm:p-6 md:p-10 overflow-y-auto">
         <VisualizadorDocumento documento={documento} />
-      </main>
+      </section>
     </div>
   );
 }
