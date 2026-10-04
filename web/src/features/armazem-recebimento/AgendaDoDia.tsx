@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { AlarmClock, CalendarDays, LoaderCircle, RefreshCw, ServerCrash, Warehouse } from "lucide-react";
+import { AlarmClock, CalendarDays, LoaderCircle, RefreshCw, ServerCrash, Warehouse, Zap } from "lucide-react";
 import MensagemStatus from "@/shared/components/ui/MensagemStatus";
 import { useMensagemTemporaria } from "@/shared/hooks/useMensagemTemporaria";
 import {
@@ -17,6 +17,12 @@ type Dados = { agenda: Agendamento[]; slots: SlotDisponibilidade[]; baias: Baia[
 
 const ATUALIZAR_A_CADA_MS = 60_000;
 const ANTES_DA_CHEGADA = new Set(["PENDENTE", "APROVADO", "DESTINO_DEFINIDO"]);
+const EM_ABERTO = new Set(["APROVADO", "DESTINO_DEFINIDO", "NA_FILA", "EM_DESCARGA"]);
+const prioritarioEmAberto = (a: Agendamento) => a.prioritario && EM_ABERTO.has(a.status);
+const ordemDeAtendimento = (a: Agendamento, b: Agendamento) =>
+  Number(b.prioritario) - Number(a.prioritario) ||
+  (a.horario_chegada ?? "9999").localeCompare(b.horario_chegada ?? "9999") ||
+  a.id - b.id;
 const comAtrasoAvisado = (a: Agendamento) => Boolean(a.atraso_informado_em) && ANTES_DA_CHEGADA.has(a.status);
 type Carga = { tipo: "carregando" } | { tipo: "erro"; mensagem: string } | { tipo: "ok"; dados: Dados };
 
@@ -156,6 +162,7 @@ export default function AgendaDoDia() {
 
       {dados && (
         <>
+          <Prioridades agenda={dados.agenda.filter(prioritarioEmAberto)} />
           <AvisosDeAtraso agenda={dados.agenda.filter(comAtrasoAvisado)} />
 
           <dl className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
@@ -170,7 +177,7 @@ export default function AgendaDoDia() {
           <div className="grid grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[minmax(0,1fr)_400px] xl:items-start">
             <section aria-label="Agenda por horário" className="space-y-5">
               {JANELAS.map(({ horario, fim }) => {
-                const doHorario = agenda.filter((a) => a.horario === horario);
+                const doHorario = agenda.filter((a) => a.horario === horario).sort(ordemDeAtendimento);
                 const slot = dados.slots.find((s) => s.horario === horario);
                 return (
                   <div key={horario}>
@@ -226,6 +233,27 @@ function AvisosDeAtraso({ agenda }: { agenda: Agendamento[] }) {
           <li key={a.id}>
             <strong>#AG-{a.id} {a.fornecedor.nome}</strong> (janela das {a.horario}h): atraso de {duracaoMin(a.atraso_minutos)},
             {" "}avisado às {hora(a.atraso_informado_em as string)}{a.atraso_motivo ? ` • ${a.atraso_motivo}` : ""}
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+function Prioridades({ agenda }: { agenda: Agendamento[] }) {
+  if (agenda.length === 0) return null;
+  return (
+    <section role="status" aria-label="Caminhões com prioridade" className="rounded-2xl bg-sky-50 px-4 py-3 ring-1 ring-sky-200">
+      <h2 className="flex items-center gap-2 text-sm font-bold text-sky-900">
+        <Zap className="h-4 w-4" aria-hidden />
+        {agenda.length === 1 ? "1 caminhão com prioridade" : `${agenda.length} caminhões com prioridade`}: atender antes dos demais
+      </h2>
+      <ul className="mt-2 space-y-1 text-xs text-sky-900">
+        {[...agenda].sort(ordemDeAtendimento).map((a) => (
+          <li key={a.id}>
+            <strong>#AG-{a.id} {a.fornecedor.nome}</strong> (janela das {a.horario}h)
+            {a.origem === "CHUVA" ? " • reagendado por chuva" : ""}
+            {a.horario_chegada ? " • já chegou" : ""}
           </li>
         ))}
       </ul>

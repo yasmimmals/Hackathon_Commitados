@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react";
-import { AlarmClock, Ban, CheckCircle2, CloudRain, LoaderCircle, MapPin, ShieldAlert, ShieldCheck, ShieldQuestion } from "lucide-react";
+import { AlarmClock, Ban, CheckCircle2, CloudRain, LoaderCircle, MapPin, ShieldAlert, ShieldCheck, ShieldQuestion, Zap } from "lucide-react";
 import {
   definirDestinos, marcarNaoCompareceu, mensagemDeErro, registrarChegada,
   type Agendamento, type Baia, type Equipamento, type LocalFisico,
@@ -10,6 +10,7 @@ import { janelaTerminou } from "@/shared/utils/janelas";
 import { LOCAIS, ROTULO_LOCAL } from "@/shared/utils/locais";
 import { autorizacao, TEXTO_STATUS, type Autorizacao } from "../utils/agenda";
 import EtapasDescarga from "./EtapasDescarga";
+import ReagendarChuva from "./ReagendarChuva";
 
 type CardRecebimentoProps = {
   agendamento: Agendamento;
@@ -33,6 +34,7 @@ const CLASSE_CAMPO =
 
 export default function CardRecebimento({ agendamento: ag, baias, equipamentos, onConcluido }: CardRecebimentoProps) {
   const [editandoDestino, setEditandoDestino] = useState(false);
+  const [reagendando, setReagendando] = useState(false);
   const [local, setLocal] = useState<LocalFisico | "">(ag.descargas[0]?.local ?? (ag.carga_adubo ? "ADUBO" : ""));
   const [baiaId, setBaiaId] = useState<string>(ag.descargas[0]?.baia?.id ? String(ag.descargas[0].baia.id) : "");
   const [enviando, setEnviando] = useState(false);
@@ -41,16 +43,18 @@ export default function CardRecebimento({ agendamento: ag, baias, equipamentos, 
   const aut = autorizacao(ag);
   const IconeAut = ICONE_AUTORIZACAO[aut.tom];
   const antesDaChegada = ag.status === "APROVADO" || ag.status === "DESTINO_DEFINIDO";
+  const podeReagendarChuva = ag.status === "APROVADO" || ag.status === "DESTINO_DEFINIDO" || ag.status === "NA_FILA";
   const podeMarcarAusencia = antesDaChegada && janelaTerminou(ag.data, ag.horario);
   const baiasDoLocal = baias.filter((b) => b.local === local && b.ativa);
 
-  const executar = async (acao: () => Promise<unknown>, sucesso: string) => {
+  const executar = async <T,>(acao: () => Promise<T>, sucesso: string | ((resultado: T) => string)) => {
     setEnviando(true);
     setErro("");
     try {
-      await acao();
+      const resultado = await acao();
       setEditandoDestino(false);
-      onConcluido(sucesso);
+      setReagendando(false);
+      onConcluido(typeof sucesso === "function" ? sucesso(resultado) : sucesso);
     } catch (falha) {
       setErro(mensagemDeErro(falha));
     } finally {
@@ -84,6 +88,11 @@ export default function CardRecebimento({ agendamento: ag, baias, equipamentos, 
             {ag.origem === "BALCAO" && " • Encaixe de pátio"}
             {ag.origem === "CHUVA" && " • Reagendado por chuva"}
           </p>
+          {ag.prioritario && (
+            <p className="mb-1 inline-flex items-center gap-1 rounded-full bg-site-azul px-2.5 py-0.5 text-[11px] font-bold text-white">
+              <Zap className="h-3 w-3" aria-hidden /> Prioridade na fila{ag.origem === "CHUVA" ? " • reagendado por chuva" : ""}
+            </p>
+          )}
           <h3 className="truncate font-bold text-site-azul">{ag.fornecedor.nome}</h3>
           <p className="text-xs text-gray-600">
             {ag.nf_numero ? `NF-e ${ag.nf_numero}` : "Sem NF"} • {ROTULO_ACONDICIONAMENTO[ag.acondicionamento]}
@@ -197,6 +206,18 @@ export default function CardRecebimento({ agendamento: ag, baias, equipamentos, 
       )}
       {(ag.status === "NA_FILA" || ag.status === "EM_DESCARGA" || ag.status === "CONCLUIDO") && (
         <EtapasDescarga agendamento={ag} equipamentos={equipamentos} executar={executar} enviando={enviando} />
+      )}
+      {podeReagendarChuva && !editandoDestino && (
+        reagendando ? (
+          <ReagendarChuva agendamento={ag} enviando={enviando} executar={executar} aoCancelar={() => setReagendando(false)} />
+        ) : (
+          <div className="mt-2 flex justify-end">
+            <button type="button" onClick={() => setReagendando(true)} disabled={enviando}
+              className="inline-flex items-center gap-1.5 rounded-full border border-sky-700 px-4 py-2 text-xs font-bold text-sky-800 hover:bg-sky-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-600 disabled:opacity-60">
+              <CloudRain className="h-3.5 w-3.5" aria-hidden /> Reagendar (chuva)
+            </button>
+          </div>
+        )
       )}
       {erro && <p role="alert" className="mt-2 text-sm text-red-700">{erro}</p>}
     </article>
