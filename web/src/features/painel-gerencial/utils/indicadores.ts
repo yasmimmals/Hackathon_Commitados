@@ -10,7 +10,6 @@ import { ROTULO_LOCAL } from "@/shared/utils/locais";
 export type IndicadorBoletim = {
   id: number;
   data: string;
-  /** Armazém do boletim, ou GERAL no padrão da Cocapec (um boletim por dia). */
   chave: string;
   rotulo: string;
   fechado: boolean;
@@ -20,7 +19,7 @@ export type IndicadorBoletim = {
   saldoReais: number;
 };
 
-export const rotuloDoGrupo = (b: Pick<Boletim, "local">) => (b.local ? ROTULO_LOCAL[b.local] : "Geral (Franca)");
+const rotuloDoGrupo = (b: Pick<Boletim, "local">) => (b.local ? ROTULO_LOCAL[b.local] : "Geral (Franca)");
 
 export function indicadorDoBoletim(b: Boletim): IndicadorBoletim {
   const producao = Number(b.calculo.producao_total);
@@ -50,7 +49,6 @@ export type ResumoGrupo = {
   saldoReais: number;
 };
 
-/** Agrega por armazém (ou Geral). Sobra e falta somadas à parte: dias diferentes não se anulam na leitura. */
 export function resumirPorGrupo(indicadores: IndicadorBoletim[]): ResumoGrupo[] {
   const grupos = new Map<string, IndicadorBoletim[]>();
   indicadores.forEach((i) => grupos.set(i.chave, [...(grupos.get(i.chave) ?? []), i]));
