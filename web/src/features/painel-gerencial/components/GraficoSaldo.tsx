@@ -2,8 +2,8 @@ import { useState } from "react";
 import { moeda } from "@/shared/utils/formatacao";
 import type { ResumoGrupo } from "../utils/indicadores";
 
-export const COR_SOBRA = "#e34948";
-export const COR_FALTA = "#2a78d6";
+const COR_SOBRA = "#e34948";
+const COR_FALTA = "#2a78d6";
 
 const sinal = (v: number) => (v > 0 ? `+${moeda(v)}` : v < 0 ? `−${moeda(-v)}` : moeda(0));
 const leitura = (v: number) => (v > 0 ? "sobra de chapas" : v < 0 ? "falta de chapas" : "equipe ajustada");

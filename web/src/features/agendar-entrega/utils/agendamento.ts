@@ -7,8 +7,7 @@ import type { ErrosEntrega, Horario, NovaEntrega } from "../types";
 const EXTENSOES_NF = [".pdf", ".xml"];
 const DIAS_SEMANA_CURTOS = ["dom.", "seg.", "ter.", "qua.", "qui.", "sex.", "sáb."];
 
-/** Data local (não UTC) em AAAA-MM-DD, deslocada em `dias`. */
-export function dataIso(dias = 0) {
+function dataIso(dias = 0) {
   const d = new Date();
   d.setDate(d.getDate() + dias);
   const mes = String(d.getMonth() + 1).padStart(2, "0");
@@ -19,27 +18,24 @@ export function dataIso(dias = 0) {
 export const dataMinima = () => dataIso(ANTECEDENCIA_MINIMA_DIAS);
 export const dataMaxima = () => dataIso(ANTECEDENCIA_MAXIMA_DIAS);
 
-/** "2026-10-05" → "seg., 05/10/2026" */
 export function formatarData(iso: string) {
   const [ano, mes, dia] = iso.split("-");
   const diaSemana = new Date(`${iso}T12:00:00`).getDay();
   return `${DIAS_SEMANA_CURTOS[diaSemana]}, ${dia}/${mes}/${ano}`;
 }
 
-/** Aceita só dígitos e uma vírgula com até 2 casas, ex.: "28,50". */
 export function mascararPeso(valor: string) {
   const [inteiro = "", ...resto] = valor.replace(/\./g, ",").replace(/[^\d,]/g, "").split(",");
   const decimais = resto.join("").slice(0, 2);
   return resto.length ? `${inteiro.slice(0, 3)},${decimais}` : inteiro.slice(0, 3);
 }
 
-export const pesoEmToneladas = (peso: string) => Number(peso.replace(",", "."));
+const pesoEmToneladas = (peso: string) => Number(peso.replace(",", "."));
 
 export function formatarTamanho(bytes: number) {
   return bytes < 1024 * 1024 ? `${Math.max(1, Math.round(bytes / 1024))} KB` : `${(bytes / 1024 / 1024).toFixed(1)} MB`;
 }
 
-/** Retorna a mensagem de erro do arquivo, ou `undefined` se ele for aceito. */
 export function validarNotaFiscal(arquivo: File): string | undefined {
   const nome = arquivo.name.toLowerCase();
   if (!EXTENSOES_NF.some((ext) => nome.endsWith(ext))) return "Envie a NF em PDF ou XML.";
@@ -48,16 +44,12 @@ export function validarNotaFiscal(arquivo: File): string | undefined {
   return undefined;
 }
 
-/** Recebimento só de segunda a sexta (feriados o backend recusa ao agendar). */
 export const ehDiaUtil = (iso: string) => {
   const diaSemana = new Date(`${iso}T12:00:00`).getDay();
   return diaSemana !== 0 && diaSemana !== 6;
 };
 
-/**
- * Vagas livres de um horário para o acondicionamento escolhido. Carga batida
- * precisa do horário vazio; com chuva bloqueando (adubo), não há vaga.
- */
+
 export function vagasNoHorario(
   slots: SlotDisponibilidade[], data: string, horario: Horario, acondicionamento: NovaEntrega["acondicionamento"],
 ): number {
@@ -69,10 +61,7 @@ export function vagasNoHorario(
 
 export const rotuloCategoria =(key: NovaEntrega["categoria"]) => CATEGORIAS.find((c) => c.key === key)?.rotulo ?? "";
 
-/**
- * A ordem das checagens segue a ordem dos campos na tela (foco no primeiro erro).
- * `vagas` vem da disponibilidade da API; sem ela (ainda carregando), quem confere é o backend.
- */
+
 export function validarEntrega(entrega: NovaEntrega, vagas?: (horario: Horario) => number): ErrosEntrega {
   const erros: ErrosEntrega = {};
 
@@ -108,6 +97,5 @@ export function validarEntrega(entrega: NovaEntrega, vagas?: (horario: Horario) 
   return erros;
 }
 
-/** Peso da NF em kg ("28500.000") → como digitado no campo ("28,50"). */
 export const pesoDaNota = (pesoKg: string) =>
   (Number(pesoKg) / 1000).toFixed(2).replace(".", ",");
