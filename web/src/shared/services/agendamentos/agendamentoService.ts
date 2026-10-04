@@ -29,6 +29,11 @@ export async function buscarAgendamento(id: number): Promise<Agendamento> {
   return data;
 }
 
+export async function avisarAtraso(id: number, dados: { minutos: number; motivo?: string }): Promise<Agendamento> {
+  const { data } = await api.post<Agendamento>(`${BASE}/${id}/atraso`, dados);
+  return data;
+}
+
 export async function cancelarAgendamento(id: number): Promise<Agendamento> {
   const { data } = await api.post<Agendamento>(`${BASE}/${id}/cancelar`);
   return data;

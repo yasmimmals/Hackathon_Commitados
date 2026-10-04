@@ -1,17 +1,19 @@
 import { useState, type FormEvent } from "react";
-import { Ban, CheckCircle2, CloudRain, LoaderCircle, MapPin, ShieldAlert, ShieldCheck, ShieldQuestion, Truck } from "lucide-react";
+import { AlarmClock, Ban, CheckCircle2, CloudRain, LoaderCircle, MapPin, ShieldAlert, ShieldCheck, ShieldQuestion } from "lucide-react";
 import {
   definirDestinos, marcarNaoCompareceu, mensagemDeErro, registrarChegada,
-  type Agendamento, type Baia, type LocalFisico,
+  type Agendamento, type Baia, type Equipamento, type LocalFisico,
 } from "@/shared/services";
 import { ROTULO_ACONDICIONAMENTO } from "@/shared/utils/acondicionamento";
 import { janelaTerminou } from "@/shared/utils/janelas";
 import { LOCAIS, ROTULO_LOCAL } from "@/shared/utils/locais";
 import { autorizacao, TEXTO_STATUS, type Autorizacao } from "../utils/agenda";
+import EtapasDescarga from "./EtapasDescarga";
 
 type CardRecebimentoProps = {
   agendamento: Agendamento;
   baias: Baia[];
+  equipamentos: Equipamento[];
   onConcluido: (mensagem: string) => void;
 };
 
@@ -28,7 +30,7 @@ const CLASSE_BOTAO =
 const CLASSE_CAMPO =
   "w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm focus-visible:border-site-azul focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-site-azul/30";
 
-export default function CardRecebimento({ agendamento: ag, baias, onConcluido }: CardRecebimentoProps) {
+export default function CardRecebimento({ agendamento: ag, baias, equipamentos, onConcluido }: CardRecebimentoProps) {
   const [editandoDestino, setEditandoDestino] = useState(false);
   const [local, setLocal] = useState<LocalFisico | "">(ag.descargas[0]?.local ?? (ag.carga_adubo ? "ADUBO" : ""));
   const [baiaId, setBaiaId] = useState<string>(ag.descargas[0]?.baia?.id ? String(ag.descargas[0].baia.id) : "");
@@ -108,6 +110,17 @@ export default function CardRecebimento({ agendamento: ag, baias, onConcluido }:
         </div>
       </div>
 
+      {ag.atraso_informado_em && !ag.horario_chegada && (
+        <p role="status" className="mt-3 flex items-start gap-2 rounded-xl bg-amber-50 px-3 py-2 text-xs text-amber-900 ring-1 ring-amber-200">
+          <AlarmClock className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
+          <span>
+            <strong>Fornecedor avisou atraso de {ag.atraso_minutos} min</strong>
+            {" "}às {new Date(ag.atraso_informado_em).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+            {ag.atraso_motivo && <> • {ag.atraso_motivo}</>}
+          </span>
+        </p>
+      )}
+
       {editandoDestino ? (
         <form noValidate onSubmit={salvarDestino} className="mt-3 grid gap-2 rounded-xl bg-gray-50 p-3 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
           <label className="text-xs font-semibold text-gray-700">
@@ -171,7 +184,7 @@ export default function CardRecebimento({ agendamento: ag, baias, onConcluido }:
                 className={`${CLASSE_BOTAO} bg-site-verde text-white hover:bg-site-verde-escuro focus-visible:ring-site-verde`}
               >
                 {enviando ? <LoaderCircle className="h-3.5 w-3.5 animate-spin" aria-hidden /> : <CheckCircle2 className="h-3.5 w-3.5" aria-hidden />}
-                Registrar comparecimento
+                Caminhão chegou
               </button>
             )}
           </div>
@@ -181,11 +194,8 @@ export default function CardRecebimento({ agendamento: ag, baias, onConcluido }:
       {ag.status === "APROVADO" && !editandoDestino && (
         <p className="mt-2 text-[11px] text-gray-500">Defina o destino para poder registrar o comparecimento.</p>
       )}
-      {ag.status === "NA_FILA" && ag.horario_chegada && (
-        <p className="mt-2 inline-flex items-center gap-1 text-xs text-emerald-800">
-          <Truck className="h-3.5 w-3.5" aria-hidden /> Chegou às{" "}
-          {new Date(ag.horario_chegada).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
-        </p>
+      {(ag.status === "NA_FILA" || ag.status === "EM_DESCARGA" || ag.status === "CONCLUIDO") && (
+        <EtapasDescarga agendamento={ag} equipamentos={equipamentos} executar={executar} enviando={enviando} />
       )}
       {erro && <p role="alert" className="mt-2 text-sm text-red-700">{erro}</p>}
     </article>

@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { LoaderCircle, ServerCrash } from "lucide-react";
 import MensagemStatus from "@/shared/components/ui/MensagemStatus";
 import { useMensagemTemporaria } from "@/shared/hooks/useMensagemTemporaria";
-import { cancelarAgendamento, listarAgendamentos, mensagemDeErro } from "@/shared/services";
+import { avisarAtraso, cancelarAgendamento, listarAgendamentos, mensagemDeErro } from "@/shared/services";
 import AlertBanner from "./components/AlertBanner";
 import AppointmentCard from "./components/AppointmentCard";
 import EmptyState from "./components/EmptyState";
@@ -71,14 +71,21 @@ export default function MeusAgendamentos() {
   const replace = (atualizado: ListedAppointment) =>
     setAppointments((list) => list.map((a) => (a.id === atualizado.id ? atualizado : a)));
 
-  const reportDelay = (appointment: ListedAppointment) => {
-    replace({
-      ...appointment,
-      footerInfo: "Atraso informado à portaria",
-      footerTone: "warning",
-      actions: appointment.actions?.filter((a) => a.kind !== "delay"),
-    });
-    setFeedback(`Atraso do agendamento ${appointment.code} informado à portaria.`);
+  const reportDelay = async (appointment: ListedAppointment) => {
+    const resposta = window.prompt(`Quantos minutos de atraso para ${appointment.code}?`, "30");
+    if (resposta === null) return;
+    const minutos = Number(resposta.replace(",", "."));
+    if (!Number.isInteger(minutos) || minutos < 5 || minutos > 600) {
+      setErroAcao("Informe o atraso em minutos inteiros, entre 5 e 600.");
+      return;
+    }
+    const motivo = window.prompt("Motivo do atraso (opcional):", "") ?? undefined;
+    try {
+      replace(mapearAgendamento(await avisarAtraso(Number(appointment.id), { minutos, motivo: motivo || undefined })));
+      setFeedback(`Atraso de ${minutos} min do agendamento ${appointment.code} avisado à equipe do armazém.`);
+    } catch (erro) {
+      setErroAcao(`Não foi possível avisar o atraso de ${appointment.code}: ${mensagemDeErro(erro)}`);
+    }
   };
 
   const cancel = async (appointment: ListedAppointment) => {

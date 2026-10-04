@@ -74,10 +74,13 @@ function rotuloData(ag: Agendamento) {
 
 function rodape(ag: Agendamento): Pick<Appointment, "footerInfo" | "footerTone"> {
   if (ag.aviso_chuva) return { footerInfo: ag.aviso_chuva, footerTone: "warning" };
+  if (ag.atraso_informado_em && ANTES_DA_CHEGADA.has(ag.status)) {
+    return { footerInfo: `Atraso de ${ag.atraso_minutos} min avisado à equipe do armazém`, footerTone: "warning" };
+  }
   switch (ag.status) {
     case "PENDENTE": return { footerInfo: "Aguardando validação da Mesa de Compras", footerTone: "warning" };
     case "APROVADO": return { footerInfo: "Aprovado • aguardando definição da doca", footerTone: "success" };
-    case "DESTINO_DEFINIDO": return { footerInfo: "Doca definida • portaria informada", footerTone: "success" };
+    case "DESTINO_DEFINIDO": return { footerInfo: "Doca definida • equipe do armazém informada", footerTone: "success" };
     case "NA_FILA":
       return {
         footerInfo: ag.horario_chegada ? `Na fila desde ${formatarHora(ag.horario_chegada)}` : "Na fila",
@@ -99,7 +102,7 @@ function rodape(ag: Agendamento): Pick<Appointment, "footerInfo" | "footerTone">
 function acoes(ag: Agendamento): AppointmentAction[] {
   const lista: AppointmentAction[] = [];
   if (ANTES_DA_CHEGADA.has(ag.status)) {
-    lista.push({ label: "Avisar Atraso", icon: "alert", variant: "outline", kind: "delay" });
+    lista.push({ label: ag.atraso_informado_em ? "Atualizar Atraso" : "Avisar Atraso", icon: "alert", variant: "outline", kind: "delay" });
   }
   if (CANCELAVEIS.has(ag.status)) {
     lista.push({ label: "Cancelar", icon: "x", variant: "danger", kind: "cancel" });
