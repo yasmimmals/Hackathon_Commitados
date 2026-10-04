@@ -45,7 +45,7 @@ export default function CardRecebimento({ agendamento: ag, baias, equipamentos, 
   const IconeAut = ICONE_AUTORIZACAO[aut.tom];
   const antesDaChegada = ag.status === "APROVADO" || ag.status === "DESTINO_DEFINIDO";
   const podeReagendarChuva = ag.status === "APROVADO" || ag.status === "DESTINO_DEFINIDO" || ag.status === "NA_FILA";
-  const podeNaoReceber = podeReagendarChuva || ag.status === "EM_DESCARGA";
+  const podeNaoReceber = ag.status === "NA_FILA" || ag.status === "EM_DESCARGA";
   const podeMarcarAusencia = antesDaChegada && janelaTerminou(ag.data, ag.horario);
   const baiasDoLocal = baias.filter((b) => b.local === local && b.ativa);
 
@@ -209,7 +209,7 @@ export default function CardRecebimento({ agendamento: ag, baias, equipamentos, 
       {(ag.status === "NA_FILA" || ag.status === "EM_DESCARGA" || ag.status === "CONCLUIDO") && (
         <EtapasDescarga agendamento={ag} equipamentos={equipamentos} executar={executar} enviando={enviando} />
       )}
-      {podeNaoReceber && !editandoDestino && (
+      {(podeReagendarChuva || podeNaoReceber) && !editandoDestino && (
         acaoAberta === "chuva" ? (
           <ReagendarChuva agendamento={ag} enviando={enviando} executar={executar} aoCancelar={() => setAcaoAberta("nenhuma")} />
         ) : acaoAberta === "naoReceber" ? (
@@ -222,10 +222,12 @@ export default function CardRecebimento({ agendamento: ag, baias, equipamentos, 
                 <CloudRain className="h-3.5 w-3.5" aria-hidden /> Reagendar (chuva)
               </button>
             )}
+            {podeNaoReceber && (
             <button type="button" onClick={() => setAcaoAberta("naoReceber")} disabled={enviando}
               className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-red-600 px-4 py-2 text-xs font-bold text-red-700 hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 disabled:opacity-60">
               <Ban className="h-3.5 w-3.5" aria-hidden /> Não receber
             </button>
+            )}
           </div>
         )
       )}

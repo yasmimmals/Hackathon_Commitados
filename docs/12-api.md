@@ -61,6 +61,7 @@ A API do **Recebimento Inteligente Cocapec** é feita em **FastAPI**. Todas as r
 | `POST` | `/armazem/agendamentos/{ag_id}/entrada` | Armazém | Marco 2: início da descarga em um armazém (status `EM_DESCARGA`) |
 | `POST` | `/armazem/agendamentos/{ag_id}/saida` | Armazém | Marco 3: fim da descarga, com chapas e equipamentos; na última, status `CONCLUIDO` |
 | `POST` | `/armazem/agendamentos/{ag_id}/nao-compareceu` | Armazém | Não comparecimento, depois do fim da janela |
+| `POST` | `/armazem/agendamentos/{ag_id}/nao-receber` | Armazém | Não recebe o caminhão que já chegou (divergência na conferência ou outro motivo descrito) |
 | `POST` | `/armazem/agendamentos/{ag_id}/reagendar-chuva` | Armazém | Reagenda por chuva, com prioridade e fora do limite do horário |
 
 ### 2.4. Cadastros

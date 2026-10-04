@@ -437,3 +437,11 @@ def test_nao_recebimento_do_armazem_valida_motivo_e_status(db, agendar):
     with pytest.raises(RegraNegocioError) as e:
         svc.registrar_nao_recebimento(db, ag.id, NaoRecebimentoIn(motivo=M.DIVERGENCIA_NF_PEDIDO, descricao="Itens não batem"))
     assert codigo_do_erro(e) == "TRANSICAO_INVALIDA"
+
+
+def test_nao_recebimento_do_armazem_so_depois_da_chegada(db, agendar, destinar):
+    from app.schemas.agendamento import NaoRecebimentoIn
+    ag = destinar(aprovar(db, agendar(A.PALETIZADO)), L.INSUMOS)
+    with pytest.raises(RegraNegocioError) as e:
+        svc.registrar_nao_recebimento(db, ag.id, NaoRecebimentoIn(motivo=M.OUTRO, descricao="Ainda não chegou"))
+    assert codigo_do_erro(e) == "TRANSICAO_INVALIDA"
